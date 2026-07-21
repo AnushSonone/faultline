@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-ob",
+  "dataset_version": "v1",
+  "incident_id": "rec-mem-001",
+  "system": "online-boutique-synthetic",
+  "start_time_ns": 1700000000000000000,
+  "end_time_ns": 1700000015000000000,
+  "signals": [
+    "metrics",
+    "spans",
+    "logs",
+    "changes"
+  ],
+  "event_counts": {
+    "metrics": 240,
+    "spans": 144,
+    "logs": 2,
+    "changes": 1
+  },
+  "files": [
+    {
+      "path": "metrics/part-00000.parquet",
+      "sha256": "eb2c3d6bfa124e7bf26fb46df3db873dfc6b8586f48eb5541ed4ae0faa772991",
+      "rows": 240
+    },
+    {
+      "path": "spans/part-00000.parquet",
+      "sha256": "6e3db3c2cb5663ba864736fd381d23979ba5c6260dd82de385598e603ec2858f",
+      "rows": 144
+    },
+    {
+      "path": "logs/part-00000.parquet",
+      "sha256": "b9475403b948be2873566f84587acbc6616431d1b91a8fe6e407ffcb01d70d29",
+      "rows": 2
+    },
+    {
+      "path": "changes/part-00000.parquet",
+      "sha256": "cc1ab09aa5214b5164b524d63861e4c8e2aac14a5c8d0a653eee055b8072c504",
+      "rows": 1
+    }
+  ]
+}

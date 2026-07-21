@@ -1,0 +1,17 @@
+{
+  "incident_id": "rec-mem-001",
+  "root_cause_services": [
+    "recommendationservice"
+  ],
+  "root_cause_indicators": [
+    "recommendationservice_mem"
+  ],
+  "fault_type": "mem",
+  "fault_start_time_ns": 1700000005000000000,
+  "fault_end_time_ns": 1700000014000000000,
+  "expected_downstream_services": [
+    "checkoutservice",
+    "frontend"
+  ],
+  "notes": "Synthetic MEM fault on recommendationservice after deploy (M2 fixture)."
+}

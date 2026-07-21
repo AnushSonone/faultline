@@ -11,6 +11,12 @@ pub enum FaultlineError {
     #[error("invalid event: {0}")]
     InvalidEvent(String),
 
+    #[error("validation error: {0}")]
+    Validation(String),
+
+    #[error("io error: {0}")]
+    Io(String),
+
     #[error("schema version mismatch: expected {expected}, got {got}")]
     SchemaVersion { expected: u16, got: u16 },
 

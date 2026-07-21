@@ -1,0 +1,15 @@
+# RCAEval pin (TA-004)
+
+source: https://github.com/phamquiluan/RCAEval
+license: MIT (datasets + framework code)
+preferred_suite: RE2-OB
+preferred_fault: mem
+download:
+  full_re2_zip_gb: ~4.2
+  recommendation: single-case Figshare fetch or synthetic fixture for M2
+status: go_with_fallback
+fallback: datasets/fixtures/synthetic-ob/v1/rec-mem-001
+notes: |
+  Sock Shop RE2/RE3 lack traces — do not use for first waterfall.
+  Full RE2 download deferred; M2 ships synthetic multi-signal fixture matching
+  Online Boutique topology narrative (recommendation MEM after deploy).
