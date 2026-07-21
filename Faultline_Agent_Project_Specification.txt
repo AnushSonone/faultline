@@ -1,4 +1,4 @@
-TRACEATLAS
+FAULTLINE
 Interactive Incident Replay and Root-Cause Visualization
 Agent-Ready Project Specification
 
@@ -10,7 +10,7 @@ Owner: Anush Sonone
 0. HOW TO USE THIS FILE
 ===============================================================================
 
-This document is the implementation contract for TraceAtlas. Give it to coding
+This document is the implementation contract for Faultline. Give it to coding
 agents before they create files, choose libraries, or change architecture.
 
 Every agent should:
@@ -50,7 +50,7 @@ systems project with:
 1. EXECUTIVE SUMMARY
 ===============================================================================
 
-TraceAtlas is an interactive visual debugger for distributed cloud systems.
+Faultline is an interactive visual debugger for distributed cloud systems.
 
 It ingests metrics, logs, distributed traces, and deployment/configuration
 events. It converts them into a synchronized model of system behavior and lets
@@ -65,7 +65,7 @@ The user should be able to:
 - Inspect a ranked list of likely root causes
 - Click each root-cause candidate to see supporting and contradicting evidence
 - Observe conclusions update when late telemetry arrives
-- Crash and restart TraceAtlas without losing the active investigation
+- Crash and restart Faultline without losing the active investigation
 - Inspect the logical and physical plan of the streaming queries powering the
   visualizations
 
@@ -76,7 +76,7 @@ KillMyCluster may be mentioned in interviews only as inspiration:
 
 "Building a failure-oriented distributed system made me interested in how
 production engineers understand failures across many services. I then built
-TraceAtlas as an independent incident-replay and root-cause visualization
+Faultline as an independent incident-replay and root-cause visualization
 engine using public microservice incident datasets and OpenTelemetry."
 
 ===============================================================================
@@ -84,13 +84,13 @@ engine using public microservice incident datasets and OpenTelemetry."
 ===============================================================================
 
 Project name:
-TraceAtlas
+Faultline
 
 Subtitle:
 Interactive Incident Replay and Root-Cause Visualization
 
 One-sentence pitch:
-TraceAtlas turns metrics, logs, traces, and deployment events into a synchronized
+Faultline turns metrics, logs, traces, and deployment events into a synchronized
 visual replay of a cloud incident, then ranks likely root causes and exposes the
 evidence behind each inference.
 
@@ -109,7 +109,7 @@ understand a distributed-system incident.
 
 Primary user problem:
 Raw logs and dashboards force humans to mentally reconstruct timing, topology,
-causality, and request propagation. TraceAtlas creates one synchronized visual
+causality, and request propagation. Faultline creates one synchronized visual
 model instead.
 
 Core differentiators:
@@ -134,9 +134,9 @@ The owner's current resume already demonstrates:
 - A Raft-based key-value store
 - Product ownership and measurable business impact
 
-TraceAtlas should add new evidence rather than repeat those same signals.
+Faultline should add new evidence rather than repeat those same signals.
 
-New signals created by TraceAtlas:
+New signals created by Faultline:
 
 - Query planning and execution
 - Columnar/vectorized data processing
@@ -173,7 +173,7 @@ OpenAI/AI infrastructure:
 - Performance bottleneck identification
 - Actionable visibility into distributed-system behavior
 
-Do not market TraceAtlas as "AI observability" unless a meaningful model is
+Do not market Faultline as "AI observability" unless a meaningful model is
 actually implemented and evaluated. The stronger initial story is systems,
 data, inference, and visualization.
 
@@ -190,11 +190,11 @@ A root-cause score must link to concrete supporting evidence: metrics, spans,
 logs, topology, temporal order, or deployment events.
 
 P3. EVENT TIME IS FIRST-CLASS
-The system must distinguish when an event occurred from when TraceAtlas
+The system must distinguish when an event occurred from when Faultline
 received it.
 
 P4. LATE DATA MUST CHANGE THE STORY
-When delayed telemetry arrives, TraceAtlas should either revise the active
+When delayed telemetry arrives, Faultline should either revise the active
 incident model or visibly explain why the event was too late to affect it.
 
 P5. COMPLETENESS OVER BUZZWORDS
@@ -236,7 +236,7 @@ Canonical demo incident:
 A new recommendation-service version is deployed. A cache-related defect causes
 memory growth and garbage-collection pauses. Recommendation spans become slower.
 Checkout requests that depend on recommendation become slower. Frontend errors
-increase. Some telemetry arrives late. TraceAtlas reconstructs and explains the
+increase. Some telemetry arrives late. Faultline reconstructs and explains the
 propagation.
 
 Demo sequence:
@@ -301,7 +301,7 @@ and physical plan.
 US-12: Observe per-operator rows, batches, state size, processing time, and
 backpressure.
 
-US-13: Intentionally crash TraceAtlas and observe state recovery.
+US-13: Intentionally crash Faultline and observe state recovery.
 
 US-14: Run a command that reproduces all published accuracy and performance
 results.
@@ -356,7 +356,7 @@ COULD HAVE:
 - Collaborative incident annotations
 - Custom alert/query editor
 - Multi-user sessions
-- Distributed TraceAtlas workers
+- Distributed Faultline workers
 
 EXPLICIT NON-GOALS FOR VERSION 1:
 
@@ -422,7 +422,7 @@ sqlparser-rs
 
 IMPORTANT:
 Use sqlparser-rs for syntax parsing only. Do not use DataFusion as the complete
-query executor. TraceAtlas must own its logical plan, physical plan, streaming
+query executor. Faultline must own its logical plan, physical plan, streaming
 operators, window state, watermark semantics, and metrics. DataFusion may be
 used as architectural reference and as a target for an external contribution.
 
@@ -463,7 +463,7 @@ Recommended deployment shape:
             |
             v
 +------------------------+
-| traceatlas-replay      |
+| faultline-replay      |
 | - dataset adapters     |
 | - event-time clock     |
 | - disorder injection  |
@@ -472,7 +472,7 @@ Recommended deployment shape:
             |
             v
 +------------------------+
-| traceatlasd            |
+| faultlined            |
 |                        |
 | Ingestion              |
 |  -> Reorder/Watermark  |
@@ -489,7 +489,7 @@ Recommended deployment shape:
             |
             v
 +------------------------+
-| traceatlas-web         |
+| faultline-web         |
 | - topology             |
 | - timeline             |
 | - heatmap              |
@@ -498,30 +498,30 @@ Recommended deployment shape:
 | - query inspector      |
 +------------------------+
 
-Do not split traceatlasd into separately deployed microservices. Internal Rust
+Do not split faultlined into separately deployed microservices. Internal Rust
 crates provide clean ownership without creating unnecessary network failure
 modes.
 
 Primary binaries:
 
-1. traceatlasd
+1. faultlined
    Runs ingestion, streaming execution, inference, storage, and API.
 
-2. traceatlas-replay
+2. faultline-replay
    Reads normalized incidents and emits events according to a replay clock.
 
-3. traceatlas-cli
+3. faultline-cli
    Dataset conversion, evaluation, checkpoint inspection, query validation, and
    benchmark commands.
 
-4. traceatlas-web
+4. faultline-web
    Browser client.
 
 ===============================================================================
 10. REPOSITORY STRUCTURE
 ===============================================================================
 
-traceatlas/
+faultline/
 |
 |-- README.md
 |-- ARCHITECTURE.md
@@ -643,8 +643,8 @@ traceatlas/
 |       `-- inspect.rs
 |
 |-- apps/
-|   |-- traceatlasd/src/main.rs
-|   `-- traceatlas-replay/src/main.rs
+|   |-- faultlined/src/main.rs
+|   `-- faultline-replay/src/main.rs
 |
 |-- web/
 |   |-- package.json
@@ -668,7 +668,7 @@ traceatlas/
 |
 |-- python/
 |   |-- pyproject.toml
-|   |-- traceatlas_data/
+|   |-- faultline_data/
 |   |   |-- adapters/
 |   |   |   |-- rcaeval.py
 |   |   |   |-- petshop.py
@@ -770,7 +770,7 @@ Generated run metadata must record:
 - Ground-truth fault type
 - Expected affected services
 - Collection duration
-- TraceAtlas converter version
+- Faultline converter version
 
 OPTIONAL METRICS-ONLY BASELINE:
 Amazon PetShop dataset
@@ -908,7 +908,7 @@ observed_time:
 When the telemetry collector observed it, if known.
 
 ingest_time:
-When traceatlasd accepted it.
+When faultlined accepted it.
 
 processing_time:
 The current backend clock during execution; do not store as source truth.
@@ -2034,10 +2034,10 @@ actually supports it. A safer claim is "checkpoint recovery with idempotent
 incident projections."
 
 ===============================================================================
-24. OBSERVABILITY OF TRACEATLAS
+24. OBSERVABILITY OF FAULTLINE
 ===============================================================================
 
-TraceAtlas must observe itself.
+Faultline must observe itself.
 
 Backend metrics:
 
@@ -2067,7 +2067,7 @@ Expose metrics through:
 - Structured logs
 - Optional Prometheus endpoint
 
-Do not make Grafana the main UI. TraceAtlas itself is the product.
+Do not make Grafana the main UI. Faultline itself is the product.
 
 ===============================================================================
 25. TESTING STRATEGY
@@ -2151,7 +2151,7 @@ Commit small fixtures for:
 25.4 INTEGRATION TESTS
 
 - Convert a small RCAEval fixture
-- Replay it through traceatlasd
+- Replay it through faultlined
 - Open incident
 - Produce topology and heatmap projections
 - Rank labeled service
@@ -2712,7 +2712,7 @@ Architecture changes require an ADR when changing:
 
 Agent prompt template:
 
-"You are implementing ticket <ID> for TraceAtlas. Read the project
+"You are implementing ticket <ID> for Faultline. Read the project
 specification, relevant ADRs, and dependency tickets. Preserve canonical
 schemas and protocols. Implement the smallest complete solution, add unit and
 integration tests, document assumptions, and do not add unrelated
@@ -2726,15 +2726,15 @@ follow-up work."
 Desired first-run experience:
 
 git clone <repo>
-cd traceatlas
+cd faultline
 make bootstrap
 make data-demo
 make demo
 
 make demo should:
 
-1. Start traceatlasd
-2. Start traceatlas-replay with the canonical incident
+1. Start faultlined
+2. Start faultline-replay with the canonical incident
 3. Start the web app
 4. Print the local URL
 5. Verify health endpoints
@@ -2864,11 +2864,11 @@ Demo video target flow:
 
 Preferred project title:
 
-TraceAtlas: Interactive Cloud Incident Replay Engine
+Faultline: Interactive Cloud Incident Replay Engine
 
 Alternative title emphasizing data systems:
 
-TraceAtlas: Vectorized Streaming Engine for Cloud Incident Analysis
+Faultline: Vectorized Streaming Engine for Cloud Incident Analysis
 
 Preferred technologies to list only after they are truly used:
 
@@ -2957,7 +2957,7 @@ Explain how global selection and versioned projections prevent views from
 showing inconsistent incident states.
 
 Story 8: Scope control
-Explain why TraceAtlas is not a full Datadog or Spark clone and how limiting
+Explain why Faultline is not a full Datadog or Spark clone and how limiting
 the query language enabled a complete, demonstrable system.
 
 ===============================================================================
@@ -3054,7 +3054,7 @@ Do not start a stretch goal until core acceptance criteria pass.
 39. DEFINITION OF DONE
 ===============================================================================
 
-TraceAtlas is portfolio-ready only when all of the following are true:
+Faultline is portfolio-ready only when all of the following are true:
 
 PRODUCT:
 - A real incident replays from healthy behavior through failure and recovery.
@@ -3175,7 +3175,7 @@ Before implementation, agents must verify:
 42. FINAL PROJECT THESIS
 ===============================================================================
 
-TraceAtlas should communicate one coherent thesis:
+Faultline should communicate one coherent thesis:
 
 "Distributed incidents are difficult because evidence is fragmented across
 time, services, and telemetry types. I built a streaming engine that reconstructs

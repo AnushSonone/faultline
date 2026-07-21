@@ -1,7 +1,7 @@
-# TraceAtlas
+# Faultline
 
 Interactive Incident Replay and Root-Cause Visualization.
 
-Local-only scaffold. GitHub remote will be added when the repo is created.
+GitHub: https://github.com/AnushSonone/faultline
 
-See `TraceAtlas_Agent_Project_Specification.txt` for the full agent implementation contract.
+See `Faultline_Agent_Project_Specification.txt` for the full agent implementation contract.
