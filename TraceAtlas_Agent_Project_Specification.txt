@@ -1,0 +1,3197 @@
+TRACEATLAS
+Interactive Incident Replay and Root-Cause Visualization
+Agent-Ready Project Specification
+
+Document date: July 21, 2026
+Primary target: Summer 2027 Software Engineering internships
+Owner: Anush Sonone
+
+===============================================================================
+0. HOW TO USE THIS FILE
+===============================================================================
+
+This document is the implementation contract for TraceAtlas. Give it to coding
+agents before they create files, choose libraries, or change architecture.
+
+Every agent should:
+
+1. Read Sections 1 through 12 before writing code.
+2. Read the section for its assigned subsystem.
+3. Preserve the canonical schemas and API contracts unless an Architecture
+   Decision Record (ADR) explicitly changes them.
+4. Implement the smallest complete vertical slice before adding breadth.
+5. Add tests, documentation, and measurable acceptance criteria with each
+   feature.
+6. Never invent benchmark numbers, accuracy numbers, dataset properties, or
+   production-scale claims.
+7. Never hard-code mock data after the real replay pipeline is available.
+8. Keep the core product independent from KillMyCluster.
+9. Treat KillMyCluster only as an optional future telemetry source.
+10. Prefer a complete, explainable system over a broad but unfinished clone of
+    Datadog, Spark, Flink, Jaeger, or Grafana.
+
+The intended final output is not merely a dashboard. It is a working streaming
+systems project with:
+
+- Multi-source telemetry ingestion
+- Event-time processing
+- Out-of-order and late-event handling
+- Stateful windowed computation
+- Limited streaming SQL planning and execution
+- Columnar/vectorized batches
+- Incremental service-graph construction
+- Evidence-based root-cause ranking
+- Checkpoint and recovery behavior
+- Synchronized, interactive visual investigation
+- Reproducible evaluation on labeled incidents
+- A polished public demo and technical write-up
+
+===============================================================================
+1. EXECUTIVE SUMMARY
+===============================================================================
+
+TraceAtlas is an interactive visual debugger for distributed cloud systems.
+
+It ingests metrics, logs, distributed traces, and deployment/configuration
+events. It converts them into a synchronized model of system behavior and lets
+a user replay an incident as it unfolded.
+
+The user should be able to:
+
+- Watch requests propagate through a service topology
+- Scrub backward and forward through incident time
+- See which services became anomalous first
+- Compare healthy and failed distributed traces
+- Inspect a ranked list of likely root causes
+- Click each root-cause candidate to see supporting and contradicting evidence
+- Observe conclusions update when late telemetry arrives
+- Crash and restart TraceAtlas without losing the active investigation
+- Inspect the logical and physical plan of the streaming queries powering the
+  visualizations
+
+The project must be useful even if KillMyCluster does not exist. Its primary
+datasets and demo environment are independent microservice systems.
+
+KillMyCluster may be mentioned in interviews only as inspiration:
+
+"Building a failure-oriented distributed system made me interested in how
+production engineers understand failures across many services. I then built
+TraceAtlas as an independent incident-replay and root-cause visualization
+engine using public microservice incident datasets and OpenTelemetry."
+
+===============================================================================
+2. PRODUCT IDENTITY
+===============================================================================
+
+Project name:
+TraceAtlas
+
+Subtitle:
+Interactive Incident Replay and Root-Cause Visualization
+
+One-sentence pitch:
+TraceAtlas turns metrics, logs, traces, and deployment events into a synchronized
+visual replay of a cloud incident, then ranks likely root causes and exposes the
+evidence behind each inference.
+
+Recruiter-friendly pitch:
+A visual cloud-debugging platform that replays failures across microservices and
+shows how latency and errors propagate through a system.
+
+Engineer-friendly pitch:
+A Rust streaming runtime with event-time windows, stateful joins, columnar
+execution, checkpoint recovery, and graph-based root-cause ranking, exposed
+through a synchronized React visualization interface.
+
+Primary user:
+A software engineer, platform engineer, or site reliability engineer trying to
+understand a distributed-system incident.
+
+Primary user problem:
+Raw logs and dashboards force humans to mentally reconstruct timing, topology,
+causality, and request propagation. TraceAtlas creates one synchronized visual
+model instead.
+
+Core differentiators:
+
+1. Time synchronization across every view
+2. Visual incident replay, not static dashboards
+3. Evidence-ranked root-cause inference, not an opaque AI answer
+4. Streaming correctness under delayed and out-of-order telemetry
+5. Query-engine internals exposed through a visual execution-plan inspector
+6. Reproducible evaluation using labeled incident datasets
+
+===============================================================================
+3. WHY THIS PROJECT IS HIGH-VALUE FOR THE OWNER'S RESUME
+===============================================================================
+
+The owner's current resume already demonstrates:
+
+- AI evaluation and tool-call replay
+- Redis Streams, retries, and dead-letter queues
+- Postgres and S3 append-only stores
+- IAM and authorization systems
+- A Raft-based key-value store
+- Product ownership and measurable business impact
+
+TraceAtlas should add new evidence rather than repeat those same signals.
+
+New signals created by TraceAtlas:
+
+- Query planning and execution
+- Columnar/vectorized data processing
+- Event-time stream processing
+- Multi-modal telemetry data modeling
+- Interactive data visualization
+- Graph algorithms
+- Root-cause inference and evaluation
+- Fault-tolerant state restoration
+- Performance benchmarking
+- Open-source/public dataset engineering
+
+Company alignment:
+
+Google/general infrastructure:
+- Distributed systems
+- Concurrency and asynchronous processing
+- Correctness under failure
+- Performance and debugging
+- Clear ownership of a hard technical system
+
+Databricks/data infrastructure:
+- Streaming queries
+- Stateful operators
+- Columnar processing
+- Logical and physical plans
+- Query performance
+- Data-quality and event-time semantics
+
+OpenAI/AI infrastructure:
+- Failure detection
+- Tracing and observability
+- High-throughput ingestion
+- Performance bottleneck identification
+- Actionable visibility into distributed-system behavior
+
+Do not market TraceAtlas as "AI observability" unless a meaningful model is
+actually implemented and evaluated. The stronger initial story is systems,
+data, inference, and visualization.
+
+===============================================================================
+4. PRODUCT PRINCIPLES
+===============================================================================
+
+P1. VISUALIZATION IS THE PRODUCT
+The UI is not a decorative dashboard added after the backend. The core product
+is a synchronized visual explanation of system behavior.
+
+P2. EVERY INFERENCE MUST BE AUDITABLE
+A root-cause score must link to concrete supporting evidence: metrics, spans,
+logs, topology, temporal order, or deployment events.
+
+P3. EVENT TIME IS FIRST-CLASS
+The system must distinguish when an event occurred from when TraceAtlas
+received it.
+
+P4. LATE DATA MUST CHANGE THE STORY
+When delayed telemetry arrives, TraceAtlas should either revise the active
+incident model or visibly explain why the event was too late to affect it.
+
+P5. COMPLETENESS OVER BUZZWORDS
+A small, correct streaming runtime is more valuable than an unfinished clone of
+Spark or Flink.
+
+P6. DETERMINISM
+Given the same dataset, replay seed, query definitions, and configuration, the
+backend must produce the same ordered projections and inference results.
+
+P7. NO BLACK-BOX LLM ROOT CAUSE
+Do not use an LLM as the primary inference mechanism. An LLM may summarize
+already-computed evidence only after the deterministic core works.
+
+P8. REAL DATA BEFORE SCALE CLAIMS
+All displayed incidents must come from a documented public dataset or a
+reproducibly generated fault scenario.
+
+P9. ONE CLICK, ALL VIEWS
+Selecting a service, trace, time range, deployment, or root-cause candidate must
+update every relevant visualization.
+
+P10. NO UNSUPPORTED RESUME METRICS
+Every number placed on the resume must be produced by a committed benchmark or
+evaluation script and documented in RESULTS.md.
+
+===============================================================================
+5. PRIMARY USE CASE AND DEMO INCIDENT
+===============================================================================
+
+Use case:
+An engineer investigates why checkout latency and errors increased after a
+software deployment in a microservice application.
+
+Recommended demo environment:
+The OpenTelemetry Demo or a replayed RCAEval incident.
+
+Canonical demo incident:
+A new recommendation-service version is deployed. A cache-related defect causes
+memory growth and garbage-collection pauses. Recommendation spans become slower.
+Checkout requests that depend on recommendation become slower. Frontend errors
+increase. Some telemetry arrives late. TraceAtlas reconstructs and explains the
+propagation.
+
+Demo sequence:
+
+1. The service graph is healthy.
+2. A deployment marker appears on the timeline.
+3. Recommendation-service memory begins rising.
+4. Recommendation-service anomaly cells appear first in the heatmap.
+5. Trace particles on affected request paths slow down.
+6. Checkout p99 latency crosses an SLO.
+7. Root-cause ranking updates:
+   - recommendation-service: high confidence
+   - checkout-service: lower confidence
+   - database: lower confidence
+8. The user clicks recommendation-service.
+9. Every view filters to supporting evidence.
+10. A delayed log event arrives and increases confidence.
+11. The causal evidence graph adds:
+    deployment -> memory growth -> GC pause -> span latency -> checkout SLO
+12. The user compares a healthy and failed trace.
+13. The backend is intentionally terminated.
+14. The backend restarts from a checkpoint.
+15. The active incident, timeline position, stateful windows, and emitted alert
+    identities are restored.
+16. No duplicate incident alert is emitted.
+17. The user opens the query-plan inspector and sees the operators powering the
+    p99 latency and anomaly heatmap.
+
+This scenario is the north star. A feature that does not improve this demo or
+the underlying technical evidence should be considered lower priority.
+
+===============================================================================
+6. USER STORIES
+===============================================================================
+
+US-01: Load a labeled incident and replay it at 0.5x, 1x, 5x, 10x, or maximum
+speed.
+
+US-02: Pause and scrub to any point in event time.
+
+US-03: See the service dependency graph as it existed at the selected time.
+
+US-04: See traffic, latency, error, and anomaly information encoded on nodes
+and edges.
+
+US-05: Select a service and inspect only traces, logs, metrics, changes, and
+evidence related to it.
+
+US-06: Compare one failed trace against a similar healthy trace.
+
+US-07: See which service became anomalous first.
+
+US-08: See a ranked root-cause list with score breakdowns.
+
+US-09: Click a score component and inspect the raw evidence that produced it.
+
+US-10: See when an inference was revised because late telemetry arrived.
+
+US-11: Write or select a limited streaming SQL query and inspect its logical
+and physical plan.
+
+US-12: Observe per-operator rows, batches, state size, processing time, and
+backpressure.
+
+US-13: Intentionally crash TraceAtlas and observe state recovery.
+
+US-14: Run a command that reproduces all published accuracy and performance
+results.
+
+US-15: Add a new incident dataset through a documented adapter interface.
+
+===============================================================================
+7. SCOPE
+===============================================================================
+
+MUST HAVE FOR A STRONG FINAL PROJECT:
+
+- RCAEval adapter for at least one system and multiple incidents
+- Deterministic incident replay
+- Canonical multi-source telemetry schema
+- Animated service topology
+- Incident timeline with scrubber
+- Service-by-time anomaly heatmap
+- Trace waterfall
+- Healthy-versus-failed trace comparison
+- Root-cause ranking with score decomposition
+- Evidence graph
+- Event-time windows
+- Watermarks and late-event handling
+- At least one stateful temporal join
+- Arrow RecordBatch-based operator execution
+- Backpressure through bounded queues
+- Checkpoint and restart recovery
+- Limited query planner/executor
+- Query-plan inspector
+- Top-1, top-3, MRR, detection-time, throughput, latency, and recovery evaluation
+- Public README, architecture document, demo video, and reproducible scripts
+
+SHOULD HAVE:
+
+- OpenTelemetry Demo live or recorded ingestion
+- Deployment/configuration events
+- Incident comparison page
+- Offline incident clustering visualization
+- Custom incident generation scripts
+- At least one meaningful external contribution or issue/PR discovered through
+  building the project
+- Hosted frontend demo with replayed sample data
+- Benchmark dashboard generated from committed result files
+
+COULD HAVE:
+
+- Live OTLP ingestion
+- GPU-serving incident dataset support
+- Natural-language evidence summary
+- Counterfactual visualization
+- Collaborative incident annotations
+- Custom alert/query editor
+- Multi-user sessions
+- Distributed TraceAtlas workers
+
+EXPLICIT NON-GOALS FOR VERSION 1:
+
+- Recreating all of Spark, Flink, Datadog, Grafana, Jaeger, or ClickHouse
+- Building a general-purpose production observability vendor
+- Training a large deep-learning model
+- Supporting every SQL feature
+- Building a distributed control plane
+- Kubernetes-first deployment
+- Multi-cloud connectors
+- PagerDuty, Slack, or ticketing integrations
+- Automated remediation
+- Full OpenTelemetry semantic-convention coverage
+- Arbitrary unbounded graph size
+- 3D visualization
+- An LLM agent that guesses a root cause from raw text
+
+===============================================================================
+8. TECHNICAL STACK
+===============================================================================
+
+BACKEND LANGUAGE:
+Rust
+
+Why:
+- Strong systems signal
+- Memory safety
+- Async runtime ecosystem
+- Good Arrow support
+- Suitable for streaming operators, state machines, and performance work
+- Adds breadth beyond the owner's existing Go and Python projects
+
+FRONTEND:
+TypeScript + React
+
+BUILD TOOL:
+Vite or an equivalent lightweight React build setup
+
+GRAPH VISUALIZATION:
+Cytoscape.js for the initial service topology and evidence graph
+
+CUSTOM VISUALIZATION:
+D3 primitives for scales, axes, brushing, heatmaps, timelines, and trace
+waterfalls
+
+BACKEND HTTP/WEBSOCKET:
+Axum
+
+ASYNC RUNTIME:
+Tokio
+
+SERIALIZATION:
+Serde
+
+COLUMNAR DATA:
+Apache Arrow RecordBatch through arrow-rs
+
+ARCHIVAL FORMAT:
+Apache Parquet
+
+SQL PARSING:
+sqlparser-rs
+
+IMPORTANT:
+Use sqlparser-rs for syntax parsing only. Do not use DataFusion as the complete
+query executor. TraceAtlas must own its logical plan, physical plan, streaming
+operators, window state, watermark semantics, and metrics. DataFusion may be
+used as architectural reference and as a target for an external contribution.
+
+LOCAL METADATA:
+SQLite is acceptable for incident catalogs, user annotations, query metadata,
+and benchmark indexes.
+
+STREAMING STATE:
+Start with in-memory operator state plus versioned checkpoint files. Use atomic
+file replacement and checksums. RocksDB may be introduced later only if state
+size or random access justifies it.
+
+OFFLINE DATA PREPARATION AND EVALUATION:
+Python + PyArrow + pandas/polars + scikit-learn as needed
+
+FRONTEND TESTING:
+Vitest and Playwright
+
+BACKEND TESTING:
+Rust unit/integration tests plus property-based tests
+
+CONTAINERIZATION:
+Docker Compose for the final local demo
+
+DO NOT ADD BY DEFAULT:
+Kafka, Kubernetes, Terraform, Redis, Postgres, Elasticsearch, or a cloud vendor.
+Adding infrastructure merely to list it on the resume will dilute the project.
+
+===============================================================================
+9. HIGH-LEVEL ARCHITECTURE
+===============================================================================
+
+Recommended deployment shape:
+
++------------------------+
+| Dataset / OTel Source  |
++-----------+------------+
+            |
+            v
++------------------------+
+| traceatlas-replay      |
+| - dataset adapters     |
+| - event-time clock     |
+| - disorder injection  |
+| - replay controls      |
++-----------+------------+
+            |
+            v
++------------------------+
+| traceatlasd            |
+|                        |
+| Ingestion              |
+|  -> Reorder/Watermark  |
+|  -> Arrow Batcher      |
+|  -> Query Planner      |
+|  -> Operator DAG       |
+|  -> State Store        |
+|  -> Inference Engine   |
+|  -> Projection Engine  |
+|  -> Checkpoint Coord.  |
+|                        |
+| REST + WebSocket API   |
++-----------+------------+
+            |
+            v
++------------------------+
+| traceatlas-web         |
+| - topology             |
+| - timeline             |
+| - heatmap              |
+| - trace compare        |
+| - evidence graph       |
+| - query inspector      |
++------------------------+
+
+Do not split traceatlasd into separately deployed microservices. Internal Rust
+crates provide clean ownership without creating unnecessary network failure
+modes.
+
+Primary binaries:
+
+1. traceatlasd
+   Runs ingestion, streaming execution, inference, storage, and API.
+
+2. traceatlas-replay
+   Reads normalized incidents and emits events according to a replay clock.
+
+3. traceatlas-cli
+   Dataset conversion, evaluation, checkpoint inspection, query validation, and
+   benchmark commands.
+
+4. traceatlas-web
+   Browser client.
+
+===============================================================================
+10. REPOSITORY STRUCTURE
+===============================================================================
+
+traceatlas/
+|
+|-- README.md
+|-- ARCHITECTURE.md
+|-- ROADMAP.md
+|-- RESULTS.md
+|-- CONTRIBUTING.md
+|-- LICENSE
+|-- Makefile
+|-- Cargo.toml
+|-- rust-toolchain.toml
+|-- docker-compose.yml
+|-- .env.example
+|
+|-- docs/
+|   |-- product/
+|   |   |-- vision.md
+|   |   |-- demo-script.md
+|   |   |-- visual-language.md
+|   |   `-- user-flows.md
+|   |-- architecture/
+|   |   |-- data-flow.md
+|   |   |-- streaming-semantics.md
+|   |   |-- checkpointing.md
+|   |   |-- inference.md
+|   |   |-- visualization-contracts.md
+|   |   `-- query-engine.md
+|   |-- adr/
+|   |   |-- 0001-rust-backend.md
+|   |   |-- 0002-arrow-record-batches.md
+|   |   |-- 0003-event-time-model.md
+|   |   |-- 0004-single-process-backend.md
+|   |   `-- README.md
+|   `-- references/
+|       `-- datasets-and-papers.md
+|
+|-- crates/
+|   |-- common/src/
+|   |   |-- event.rs
+|   |   |-- ids.rs
+|   |   |-- time.rs
+|   |   |-- error.rs
+|   |   `-- config.rs
+|   |-- catalog/src/
+|   |   |-- incident.rs
+|   |   |-- dataset.rs
+|   |   |-- query.rs
+|   |   `-- sqlite.rs
+|   |-- ingest/src/
+|   |   |-- source.rs
+|   |   |-- reorder.rs
+|   |   |-- watermark.rs
+|   |   |-- dedupe.rs
+|   |   `-- batcher.rs
+|   |-- planner/src/
+|   |   |-- ast.rs
+|   |   |-- logical.rs
+|   |   |-- physical.rs
+|   |   |-- optimizer.rs
+|   |   |-- schema.rs
+|   |   `-- explain.rs
+|   |-- engine/src/
+|   |   |-- runtime.rs
+|   |   |-- operator.rs
+|   |   |-- metrics.rs
+|   |   |-- scheduler.rs
+|   |   |-- channel.rs
+|   |   `-- operators/
+|   |       |-- source.rs
+|   |       |-- filter.rs
+|   |       |-- project.rs
+|   |       |-- aggregate.rs
+|   |       |-- window.rs
+|   |       |-- temporal_join.rs
+|   |       |-- percentile.rs
+|   |       `-- sink.rs
+|   |-- state/src/
+|   |   |-- backend.rs
+|   |   |-- memory.rs
+|   |   |-- snapshot.rs
+|   |   |-- manifest.rs
+|   |   |-- checksum.rs
+|   |   `-- recovery.rs
+|   |-- graph/src/
+|   |   |-- service_graph.rs
+|   |   |-- trace_graph.rs
+|   |   |-- critical_path.rs
+|   |   `-- propagation.rs
+|   |-- inference/src/
+|   |   |-- baseline.rs
+|   |   |-- anomaly.rs
+|   |   |-- features.rs
+|   |   |-- ranking.rs
+|   |   |-- evidence.rs
+|   |   |-- incident.rs
+|   |   `-- calibration.rs
+|   |-- projection/src/
+|   |   |-- topology.rs
+|   |   |-- timeline.rs
+|   |   |-- heatmap.rs
+|   |   |-- trace.rs
+|   |   |-- evidence.rs
+|   |   `-- protocol.rs
+|   |-- api/src/
+|   |   |-- routes.rs
+|   |   |-- websocket.rs
+|   |   |-- sessions.rs
+|   |   `-- dto.rs
+|   |-- replay/src/
+|   |   |-- clock.rs
+|   |   |-- manifest.rs
+|   |   |-- reader.rs
+|   |   |-- disorder.rs
+|   |   `-- controls.rs
+|   `-- cli/src/
+|       |-- main.rs
+|       |-- convert.rs
+|       |-- evaluate.rs
+|       |-- benchmark.rs
+|       `-- inspect.rs
+|
+|-- apps/
+|   |-- traceatlasd/src/main.rs
+|   `-- traceatlas-replay/src/main.rs
+|
+|-- web/
+|   |-- package.json
+|   |-- src/
+|   |   |-- app/
+|   |   |-- api/
+|   |   |-- state/
+|   |   |-- types/
+|   |   |-- components/
+|   |   |-- views/
+|   |   |   |-- ServiceMap/
+|   |   |   |-- IncidentTimeline/
+|   |   |   |-- AnomalyHeatmap/
+|   |   |   |-- TraceWaterfall/
+|   |   |   |-- TraceComparison/
+|   |   |   |-- EvidenceGraph/
+|   |   |   |-- RootCausePanel/
+|   |   |   `-- QueryInspector/
+|   |   `-- workers/
+|   `-- tests/
+|
+|-- python/
+|   |-- pyproject.toml
+|   |-- traceatlas_data/
+|   |   |-- adapters/
+|   |   |   |-- rcaeval.py
+|   |   |   |-- petshop.py
+|   |   |   `-- otel_demo.py
+|   |   |-- normalize.py
+|   |   |-- validate.py
+|   |   |-- features.py
+|   |   |-- clustering.py
+|   |   `-- evaluation.py
+|   `-- tests/
+|
+|-- datasets/
+|   |-- README.md
+|   |-- manifests/
+|   |-- normalized/
+|   `-- .gitignore
+|
+|-- scenarios/
+|   |-- demo-memory-leak.yaml
+|   |-- demo-network-delay.yaml
+|   |-- demo-cpu-saturation.yaml
+|   `-- schema.json
+|
+|-- queries/
+|   |-- service-latency.sql
+|   |-- service-errors.sql
+|   |-- failed-trace-coverage.sql
+|   |-- deployment-correlation.sql
+|   |-- anomaly-heatmap.sql
+|   `-- active-incidents.sql
+|
+|-- benchmarks/
+|   |-- configs/
+|   |-- baselines/
+|   |-- results/
+|   |-- plots/
+|   `-- README.md
+|
+|-- scripts/
+|   |-- bootstrap.sh
+|   |-- download-data.sh
+|   |-- prepare-demo.sh
+|   |-- run-demo.sh
+|   |-- run-evaluation.sh
+|   |-- run-benchmarks.sh
+|   `-- verify-results.sh
+|
+`-- .github/workflows/
+    |-- rust.yml
+    |-- web.yml
+    |-- python.yml
+    `-- integration.yml
+
+===============================================================================
+11. DATASET STRATEGY
+===============================================================================
+
+PRIMARY BENCHMARK:
+RCAEval
+
+Use RCAEval because it provides labeled failure cases across microservice
+systems and includes multi-source telemetry. Pin a specific dataset release or
+commit in datasets/manifests/rcaeval.yaml.
+
+Do not begin by supporting every RCAEval dataset. Begin with one system and a
+small set of incidents representing at least three fault types.
+
+Recommended progression:
+
+Phase A:
+- One healthy period
+- One memory-related incident
+- One CPU/resource incident
+- One network/delay incident
+
+Phase B:
+- Twenty or more incidents from one system
+- Train/validation/test split by incident
+
+Phase C:
+- Multiple systems
+- Cross-system generalization evaluation
+
+LIVE/GENERATED DATA:
+OpenTelemetry Demo
+
+Use the OpenTelemetry Demo to create visually compelling incident recordings.
+Use feature flags or documented scenarios to induce reproducible faults.
+
+Generated run metadata must record:
+
+- Git commit of the demo
+- Container image versions
+- Scenario configuration
+- Fault start and end times
+- Load-generator configuration
+- Random seed
+- Ground-truth root-cause service
+- Ground-truth fault type
+- Expected affected services
+- Collection duration
+- TraceAtlas converter version
+
+OPTIONAL METRICS-ONLY BASELINE:
+Amazon PetShop dataset
+
+Use only as an additional baseline or a simple early pipeline test. It is less
+suitable than RCAEval for the final multi-source visual experience because its
+main strength is labeled performance-issue metrics.
+
+OPTIONAL SCALE DATA:
+Google or Alibaba public cluster traces
+
+Use only after the core project works. These traces may not contain clean RCA
+labels. Their purpose is ingestion and aggregation benchmarking, not primary
+root-cause accuracy.
+
+DATASET RULES:
+
+1. Never commit large raw datasets to Git.
+2. Commit manifests, checksums, download scripts, licenses, and small fixtures.
+3. Record exact source versions.
+4. Validate timestamps, service names, missing values, and label consistency.
+5. Split by entire incident, never by individual event.
+6. Prevent healthy and incident slices from the same run from leaking across
+   training and evaluation sets.
+7. Keep the first scoring method train-free when possible.
+8. If weights are tuned, tune only on the training split.
+9. Publish exact evaluation splits.
+10. Include dataset license notes.
+
+===============================================================================
+12. CANONICAL TELEMETRY MODEL
+===============================================================================
+
+All source-specific data must be normalized into a common envelope.
+
+TelemetryEnvelope {
+    schema_version: u16,
+    event_id: EventId,
+    event_time_ns: i64,
+    observed_time_ns: i64,
+    ingest_time_ns: i64,
+    source_id: String,
+    dataset_id: String,
+    incident_id: Option<String>,
+    environment: String,
+    service: Option<String>,
+    service_instance: Option<String>,
+    host: Option<String>,
+    region: Option<String>,
+    signal: TelemetrySignal,
+    attributes: Map<String, Value>,
+    payload: TelemetryPayload,
+}
+
+TelemetrySignal enum:
+
+- Metric
+- Span
+- Log
+- Deployment
+- Configuration
+- Alert
+- Annotation
+- Control
+
+Metric payload:
+
+MetricPoint {
+    name: String,
+    kind: Gauge | Counter | HistogramSample,
+    value: f64,
+    unit: Option<String>,
+}
+
+Span payload:
+
+SpanEvent {
+    trace_id: String,
+    span_id: String,
+    parent_span_id: Option<String>,
+    operation: String,
+    start_time_ns: i64,
+    end_time_ns: i64,
+    duration_ns: i64,
+    status: Unset | Ok | Error,
+    peer_service: Option<String>,
+    span_kind: Internal | Server | Client | Producer | Consumer,
+}
+
+Log payload:
+
+LogEvent {
+    severity_number: Option<u8>,
+    severity_text: Option<String>,
+    body: String,
+    template_id: Option<String>,
+    trace_id: Option<String>,
+    span_id: Option<String>,
+}
+
+Deployment payload:
+
+ChangeEvent {
+    change_id: String,
+    change_type: Deployment | Config | FeatureFlag | Rollback,
+    version_before: Option<String>,
+    version_after: Option<String>,
+    actor: Option<String>,
+    metadata: Map<String, Value>,
+}
+
+Control payload:
+
+ReplayControl {
+    kind: IncidentStart | IncidentEnd | WatermarkHint | CheckpointRequest,
+    metadata: Map<String, Value>,
+}
+
+IDENTITY RULES:
+
+- event_id must be deterministic for replayed datasets.
+- event_id should be a hash of stable source fields plus dataset version.
+- trace_id and span_id must remain source-accurate when available.
+- service names must pass through a dataset-specific canonicalization table.
+- unknown service values must not silently become "other".
+- schema_version changes require migration code or a documented compatibility
+  break.
+
+TIME RULES:
+
+event_time:
+When the event happened in the observed system.
+
+observed_time:
+When the telemetry collector observed it, if known.
+
+ingest_time:
+When traceatlasd accepted it.
+
+processing_time:
+The current backend clock during execution; do not store as source truth.
+
+===============================================================================
+13. NORMALIZED STORAGE LAYOUT
+===============================================================================
+
+Store normalized events as Parquet partitions:
+
+datasets/normalized/
+  <dataset_id>/
+    <dataset_version>/
+      <incident_id>/
+        metrics/part-00000.parquet
+        spans/part-00000.parquet
+        logs/part-00000.parquet
+        changes/part-00000.parquet
+        manifest.json
+        labels.json
+
+manifest.json should include:
+
+- schema_version
+- dataset_id
+- dataset_version
+- incident_id
+- system
+- start_time_ns
+- end_time_ns
+- signal list
+- event counts
+- file paths
+- row counts
+- checksums
+
+labels.json should include:
+
+- root_cause_services
+- root_cause_indicators
+- fault_type
+- fault_start_time_ns
+- fault_end_time_ns
+- expected_downstream_services
+- notes
+
+===============================================================================
+14. REPLAY SYSTEM
+===============================================================================
+
+The replay service turns static normalized datasets into live event streams.
+
+Required controls:
+
+- Load incident
+- Start
+- Pause
+- Resume
+- Seek
+- Stop
+- Set speed
+- Reset
+- Inject disorder
+- Inject duplicates
+- Inject drops
+- Inject a backend crash request
+- Request checkpoint
+
+Supported replay speeds:
+
+- 0.5x
+- 1x
+- 2x
+- 5x
+- 10x
+- 50x
+- max-throughput
+
+Replay modes:
+
+1. Faithful
+   Preserve source event order based on event_time with documented tie-breaking.
+
+2. Observed
+   Preserve observed/arrival order if the source provides it.
+
+3. Adversarial
+   Add deterministic delays, disorder, duplicates, and bursts.
+
+4. Benchmark
+   Ignore wall-clock pacing and emit as fast as allowed.
+
+DisorderConfig {
+    seed: u64,
+    max_delay_ms: u64,
+    late_event_probability: f64,
+    duplicate_probability: f64,
+    drop_probability: f64,
+    burst_size: usize,
+    burst_interval_ms: u64,
+}
+
+Rules:
+
+- All random behavior must be seeded.
+- The replay manifest must record the disorder configuration.
+- Seeking must reset or restore engine state consistently.
+- A seek cannot silently retain state from a later time.
+- Replay control messages are part of the deterministic event log.
+
+===============================================================================
+15. STREAMING ENGINE
+===============================================================================
+
+The engine is the technical center of the project.
+
+15.1 INGESTION
+
+Responsibilities:
+
+- Validate schema version
+- Assign ingest sequence number
+- Deduplicate by event_id
+- Route by signal and partition key
+- Apply bounded buffering
+- Track source health
+- Expose ingestion metrics
+
+Recommended partition keys:
+
+- Metrics: service + metric name
+- Spans: trace_id
+- Logs: service
+- Changes: service
+- Incident projections: incident_id
+
+15.2 REORDER BUFFER
+
+Each input partition maintains:
+
+- Maximum event time observed
+- Current watermark
+- Buffered events ordered by event time and sequence number
+- Late-event counters
+- Duplicate counters
+
+Watermark baseline:
+
+watermark = max_event_time_seen - allowed_lateness
+
+Start with fixed allowed lateness configured per source. Later, experiment with
+adaptive lateness based on observed delay distributions.
+
+Watermark invariants:
+
+- A partition watermark never moves backward.
+- The global watermark is the minimum active partition watermark.
+- Idle partitions must not block progress forever.
+- Window finalization occurs only when the relevant watermark passes the
+  window end.
+- Late events inside the grace period may revise previously emitted results.
+- Events beyond the final grace period are retained for audit but do not mutate
+  finalized state unless a query explicitly allows revision.
+
+15.3 COLUMNAR BATCHING
+
+Convert validated envelopes into signal-specific Arrow RecordBatches.
+
+Batch flush conditions:
+
+- Maximum row count reached
+- Maximum byte size reached
+- Maximum batch age reached
+- Checkpoint barrier
+- Replay pause or seek
+
+Benchmark multiple batch sizes. Do not assume larger is always better.
+
+15.4 OPERATOR MODEL
+
+Conceptual trait:
+
+trait Operator {
+    fn id(&self) -> OperatorId;
+    fn on_batch(&mut self, batch: RecordBatch, ctx: &mut OperatorContext)
+        -> Result<Vec<OperatorOutput>>;
+    fn on_watermark(&mut self, watermark: EventTime, ctx: &mut OperatorContext)
+        -> Result<Vec<OperatorOutput>>;
+    fn snapshot(&self) -> Result<OperatorSnapshot>;
+    fn restore(&mut self, snapshot: OperatorSnapshot) -> Result<()>;
+    fn metrics(&self) -> OperatorMetrics;
+}
+
+Initial physical operators:
+
+- SourceExec
+- FilterExec
+- ProjectionExec
+- HashAggregateExec
+- WindowAggregateExec
+- PercentileExec
+- TemporalJoinExec
+- TopKExec
+- IncidentSinkExec
+- ProjectionSinkExec
+
+15.5 WINDOW TYPES
+
+Tumbling window:
+Non-overlapping fixed intervals.
+
+Hopping window:
+Fixed-size window emitted at a smaller slide interval.
+
+Session windows are a stretch goal and should not block completion.
+
+Window state key:
+
+QueryId + OperatorId + GroupKey + WindowStart + WindowEnd
+
+Required aggregates:
+
+- count
+- sum
+- min
+- max
+- average
+- error rate
+- approximate p50
+- approximate p95
+- approximate p99
+
+Percentile implementation:
+Start with a documented approximate sketch or bounded reservoir. Include error
+evaluation. Do not label an estimate as exact.
+
+15.6 STATEFUL TEMPORAL JOIN
+
+Required use case:
+Join service spans or metrics with nearby deployment/configuration changes.
+
+Join semantics:
+
+- Key equality on canonical service
+- Event-time interval constraint
+- Bounded retention
+- Watermark-driven cleanup
+- Explicit behavior for unmatched rows
+- State-size metrics
+
+Example conceptual condition:
+
+span.service = deployment.service
+AND deployment.event_time BETWEEN
+    span.event_time - 10 minutes
+    AND span.event_time + 1 minute
+
+15.7 BACKPRESSURE
+
+Use bounded Tokio channels.
+
+Every stage must expose:
+
+- Queue depth
+- Capacity
+- Enqueue wait time
+- Batch processing time
+- Dropped messages, which should be zero in normal operation
+- Current watermark lag
+- State size
+
+When a downstream queue is full, upstream work should await capacity rather
+than unboundedly allocating memory.
+
+The UI should show backpressure in Query Inspector.
+
+15.8 SCHEDULING
+
+Version 1:
+Cooperative async scheduling within one process.
+
+Do not build a distributed scheduler.
+
+Prioritize:
+
+- Control events
+- Checkpoint barriers
+- Watermark propagation
+- Data batches
+- Projection updates
+
+Prevent high-volume raw events from starving control operations.
+
+===============================================================================
+16. QUERY LANGUAGE AND PLANNER
+===============================================================================
+
+The query system proves database and streaming-engine depth and makes
+visualizations inspectable.
+
+Do not block the MVP on SQL. Begin with programmatically constructed logical
+plans, then add SQL syntax once operators are stable.
+
+SUPPORTED TABLES:
+
+- metrics
+- spans
+- logs
+- deployments
+- incidents
+
+VERSION 1 SQL SUBSET:
+
+- SELECT
+- FROM
+- WHERE
+- AND / OR / NOT
+- comparison operators
+- arithmetic expressions
+- aliases
+- GROUP BY
+- service and scalar dimensions
+- COUNT
+- SUM
+- AVG
+- MIN
+- MAX
+- P50
+- P95
+- P99
+- TUMBLE(event_time, interval)
+- HOP(event_time, window, slide)
+- ORDER BY for bounded results
+- LIMIT
+- one constrained temporal JOIN form
+
+NOT SUPPORTED IN V1:
+
+- arbitrary subqueries
+- recursive CTEs
+- unbounded sort
+- full outer join
+- arbitrary user-defined functions
+- transactions
+- updates/deletes
+- complex nested types
+- general batch SQL compatibility
+
+LOGICAL PLAN NODES:
+
+- Scan
+- Filter
+- Project
+- Aggregate
+- Window
+- TemporalJoin
+- Sort
+- Limit
+- Sink
+
+INITIAL OPTIMIZER RULES:
+
+1. Predicate pushdown
+2. Projection pruning
+3. Constant folding
+4. Filter combination
+5. Remove no-op projections
+6. Push LIMIT into TopK where safe
+7. Share compatible scans only after correctness
+
+EXPLAIN output must include:
+
+- Parsed statement
+- Logical plan
+- Optimized logical plan
+- Physical plan
+- Operator IDs
+- Partitioning
+- State retention
+- Watermark policy
+- Estimated or observed cardinality when available
+
+EXPLAIN ANALYZE must include:
+
+- Rows in/out
+- Batches in/out
+- CPU time
+- Wall time
+- Queue wait
+- State bytes
+- Watermark lag
+- Late events
+- Peak memory estimate
+
+===============================================================================
+17. SERVICE GRAPH AND TRACE MODEL
+===============================================================================
+
+17.1 SERVICE GRAPH
+
+Build the service graph incrementally from spans.
+
+Node:
+A canonical service.
+
+Directed edge:
+Observed caller -> callee relationship.
+
+Node state at selected time:
+
+- request rate
+- error rate
+- p50 latency
+- p99 latency
+- anomaly score
+- root-cause score
+- deployment version
+- health state
+- first anomaly time
+- active incident count
+
+Edge state:
+
+- request rate
+- error rate
+- p50 latency
+- p99 latency
+- failed-trace coverage
+- anomaly score
+- last seen time
+
+Graph retention:
+Use time-bucketed aggregates so the UI can reconstruct historical state without
+storing every animated particle.
+
+17.2 TRACE GRAPH
+
+A trace is a DAG of spans.
+
+Required operations:
+
+- Validate parent-child relationships
+- Detect missing parents
+- Sort spans deterministically
+- Identify parallel branches
+- Calculate critical path
+- Calculate service latency contribution
+- Mark error propagation
+- Compare against a baseline trace cohort
+
+17.3 CRITICAL PATH
+
+The critical path is the longest causally valid path through the trace DAG based
+on span timing and dependencies.
+
+Do not simply sum all span durations.
+
+Expose:
+
+- total trace duration
+- critical path duration
+- per-service critical contribution
+- waiting versus execution time when inferable
+- first divergence from healthy baseline
+
+17.4 HEALTHY TRACE MATCHING
+
+For a failed trace, choose comparable healthy traces by:
+
+- same entry operation
+- similar service path
+- similar request attributes when available
+- nearest time before incident
+- comparable payload class if known
+
+Display the median healthy trace, not a cherry-picked single trace, when enough
+samples exist.
+
+===============================================================================
+18. INFERENCE ENGINE
+===============================================================================
+
+The initial inference system should be deterministic, explainable, and
+evaluated.
+
+18.1 INCIDENT DETECTION
+
+An incident begins when one or more SLO or anomaly conditions remain above a
+threshold for a configurable number of windows.
+
+Possible signals:
+
+- p99 latency
+- error rate
+- request throughput drop
+- saturation metric
+- queue depth
+- failed trace rate
+
+Use hysteresis to avoid opening and closing incidents repeatedly.
+
+18.2 BASELINE ESTIMATION
+
+Initial baseline:
+Rolling median and Median Absolute Deviation (MAD) by service, metric, and
+comparable time context.
+
+Robust z-score concept:
+
+z = 0.6745 * (x - median) / MAD
+
+Handle MAD = 0 explicitly.
+
+Alternative baselines to evaluate:
+
+- Exponentially weighted moving statistics
+- Seasonal time-bucket baseline
+- Healthy-run reference distribution
+
+18.3 ROOT-CAUSE FEATURES
+
+For each service candidate, compute normalized features in [0, 1].
+
+A. anomaly_strength
+How unusual are the service's relevant metrics, logs, and spans?
+
+B. temporal_precedence
+Did the service become anomalous before downstream failures?
+
+C. failed_trace_coverage
+What fraction of failed traces include this service?
+
+D. critical_path_contribution
+How much excess critical-path latency is attributable to this service?
+
+E. downstream_impact
+How many affected nodes are reachable downstream?
+
+F. topology_consistency
+Does the observed propagation follow known dependency edges?
+
+G. change_proximity
+Was there a deployment/config/feature-flag change nearby?
+
+H. log_evidence
+Did high-severity or novel log templates increase near onset?
+
+I. persistence
+Did the candidate remain anomalous rather than spike briefly?
+
+J. contradiction_penalty
+Evidence against causality, such as anomaly beginning after downstream impact.
+
+18.4 INITIAL SCORE
+
+score =
+  0.20 * anomaly_strength
++ 0.15 * temporal_precedence
++ 0.15 * failed_trace_coverage
++ 0.15 * critical_path_contribution
++ 0.10 * downstream_impact
++ 0.10 * topology_consistency
++ 0.10 * change_proximity
++ 0.05 * log_evidence
+- 0.10 * contradiction_penalty
+
+These weights are a starting hypothesis, not a factual optimum.
+
+Rules:
+
+- Store feature values and contribution values separately.
+- Tune weights only on the training split.
+- Report untuned and tuned results.
+- Perform ablation tests.
+- Never hide negative evidence.
+- Use the same score implementation for backend output and evaluation.
+
+18.5 EVIDENCE OBJECT
+
+Evidence {
+    evidence_id,
+    incident_id,
+    candidate_service,
+    type,
+    event_time_range,
+    strength,
+    direction: Supports | Contradicts,
+    source_refs,
+    human_label,
+    details
+}
+
+Evidence types:
+
+- Metric anomaly
+- Trace divergence
+- Critical-path increase
+- Failed-trace coverage
+- Temporal precedence
+- Deployment proximity
+- Log-template spike
+- Dependency propagation
+- Recovery correlation
+- Contradiction
+
+18.6 EVIDENCE GRAPH
+
+Nodes:
+
+- Change event
+- Metric anomaly
+- Log pattern
+- Span anomaly
+- Service degradation
+- SLO breach
+- Root-cause candidate
+
+Edges:
+
+- precedes
+- occurs_on
+- propagates_to
+- contributes_to
+- correlates_with
+- contradicts
+- recovers_with
+
+The graph is an evidence explanation, not a claim of proven philosophical
+causality. UI language should say "likely cause," "supports," and "correlates"
+unless the dataset provides ground truth.
+
+18.7 INCIDENT CLUSTERING
+
+Stretch feature:
+
+Create one feature vector per incident using:
+
+- services affected
+- fault type signals
+- temporal sequence
+- trace-path changes
+- metric anomaly profile
+- log-template changes
+- duration
+- recovery behavior
+
+Start with PCA for a reproducible baseline. Add UMAP only as an optional visual
+projection. Cluster quality must be evaluated separately from visual appeal.
+
+===============================================================================
+19. VISUALIZATION SYSTEM
+===============================================================================
+
+The visualization system must support brushing and linking: an interaction in
+one view updates all related views.
+
+19.1 GLOBAL VISUAL STATE
+
+Global selection state:
+
+- active incident
+- replay status
+- selected event-time cursor
+- selected time range
+- selected service set
+- selected trace
+- selected root-cause candidate
+- selected evidence item
+- selected query
+- comparison mode
+- replay speed
+
+All views read from this shared state.
+
+19.2 VISUAL LANGUAGE
+
+Semantic encoding:
+
+- Node size: request volume
+- Edge width: request volume
+- Edge animation speed: latency category or replay flow, used carefully
+- Border intensity: error rate
+- Fill intensity: anomaly strength
+- Halo/ring: root-cause confidence
+- Dashed edge: incomplete or partial trace evidence
+- Deployment badge: recent change
+- Shape or icon: service category when known
+
+Accessibility:
+
+- Never communicate healthy versus unhealthy using red and green alone.
+- Use labels, icons, border patterns, and intensity.
+- Support reduced-motion mode.
+- Every canvas/SVG view must have an accessible textual summary.
+- Tooltips must be keyboard reachable where practical.
+- Use a high-contrast mode.
+- Keep a service's identity encoding stable across views.
+
+Animation rules:
+
+- Animation must explain change, not decorate.
+- Default topology updates should be 5 to 10 frames per second, not one
+  animation per raw request.
+- Aggregate request particles.
+- Pause animation while the user is scrubbing.
+- Respect prefers-reduced-motion.
+- Avoid layout jitter by keeping node positions stable.
+
+19.3 MAIN SCREEN LAYOUT
+
+Desktop layout concept:
+
++--------------------------------------------------------------------------+
+| Header: Incident | Replay controls | Speed | Dataset | Engine status     |
++-------------------------+------------------------------------------------+
+|                         | Root-cause ranking                              |
+| Animated Service Map    | Candidate score breakdown                      |
+|                         | Supporting / contradicting evidence             |
++-------------------------+------------------------------------------------+
+| Incident Timeline and event lanes                                         |
++--------------------------------------------------------------------------+
+| Anomaly Heatmap          | Trace Waterfall / Healthy Comparison            |
++--------------------------+------------------------------------------------+
+| Evidence Graph           | Query Plan + Operator Metrics                   |
++--------------------------+------------------------------------------------+
+
+The main screen should be useful at 1440x900 and remain navigable on a laptop.
+Use tabs or a resizable inspector rather than shrinking every panel.
+
+===============================================================================
+20. VISUALIZATION VIEW SPECIFICATIONS
+===============================================================================
+
+20.1 ANIMATED SERVICE MAP
+
+Purpose:
+Show topology, traffic, health, and failure propagation.
+
+Required interactions:
+
+- Hover node for current health summary
+- Click node to select it globally
+- Shift-click to compare services
+- Click edge to inspect caller/callee traces
+- Drag timeline and watch graph state update
+- Toggle traffic, latency, error, anomaly, and root-cause overlays
+- Freeze layout
+- Fit to graph
+- Search for service
+
+Performance:
+
+- Stable for at least 100 services in the main target.
+- Aggregate or simplify beyond that.
+- Never send one WebSocket message per request.
+
+20.2 INCIDENT TIMELINE
+
+Purpose:
+Create the time-machine interaction.
+
+Lanes:
+
+- Deployments/config changes
+- Incident/SLO events
+- Metrics anomalies
+- Trace anomalies
+- Log-template spikes
+- Checkpoints/restarts
+- Late-event arrivals
+- User annotations
+
+Interactions:
+
+- Play/pause
+- Scrub
+- Brush a time range
+- Zoom
+- Click event marker
+- Jump to incident start
+- Jump to first anomaly
+- Jump to SLO breach
+- Jump to root-cause confidence threshold
+- Show event-time versus arrival-time option
+
+The timeline must distinguish:
+
+- Event occurrence
+- Telemetry arrival
+- Inference revision
+
+20.3 SERVICE-BY-TIME ANOMALY HEATMAP
+
+Rows:
+Services
+
+Columns:
+Time buckets
+
+Cell value:
+Selected signal, default combined anomaly score
+
+Modes:
+
+- Combined anomaly
+- Latency
+- Error rate
+- Saturation
+- Trace divergence
+- Root-cause score
+
+Row sorting:
+
+- Topology order
+- First anomaly time
+- Maximum anomaly
+- Root-cause rank
+- Alphabetical
+
+Interactions:
+
+- Hover cell for exact score and feature breakdown
+- Click cell to set time cursor and select service
+- Drag over cells to set time range
+- Pin services
+- Toggle normalization by service versus global
+
+20.4 TRACE WATERFALL
+
+Required display:
+
+- Span hierarchy
+- Start offset
+- Duration
+- Service
+- Operation
+- Status
+- Critical-path membership
+- Baseline deviation
+- Missing-parent indicator
+- Logs attached to span
+- Deployment version attached to service
+
+Interactions:
+
+- Expand/collapse spans
+- Select span
+- Jump service selection
+- Toggle absolute versus normalized time
+- Show critical path only
+- Show error path only
+
+20.5 HEALTHY-VERSUS-FAILED TRACE COMPARISON
+
+Display:
+
+- Failed trace
+- Median healthy reference trace
+- Per-span duration delta
+- Added/removed services
+- Changed order
+- Critical-path difference
+- Total excess latency
+- Confidence that traces are comparable
+
+Do not align traces only by array index. Align by service, operation, and causal
+path.
+
+20.6 ROOT-CAUSE PANEL
+
+For each candidate:
+
+- Rank
+- Overall score
+- Confidence category
+- Feature contribution bars
+- First anomaly time
+- Affected trace coverage
+- Recent changes
+- Supporting evidence count
+- Contradicting evidence count
+- Ground-truth indicator only in evaluation/demo mode
+
+Clicking a feature contribution should filter the evidence list.
+
+20.7 CAUSAL EVIDENCE GRAPH
+
+Purpose:
+Show the chain of evidence.
+
+Example:
+
+Deployment v4.2
+  -> recommendation memory anomaly
+  -> GC pause log spike
+  -> recommendation span latency
+  -> checkout critical-path increase
+  -> frontend SLO breach
+
+Requirements:
+
+- Distinguish supports from contradicts
+- Show timestamps
+- Link each node to raw evidence
+- Avoid implying certainty
+- Maintain a DAG when possible
+- Collapse repeated evidence into groups
+- Support "show only strongest path"
+
+20.8 QUERY PLAN INSPECTOR
+
+Display:
+
+- SQL text
+- Logical plan tree
+- Optimized logical plan
+- Physical plan
+- Per-operator metrics
+- Queue depths
+- State size
+- Watermark
+- Late-event count
+- Rows and batches
+- Processing time
+- Backpressure
+- Last checkpoint
+
+Clicking an operator should highlight the visualization projection it powers
+when applicable.
+
+20.9 INCIDENT GALAXY, STRETCH
+
+Each point:
+One historical incident.
+
+Encodings:
+
+- Position: 2D incident embedding
+- Shape: labeled fault type
+- Size: blast radius
+- Border: correct/incorrect RCA prediction
+- Tooltip: root cause, duration, affected services, replay link
+
+Do not ship this before the main incident replay is polished.
+
+===============================================================================
+21. SYNCHRONIZED INTERACTION CONTRACT
+===============================================================================
+
+Selecting a service:
+- Highlight node and connected paths
+- Reorder or filter heatmap
+- Filter timeline events
+- Filter traces
+- Filter evidence
+- Emphasize candidate score if present
+
+Selecting a time:
+- Update topology snapshot
+- Update current heatmap column
+- Update root-cause ranking as known at that time
+- Show only evidence available by that arrival time
+- Update active windows and watermark display
+
+Selecting a trace:
+- Highlight its service path
+- Open waterfall
+- Show healthy comparison
+- Filter evidence to trace-related items
+
+Selecting a root-cause candidate:
+- Highlight candidate service
+- Highlight downstream impact path
+- Show feature contributions
+- Show supporting and contradicting evidence
+- Set heatmap mode to the strongest feature when requested
+
+Selecting a deployment:
+- Highlight affected service/version
+- Show before/after metrics
+- Show nearby trace changes
+- Show change_proximity score
+
+The frontend must never compute core inference independently from the backend.
+It may derive purely visual transformations from backend projections.
+
+===============================================================================
+22. API CONTRACTS
+===============================================================================
+
+All APIs must use versioned DTOs.
+
+REST endpoints:
+
+GET /api/v1/health
+GET /api/v1/datasets
+GET /api/v1/incidents
+GET /api/v1/incidents/{incident_id}
+POST /api/v1/sessions
+GET /api/v1/sessions/{session_id}
+POST /api/v1/sessions/{session_id}/load
+POST /api/v1/sessions/{session_id}/play
+POST /api/v1/sessions/{session_id}/pause
+POST /api/v1/sessions/{session_id}/seek
+POST /api/v1/sessions/{session_id}/speed
+POST /api/v1/sessions/{session_id}/checkpoint
+POST /api/v1/sessions/{session_id}/crash-test
+GET /api/v1/sessions/{session_id}/snapshot
+GET /api/v1/incidents/{incident_id}/traces
+GET /api/v1/traces/{trace_id}
+GET /api/v1/queries
+POST /api/v1/queries
+POST /api/v1/queries/validate
+POST /api/v1/queries/explain
+GET /api/v1/evaluations/{run_id}
+
+WebSocket:
+
+GET /api/v1/sessions/{session_id}/stream
+
+WebSocket envelope:
+
+{
+  "protocol_version": 1,
+  "session_id": "...",
+  "sequence": 123,
+  "server_time_ns": 0,
+  "event_time_ns": 0,
+  "type": "topology.delta",
+  "payload": {}
+}
+
+Message types:
+
+- session.ready
+- replay.status
+- clock.tick
+- watermark.updated
+- topology.snapshot
+- topology.delta
+- timeline.append
+- timeline.revision
+- heatmap.delta
+- trace.available
+- incident.opened
+- incident.updated
+- incident.closed
+- ranking.updated
+- evidence.updated
+- query.plan
+- query.metrics
+- checkpoint.started
+- checkpoint.completed
+- recovery.started
+- recovery.completed
+- engine.warning
+- engine.error
+
+Protocol rules:
+
+- sequence is monotonically increasing per session.
+- Client detects gaps and requests a full snapshot.
+- Deltas are idempotent or include revision numbers.
+- Every mutable projection includes projection_version.
+- Backend batches high-frequency updates.
+- Client never assumes message arrival equals event-time order.
+
+===============================================================================
+23. CHECKPOINTING AND RECOVERY
+===============================================================================
+
+Checkpoint must capture:
+
+- Session metadata
+- Replay position and source offsets
+- Global watermark
+- Per-partition watermark
+- Reorder-buffer state required for correctness
+- Active operator state
+- Window aggregates
+- Temporal-join state
+- Service graph aggregates
+- Active incident state
+- Root-cause feature state
+- Emitted alert/evidence IDs
+- Projection revision counters
+- Query definitions and plan versions
+
+Atomicity strategy:
+
+1. Write to temporary checkpoint directory.
+2. Flush files.
+3. Compute checksums.
+4. Write manifest last.
+5. Atomically rename temporary directory.
+6. Atomically update LATEST pointer.
+
+Recovery:
+
+1. Read LATEST.
+2. Validate manifest and checksums.
+3. Restore operators.
+4. Restore graph and inference state.
+5. Restore source offsets.
+6. Rebuild projections or load projection snapshot.
+7. Resume after the checkpoint boundary.
+8. Deduplicate replayed events by event_id.
+9. Do not duplicate incident alerts or evidence IDs.
+
+Failure tests:
+
+- Crash during batch processing
+- Crash during checkpoint write
+- Corrupted latest checkpoint
+- Missing operator state
+- Replay of events after checkpoint
+- Late event immediately before crash
+- Query added before checkpoint
+- Query removed after checkpoint
+
+Do not claim exactly-once processing unless every output and recovery path
+actually supports it. A safer claim is "checkpoint recovery with idempotent
+incident projections."
+
+===============================================================================
+24. OBSERVABILITY OF TRACEATLAS
+===============================================================================
+
+TraceAtlas must observe itself.
+
+Backend metrics:
+
+- events_ingested_total
+- events_deduplicated_total
+- events_late_total
+- events_dropped_total
+- batches_processed_total
+- batch_rows
+- batch_bytes
+- operator_processing_seconds
+- operator_queue_depth
+- operator_state_bytes
+- watermark_lag_seconds
+- projection_updates_total
+- websocket_clients
+- checkpoint_duration_seconds
+- checkpoint_bytes
+- recovery_duration_seconds
+- inference_candidates
+- inference_update_seconds
+- root_cause_score_changes_total
+
+Expose metrics through:
+
+- Internal Query Inspector
+- Structured logs
+- Optional Prometheus endpoint
+
+Do not make Grafana the main UI. TraceAtlas itself is the product.
+
+===============================================================================
+25. TESTING STRATEGY
+===============================================================================
+
+25.1 UNIT TESTS
+
+Common:
+- deterministic IDs
+- time conversion
+- schema validation
+
+Ingestion:
+- dedupe
+- reorder
+- idle partition handling
+- watermark monotonicity
+- late-event classification
+
+Operators:
+- filter
+- projection
+- aggregate
+- percentile error bounds
+- window open/close
+- temporal join boundaries
+- cleanup after watermark
+
+Planner:
+- parser translation
+- schema validation
+- optimizer correctness
+- plan serialization
+- EXPLAIN stability
+
+Graph:
+- service edge creation
+- missing spans
+- critical path
+- parallel branches
+- trace alignment
+
+Inference:
+- robust z-score
+- feature normalization
+- temporal precedence
+- score decomposition
+- contradiction penalty
+- deterministic ranking
+
+State:
+- snapshot round trip
+- checksum validation
+- corrupt checkpoint fallback
+
+25.2 PROPERTY-BASED TESTS
+
+Properties:
+
+- Watermark never decreases
+- Reordering within allowed lateness produces same finalized window result
+- Duplicate events do not change idempotent aggregates
+- Snapshot then restore produces equivalent state
+- Query optimizer preserves result
+- Candidate ranking is deterministic for equal input
+- Critical-path duration never exceeds total trace envelope
+- State is eventually cleaned after watermark advancement
+
+25.3 GOLDEN TESTS
+
+Commit small fixtures for:
+
+- Logical plans
+- Physical plans
+- EXPLAIN output
+- Incident ranking
+- Evidence graph
+- WebSocket projection sequence
+- Demo screenshots where useful
+
+25.4 INTEGRATION TESTS
+
+- Convert a small RCAEval fixture
+- Replay it through traceatlasd
+- Open incident
+- Produce topology and heatmap projections
+- Rank labeled service
+- Save checkpoint
+- Restart
+- Resume without duplicate incident
+- Complete evaluation
+
+25.5 FRONTEND END-TO-END
+
+Playwright scenarios:
+
+- Load incident
+- Play and pause
+- Scrub timeline
+- Select service
+- Open trace
+- Compare healthy trace
+- Select root-cause candidate
+- Inspect evidence
+- Disconnect and resync WebSocket
+- Trigger crash-test and watch recovery
+- Open query-plan inspector
+
+25.6 CHAOS TESTS
+
+- Terminate backend process
+- Delay a source
+- Send bursts
+- Send duplicates
+- Send late spans
+- Corrupt a checkpoint
+- Disconnect browser
+- Restart replay source
+
+===============================================================================
+26. EVALUATION
+===============================================================================
+
+26.1 ROOT-CAUSE QUALITY
+
+Report:
+
+- Top-1 accuracy
+- Top-3 accuracy
+- Mean Reciprocal Rank
+- Per-fault-type results
+- Per-system results
+- Confusion analysis
+- Confidence calibration if a confidence value is shown
+- Untuned baseline
+- Tuned score
+- Ablation results
+
+Ablations:
+
+- Remove temporal precedence
+- Remove trace coverage
+- Remove topology
+- Remove deployment events
+- Remove log evidence
+- Remove critical-path contribution
+
+26.2 INCIDENT DETECTION
+
+Report:
+
+- Precision
+- Recall
+- F1
+- Detection delay from labeled fault start
+- Alert stability
+- False alerts per healthy hour
+
+26.3 STREAMING SYSTEM
+
+Report:
+
+- Events per second
+- RecordBatches per second
+- Rows per batch
+- p50/p95/p99 end-to-end processing latency
+- Watermark lag
+- Late-event revision delay
+- Memory by event rate
+- State bytes per active query
+- Checkpoint duration
+- Checkpoint size
+- Recovery duration
+- Duplicate projection count after recovery
+- Correctness under disorder
+
+26.4 VECTORIZED EXECUTION
+
+Compare:
+
+- Row-at-a-time baseline
+- Arrow batch sizes such as 64, 256, 1,024, 4,096, and 16,384
+- Filter-heavy query
+- Aggregation-heavy query
+- Percentile query
+- Temporal join
+
+Record:
+
+- Throughput
+- CPU time
+- Peak memory
+- p99 batch latency
+
+26.5 FRONTEND
+
+Measure:
+
+- Time to first visual
+- WebSocket payload rate
+- Main-thread blocking
+- Frames per second during replay
+- Interaction latency
+- Graph size supported
+- Heatmap cells supported
+- Memory after a long replay
+
+26.6 RESULT INTEGRITY
+
+Every published result must include:
+
+- Git commit
+- Dataset manifest checksum
+- Machine configuration
+- OS
+- compiler/runtime versions
+- command
+- config
+- random seed
+- raw output file
+- plot-generation script
+
+===============================================================================
+27. MILESTONE PLAN
+===============================================================================
+
+MILESTONE 0: CONTRACT AND SKELETON
+
+Deliverables:
+- Repository scaffold
+- Cargo workspace
+- React app
+- CI
+- ADRs
+- Canonical schema
+- One tiny generated fixture
+- Health endpoint
+- WebSocket connection
+- Static placeholder layout
+
+Exit criteria:
+- One command starts backend and frontend.
+- CI runs Rust, Python, and frontend checks.
+- No architecture choices remain implicit.
+
+MILESTONE 1: DATA NORMALIZATION AND REPLAY
+
+Deliverables:
+- RCAEval adapter for one incident subset
+- Normalized Parquet output
+- Dataset manifest validation
+- Replay clock
+- play/pause/seek/speed
+- deterministic disorder
+- backend ingestion
+
+Exit criteria:
+- A real incident can be replayed deterministically.
+- Event time and ingest time are visible.
+- Counts match manifest.
+
+MILESTONE 2: VISUAL REPLAY MVP
+
+Deliverables:
+- Topology
+- Timeline
+- Heatmap
+- Basic trace waterfall
+- Shared global selection
+- Precomputed or simple backend projections
+
+Exit criteria:
+- User can visually identify when and where an incident begins.
+- All views update when time or service changes.
+- No hardcoded incident data.
+
+MILESTONE 3: STREAMING RUNTIME
+
+Deliverables:
+- Arrow batches
+- Bounded queues
+- Watermarks
+- Tumbling/hopping windows
+- Filter/projection/aggregate operators
+- Operator metrics
+
+Exit criteria:
+- Visual projections are powered by streaming operators.
+- Late-event behavior is tested.
+- Query Inspector shows live operator metrics.
+
+MILESTONE 4: ROOT-CAUSE INFERENCE
+
+Deliverables:
+- Baselines
+- Feature extraction
+- Scoring
+- Ranking
+- Evidence objects
+- Initial evaluation
+
+Exit criteria:
+- Ranking is deterministic and evaluated.
+- Every score component is inspectable.
+- Ground truth is hidden outside evaluation mode.
+
+MILESTONE 5: TRACE COMPARISON AND EVIDENCE GRAPH
+
+Deliverables:
+- Critical-path analysis
+- Healthy trace matching
+- Trace diff
+- Evidence graph
+- Synchronized click-through
+
+Exit criteria:
+- User can understand why the top candidate was selected.
+- Contradicting evidence is visible.
+
+MILESTONE 6: CHECKPOINT AND RECOVERY
+
+Deliverables:
+- Checkpoint coordinator
+- Snapshot manifests
+- Restart recovery
+- Idempotent projections
+- Crash-test button
+- Recovery timeline markers
+
+Exit criteria:
+- Demo survives a forced backend crash.
+- No duplicate incident alert.
+- Active state is restored.
+
+MILESTONE 7: QUERY PLANNER AND EXECUTOR
+
+Deliverables:
+- SQL subset
+- Logical plan
+- Optimizer
+- Physical plan
+- EXPLAIN
+- EXPLAIN ANALYZE
+- Temporal join
+
+Exit criteria:
+- At least three important visual queries are defined in SQL.
+- Plans and runtime metrics are visible.
+- Query results match reference implementations on fixtures.
+
+MILESTONE 8: EVALUATION AND PERFORMANCE
+
+Deliverables:
+- RCA evaluation suite
+- Vectorized versus row baseline
+- Disorder tests
+- Checkpoint benchmarks
+- Frontend profiling
+- RESULTS.md
+
+Exit criteria:
+- Every resume candidate metric is reproducible.
+- Weak results are reported honestly.
+- Bottlenecks and tradeoffs are documented.
+
+MILESTONE 9: PUBLIC RELEASE
+
+Deliverables:
+- Polished README
+- Architecture diagrams
+- Demo video
+- Hosted sample
+- Contributor docs
+- One technical article
+- Issue list for contributors
+- External contribution attempt
+
+Exit criteria:
+- A recruiter understands the project in ten seconds.
+- An engineer can run it locally.
+- An interviewer can inspect deep technical evidence.
+
+===============================================================================
+28. AGENT WORK PACKETS
+===============================================================================
+
+TA-001 Repository bootstrap
+Output: workspace, CI, Makefile, formatting, linting
+
+TA-002 Canonical event types
+Depends on: TA-001
+Output: common crate schemas, IDs, serialization tests
+
+TA-003 Dataset manifest schema
+Depends on: TA-002
+Output: JSON schema, Rust/Python validators
+
+TA-004 RCAEval source audit
+Output: documented file structure, licenses, timestamp mappings, label mappings
+
+TA-005 RCAEval converter
+Depends on: TA-002, TA-003, TA-004
+Output: normalized Parquet and manifests
+
+TA-006 Replay clock
+Depends on: TA-002
+Output: deterministic virtual event-time clock
+
+TA-007 Disorder injector
+Depends on: TA-006
+Output: seeded delays, duplicates, bursts, drops
+
+TA-008 Backend ingest endpoint
+Depends on: TA-002
+Output: event validation and bounded queue
+
+TA-009 WebSocket protocol
+Depends on: TA-001, TA-002
+Output: versioned envelope and resync flow
+
+TA-010 Frontend application shell
+Depends on: TA-009
+Output: shared state, reconnect, error handling
+
+TA-011 Service graph builder
+Depends on: TA-002, TA-008
+Output: incremental nodes and edges from spans
+
+TA-012 Topology projection
+Depends on: TA-011, TA-009
+Output: snapshot/delta messages
+
+TA-013 Timeline projection
+Depends on: TA-008, TA-009
+Output: event lanes and revisions
+
+TA-014 Heatmap projection
+Depends on: TA-008, TA-009
+Output: service/time buckets
+
+TA-015 Trace assembly
+Depends on: TA-002, TA-008
+Output: trace DAG, missing span handling
+
+TA-016 Topology UI
+Depends on: TA-010, TA-012
+Output: stable interactive service map
+
+TA-017 Timeline UI
+Depends on: TA-010, TA-013
+Output: replay scrubber and event lanes
+
+TA-018 Heatmap UI
+Depends on: TA-010, TA-014
+Output: interactive service-time matrix
+
+TA-019 Trace waterfall UI
+Depends on: TA-010, TA-015
+Output: expandable span waterfall
+
+TA-020 Global linked selection
+Depends on: TA-016, TA-017, TA-018, TA-019
+Output: synchronized views
+
+TA-021 Reorder buffer and watermarks
+Depends on: TA-008
+Output: tested event-time semantics
+
+TA-022 Arrow batcher
+Depends on: TA-008
+Output: signal-specific RecordBatches
+
+TA-023 Operator runtime
+Depends on: TA-021, TA-022
+Output: operator trait, scheduler, metrics
+
+TA-024 Basic operators
+Depends on: TA-023
+Output: filter, project, aggregate
+
+TA-025 Window operators
+Depends on: TA-021, TA-023
+Output: tumbling/hopping windows
+
+TA-026 Percentile operator
+Depends on: TA-023
+Output: p50/p95/p99 with accuracy tests
+
+TA-027 Temporal join
+Depends on: TA-021, TA-023
+Output: service change correlation
+
+TA-028 Query Inspector backend metrics
+Depends on: TA-023
+Output: operator metric projection
+
+TA-029 Query Inspector UI
+Depends on: TA-010, TA-028
+Output: live operator tree and metrics
+
+TA-030 Baseline estimator
+Depends on: TA-025
+Output: rolling robust baseline
+
+TA-031 Root-cause features
+Depends on: TA-011, TA-015, TA-030
+Output: feature vectors per candidate
+
+TA-032 Root-cause ranking
+Depends on: TA-031
+Output: score and decomposition
+
+TA-033 Evidence objects
+Depends on: TA-031, TA-032
+Output: supporting/contradicting evidence
+
+TA-034 Root-cause UI
+Depends on: TA-010, TA-032, TA-033
+Output: ranked candidates and breakdown
+
+TA-035 Critical path
+Depends on: TA-015
+Output: trace critical path and contribution
+
+TA-036 Healthy trace matcher
+Depends on: TA-015
+Output: reference cohort and confidence
+
+TA-037 Trace comparison UI
+Depends on: TA-019, TA-035, TA-036
+Output: failed versus healthy comparison
+
+TA-038 Evidence graph UI
+Depends on: TA-033
+Output: clickable evidence DAG
+
+TA-039 State snapshot interface
+Depends on: TA-023
+Output: operator snapshot contract
+
+TA-040 Checkpoint coordinator
+Depends on: TA-039
+Output: atomic versioned checkpoints
+
+TA-041 Recovery
+Depends on: TA-040
+Output: full state restoration and dedupe
+
+TA-042 Crash-test UI
+Depends on: TA-041
+Output: visible forced crash and recovery
+
+TA-043 SQL parser integration
+Depends on: TA-024
+Output: supported AST conversion
+
+TA-044 Logical planner
+Depends on: TA-043
+Output: validated logical plan
+
+TA-045 Optimizer
+Depends on: TA-044
+Output: initial rewrite rules
+
+TA-046 Physical planner
+Depends on: TA-023, TA-045
+Output: executable operator DAG
+
+TA-047 EXPLAIN
+Depends on: TA-044, TA-046
+Output: logical/physical plan DTO
+
+TA-048 RCA evaluation suite
+Depends on: TA-032, TA-005
+Output: top-1/top-3/MRR and reports
+
+TA-049 Engine benchmark suite
+Depends on: TA-024, TA-025, TA-026, TA-027
+Output: throughput/latency/vectorization results
+
+TA-050 Recovery benchmark
+Depends on: TA-041
+Output: checkpoint and recovery results
+
+TA-051 Frontend performance suite
+Depends on: TA-020
+Output: FPS, interaction, memory measurements
+
+TA-052 OpenTelemetry Demo adapter
+Depends on: TA-003
+Output: reproducible incident recording pipeline
+
+TA-053 Demo scenario
+Depends on: TA-052, TA-020, TA-034, TA-042
+Output: polished canonical incident
+
+TA-054 Public docs and video
+Depends on: core milestones
+Output: release-ready portfolio material
+
+===============================================================================
+29. AGENT CONTRIBUTION RULES
+===============================================================================
+
+Every agent task must return:
+
+- Summary of what changed
+- Files changed
+- Commands run
+- Tests added
+- Tests passed
+- Known limitations
+- Follow-up tickets
+- Any ADR needed
+
+Code rules:
+
+- No unbounded channels
+- No unwrap/expect in long-running production paths without justification
+- Structured error types
+- Deterministic ordering for maps and rankings exposed to tests/UI
+- Configurable thresholds
+- No secret values committed
+- No version claims without manifests
+- No silent fallback to mock data
+- No broad refactor inside an unrelated ticket
+- No API contract change without updating docs and frontend types
+- No benchmark optimization that changes semantics
+- No feature considered complete without failure states
+
+Architecture changes require an ADR when changing:
+
+- language
+- storage engine
+- wire protocol
+- checkpoint semantics
+- event schema
+- query semantics
+- deployment shape
+- root-cause scoring definition
+- visualization identity encoding
+
+Agent prompt template:
+
+"You are implementing ticket <ID> for TraceAtlas. Read the project
+specification, relevant ADRs, and dependency tickets. Preserve canonical
+schemas and protocols. Implement the smallest complete solution, add unit and
+integration tests, document assumptions, and do not add unrelated
+infrastructure. Return changed files, commands, test results, limitations, and
+follow-up work."
+
+===============================================================================
+30. DEVELOPMENT COMMANDS AND LOCAL EXPERIENCE
+===============================================================================
+
+Desired first-run experience:
+
+git clone <repo>
+cd traceatlas
+make bootstrap
+make data-demo
+make demo
+
+make demo should:
+
+1. Start traceatlasd
+2. Start traceatlas-replay with the canonical incident
+3. Start the web app
+4. Print the local URL
+5. Verify health endpoints
+6. Load the incident automatically or provide one clear click
+
+Configuration files:
+
+config/default.toml
+config/dev.toml
+config/test.toml
+config/benchmark.toml
+
+Configuration categories:
+
+- ingestion limits
+- batch size
+- allowed lateness
+- grace period
+- window definitions
+- channel capacity
+- checkpoint interval
+- projection update frequency
+- inference weights
+- incident thresholds
+- WebSocket batching
+- logging level
+
+===============================================================================
+31. DOCUMENTATION DELIVERABLES
+===============================================================================
+
+README.md:
+
+1. Ten-second project explanation
+2. Animated GIF or short video
+3. Architecture diagram
+4. Key technical features
+5. Demo instructions
+6. Dataset instructions
+7. Reproducible results summary
+8. Design tradeoffs
+9. Roadmap
+10. Contribution instructions
+
+ARCHITECTURE.md:
+
+- Data flow
+- Event-time model
+- Query planning
+- State model
+- Checkpointing
+- Inference
+- Projection protocol
+- Frontend synchronization
+- Failure modes
+
+RESULTS.md:
+
+- Evaluation environment
+- Dataset splits
+- RCA metrics
+- Detection metrics
+- Engine benchmarks
+- Vectorization comparison
+- Recovery results
+- Frontend results
+- Limitations
+- Exact reproduction commands
+
+Technical article topics:
+
+- Replaying an outage as a deterministic event stream
+- Why event time matters for cloud incident analysis
+- Building an explainable root-cause ranking system
+- Vectorized streaming operators with Apache Arrow
+- Designing synchronized incident visualizations
+- Recovering a live investigation from a checkpoint
+
+===============================================================================
+32. PUBLIC DEMO AND DEPLOYMENT
+===============================================================================
+
+Recommended demo modes:
+
+1. Hosted static replay
+   Precomputed projection stream bundled with frontend. Easy for recruiters.
+
+2. Full local engine
+   Docker Compose starts the real backend and replay engine.
+
+3. Live OpenTelemetry mode
+   Optional advanced setup.
+
+The hosted static replay must be visibly labeled as a recorded replay, not a
+live backend benchmark.
+
+Demo video target flow:
+
+- 10 seconds: explain problem and product
+- 20 seconds: healthy topology to incident onset
+- 20 seconds: heatmap and timeline
+- 20 seconds: root-cause evidence
+- 15 seconds: healthy/failed trace comparison
+- 15 seconds: backend crash and recovery
+- 10 seconds: query plan and benchmark result
+
+===============================================================================
+33. SECURITY AND DATA HANDLING
+===============================================================================
+
+- Use only public, licensed, or self-generated telemetry.
+- Do not upload employer telemetry.
+- Do not reuse proprietary AfterQuery, Visa, CDK, PwC, or client data.
+- Do not reproduce proprietary code or architecture.
+- Redact secrets and personally identifiable values from generated examples.
+- Validate uploaded dataset paths.
+- Apply file-size and row-count limits.
+- Treat log text as untrusted input.
+- Escape HTML.
+- Avoid executing user-provided query code outside the limited planner.
+- Add time and memory limits to custom queries.
+- Never expose local filesystem paths in hosted responses.
+
+===============================================================================
+34. RESUME POSITIONING
+===============================================================================
+
+Preferred project title:
+
+TraceAtlas: Interactive Cloud Incident Replay Engine
+
+Alternative title emphasizing data systems:
+
+TraceAtlas: Vectorized Streaming Engine for Cloud Incident Analysis
+
+Preferred technologies to list only after they are truly used:
+
+Rust, Apache Arrow, SQL, WebSockets, React, TypeScript, Parquet, OpenTelemetry
+
+Do not list:
+
+- Kafka unless actually integrated for a meaningful reason
+- Kubernetes unless custom scheduling/controller work exists
+- Spark/Flink as if they were dependencies when they are only inspirations
+- Machine learning unless a model was implemented and evaluated
+- "AI-powered" because an LLM writes a summary
+
+Potential final bullets, placeholders only:
+
+- Built a Rust streaming engine that joined metrics, logs, traces, and
+  deployment events into synchronized service graphs, anomaly heatmaps, trace
+  waterfalls, and replayable incident timelines across [N] labeled failures.
+
+- Ranked root-cause services with [X]% top-1 and [Y]% top-3 accuracy using
+  temporal precedence, failed-trace coverage, critical-path contribution, and
+  dependency propagation, with clickable evidence for each prediction.
+
+- Processed [X] telemetry events/s at [Y] ms p99 latency using Arrow
+  RecordBatches and stateful event-time windows, improving throughput [Z]x over
+  a row-at-a-time baseline.
+
+- Restored active query, graph, and inference state in [X] seconds after
+  injected process failures through versioned checkpoints and idempotent
+  projection recovery.
+
+Only use two bullets on the final one-page resume. Select the strongest verified
+systems result and strongest inference/visual result.
+
+Google-targeted emphasis:
+- correctness
+- failure recovery
+- concurrency
+- performance
+- critical-path debugging
+
+Databricks-targeted emphasis:
+- Arrow batches
+- query plans
+- event-time windows
+- stateful joins
+- vectorized execution
+
+OpenAI-infrastructure-targeted emphasis:
+- failure detection
+- tracing
+- actionable observability
+- high-throughput ingestion
+- bottleneck and root-cause identification
+
+===============================================================================
+35. INTERVIEW STORIES
+===============================================================================
+
+Story 1: Event time versus arrival time
+Explain how delayed spans initially caused the wrong root-cause ranking and how
+watermarks and revisions corrected it.
+
+Story 2: Backpressure
+Explain how an incident creates a telemetry burst, why unbounded queues are
+dangerous, and how bounded channels affected throughput and latency.
+
+Story 3: Critical path
+Explain why summing span durations is wrong and how parallel branches change
+latency attribution.
+
+Story 4: Checkpoint consistency
+Explain which state must be captured together and how a partially written
+checkpoint is rejected.
+
+Story 5: Inference explainability
+Explain why the system uses feature decomposition and contradicting evidence
+instead of an opaque model.
+
+Story 6: Vectorization
+Explain which workloads benefited from Arrow batches, which did not, and how
+batch size affected latency.
+
+Story 7: Visual synchronization
+Explain how global selection and versioned projections prevent views from
+showing inconsistent incident states.
+
+Story 8: Scope control
+Explain why TraceAtlas is not a full Datadog or Spark clone and how limiting
+the query language enabled a complete, demonstrable system.
+
+===============================================================================
+36. RECRUITER TEN-SECOND TEST
+===============================================================================
+
+A recruiter opening the repository should immediately see:
+
+- A compelling animated incident replay
+- A clear one-sentence explanation
+- Root-cause evidence, not generic charts
+- Real public datasets
+- Quantified results
+- A recognizable architecture diagram
+- A live or recorded demo
+- A concise list of difficult systems features
+
+An engineer opening the repository should immediately find:
+
+- Exact dataset versions
+- Query semantics
+- Event-time rules
+- State and checkpoint design
+- Tests
+- Benchmarks
+- Failure cases
+- Reproduction commands
+- Honest limitations
+
+===============================================================================
+37. RISKS AND MITIGATIONS
+===============================================================================
+
+Risk: UI consumes all project time.
+Mitigation: Ship topology, timeline, heatmap, and one trace waterfall before
+visual polish. Use stable libraries and fixed layouts.
+
+Risk: The streaming engine becomes too broad.
+Mitigation: Support only the operators required by built-in incident queries.
+
+Risk: RCA accuracy is weak.
+Mitigation: The project remains valuable through explainable baselines,
+evaluation, and visual debugging. Do not overclaim. Use error analysis as a
+strength.
+
+Risk: Public dataset formats are inconsistent.
+Mitigation: Build adapters behind one canonical schema and pin versions.
+
+Risk: Trace data is incomplete.
+Mitigation: Represent missing spans explicitly and include completeness as
+evidence confidence.
+
+Risk: Checkpointing delays progress.
+Mitigation: Implement operator snapshot round trips early, then coordinate
+globally.
+
+Risk: The visual graph becomes noisy.
+Mitigation: Use stable layout, aggregation, filtering, progressive disclosure,
+and service search.
+
+Risk: Project appears like a dashboard clone.
+Mitigation: Expose event-time semantics, query plans, late-event revisions,
+root-cause features, critical paths, and recovery behavior in the UI and docs.
+
+Risk: Agents create incompatible modules.
+Mitigation: Enforce schemas, protocol DTOs, ticket dependencies, and ADRs from
+this file.
+
+===============================================================================
+38. STRETCH GOALS
+===============================================================================
+
+After the core system is complete:
+
+- Incident galaxy
+- Counterfactual expected-versus-actual latency
+- Adaptive watermark policy
+- Session windows
+- Query sharing
+- GPU-serving dataset adapter
+- Live OTLP receiver
+- OTel Collector exporter
+- Collaborative annotations
+- Incident comparison across software versions
+- Causal discovery experiment
+- Natural-language evidence summary
+- Exportable postmortem
+- Plugin SDK for custom inference features
+- Meaningful Apache Arrow, DataFusion, or OpenTelemetry contribution
+
+Do not start a stretch goal until core acceptance criteria pass.
+
+===============================================================================
+39. DEFINITION OF DONE
+===============================================================================
+
+TraceAtlas is portfolio-ready only when all of the following are true:
+
+PRODUCT:
+- A real incident replays from healthy behavior through failure and recovery.
+- The timeline, graph, heatmap, trace, and evidence views are synchronized.
+- A new viewer understands the failure visually.
+
+DATA:
+- At least one public labeled dataset is reproducibly converted.
+- Dataset versions, checksums, splits, and licenses are documented.
+- No employer data is used.
+
+SYSTEMS:
+- Event time differs from ingest time.
+- Watermarks and late events are implemented and tested.
+- At least one stateful temporal join exists.
+- Arrow batches power query operators.
+- Backpressure is bounded and observable.
+- Checkpoint and recovery survive an injected crash.
+
+INFERENCE:
+- Root-cause ranking is deterministic.
+- Scores expose feature contributions.
+- Supporting and contradicting evidence are visible.
+- Top-1, top-3, and MRR are evaluated.
+
+QUERY ENGINE:
+- A limited SQL subset compiles to logical and physical plans.
+- At least three core views use engine queries.
+- EXPLAIN and operator metrics are visible.
+
+VISUALIZATION:
+- Service map is stable and interactive.
+- Timeline supports scrubbing.
+- Heatmap reveals temporal order.
+- Trace comparison exposes the first divergence.
+- Evidence graph links claims to source evidence.
+- Reduced-motion and non-color cues exist.
+
+QUALITY:
+- Unit, property, integration, E2E, and failure tests pass.
+- Benchmarks are reproducible.
+- README, ARCHITECTURE.md, and RESULTS.md are complete.
+- A demo video exists.
+- Resume bullets contain only verified values.
+
+===============================================================================
+40. FIRST ACTIONS FOR THE IMPLEMENTING AGENTS
+===============================================================================
+
+Do these in order:
+
+1. Create the repository scaffold and ADRs.
+2. Audit RCAEval's actual files, labels, timestamps, and license.
+3. Freeze canonical event and incident schemas.
+4. Convert one small labeled incident into normalized Parquet.
+5. Build a deterministic replay CLI.
+6. Stream the incident into a backend with a versioned WebSocket.
+7. Render a real topology, timeline, heatmap, and trace waterfall.
+8. Add linked selections.
+9. Replace precomputed aggregates with Arrow batch operators.
+10. Add event-time watermarks and late-event revisions.
+11. Add baseline anomaly detection and root-cause feature extraction.
+12. Add ranking and evidence graphs.
+13. Add critical-path and healthy-trace comparison.
+14. Add checkpoint/recovery and a crash-test demo.
+15. Add SQL planning and EXPLAIN.
+16. Run evaluation and benchmarks.
+17. Polish the public demo.
+18. Attempt an external contribution based on a real issue discovered while
+    building.
+
+The first vertical slice should be:
+
+RCAEval incident
+-> normalized Parquet
+-> deterministic replay
+-> topology/timeline/heatmap/trace
+-> simple root-cause ranking
+-> clickable evidence
+
+Do not begin with Kubernetes, a general SQL engine, an LLM, or multiple datasets.
+
+===============================================================================
+41. PRIMARY REFERENCES TO VERIFY AND PIN
+===============================================================================
+
+OpenTelemetry Demo:
+https://opentelemetry.io/docs/demo/
+
+OpenTelemetry Demo feature-flag scenarios:
+https://opentelemetry.io/docs/demo/feature-flags/
+
+RCAEval:
+https://github.com/phamquiluan/RCAEval
+
+Amazon PetShop dataset:
+https://www.amazon.science/code-and-datasets/petshop
+
+Apache Arrow columnar format:
+https://arrow.apache.org/docs/format/Columnar.html
+
+Apache DataFusion logical-plan documentation, for architectural reference:
+https://datafusion.apache.org/library-user-guide/building-logical-plans.html
+
+Apache DataFusion EXPLAIN documentation, for architectural reference:
+https://datafusion.apache.org/user-guide/sql/explain.html
+
+Before implementation, agents must verify:
+
+- Current repository structure
+- Current dataset download paths
+- Dataset and code licenses
+- Current stable library versions
+- Any breaking API changes
+- Exact job posting availability before citing it publicly
+
+===============================================================================
+42. FINAL PROJECT THESIS
+===============================================================================
+
+TraceAtlas should communicate one coherent thesis:
+
+"Distributed incidents are difficult because evidence is fragmented across
+time, services, and telemetry types. I built a streaming engine that reconstructs
+that evidence into a synchronized visual model, ranks likely root causes, and
+shows exactly why each conclusion was reached, even when events arrive late and
+the analysis process itself fails."
+
+That thesis is more important than the number of features.
+
+The best final project is not the one with the most technologies. It is the one
+where:
+
+- the problem is obvious,
+- the visuals are memorable,
+- the inference is defensible,
+- the architecture is deep,
+- the benchmarks are reproducible,
+- the failures are honest,
+- and every implementation choice creates interview material.
