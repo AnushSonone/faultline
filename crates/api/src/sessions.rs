@@ -86,7 +86,7 @@ impl Session {
         self.clock = ReplayClock::new(start, end);
         let cap = self.envelopes.len().max(DEFAULT_CAPACITY);
         self.ingest = IngestPipeline::new(cap);
-        let _ = self.ingest.take_receiver();
+        // Keep receiver alive so try_ingest does not see a closed channel.
         self.projection_version = 0;
         self.ws_sequence = 0;
 

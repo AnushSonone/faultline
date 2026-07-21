@@ -107,11 +107,35 @@ pub async fn play_session(
     State(state): State<SharedState>,
     Path(session_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    with_session(&state, &session_id, |s| {
+    let label = with_session(&state, &session_id, |s| {
         s.clock.play();
         s.publish_projections();
         json!({ "state": clock_state_label(s.clock.state()) })
-    })
+    })?;
+
+    let state_tick = state.clone();
+    let sid = session_id.clone();
+    tokio::spawn(async move {
+        use faultline_replay::ClockState;
+        use std::time::Duration;
+        loop {
+            tokio::time::sleep(Duration::from_millis(150)).await;
+            let mut sessions = state_tick.sessions.lock();
+            let Some(session) = sessions.get_mut(&sid) else {
+                break;
+            };
+            if session.clock.state() != ClockState::Playing {
+                break;
+            }
+            session.clock.tick_wall(Duration::from_millis(150));
+            session.publish_projections();
+            if session.clock.state() != ClockState::Playing {
+                break;
+            }
+        }
+    });
+
+    Ok(label)
 }
 
 pub async fn pause_session(
