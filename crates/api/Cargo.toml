@@ -6,12 +6,21 @@ license.workspace = true
 
 [dependencies]
 faultline-common = { workspace = true }
+faultline-catalog = { workspace = true }
+faultline-replay = { workspace = true }
+faultline-ingest = { workspace = true }
+faultline-graph = { workspace = true }
+faultline-projection = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
+uuid = { workspace = true }
+futures = { workspace = true }
+parking_lot = { workspace = true }
+anyhow = { workspace = true }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
