@@ -1,0 +1,18 @@
+﻿[package]
+name = "faultline-replay-bin"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "faultline-replay"
+path = "src/main.rs"
+
+[dependencies]
+faultline-replay = { workspace = true }
+faultline-common = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
