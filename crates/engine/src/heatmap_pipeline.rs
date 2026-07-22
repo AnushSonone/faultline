@@ -99,38 +99,46 @@ impl HeatmapStreamingPipeline {
         envelopes: &[TelemetryEnvelope],
         cursor_ns: i64,
     ) -> Result<HeatmapProjection, String> {
+        let filtered: Vec<_> = envelopes
+            .iter()
+            .filter(|e| e.event_time_ns <= cursor_ns)
+            .cloned()
+            .collect();
+        self.rebuild_arrival_order(&filtered, cursor_ns)
+    }
+
+    /// Feed envelopes in the given arrival order (for adversarial schedules).
+    pub fn rebuild_arrival_order(
+        &mut self,
+        arrival_order: &[TelemetryEnvelope],
+        cursor_ns: i64,
+    ) -> Result<HeatmapProjection, String> {
         self.reset();
         self.cursor_ns = cursor_ns;
         self.watermark.advance_processing_time(cursor_ns);
         self.batcher.set_processing_time(cursor_ns);
 
-        for env in envelopes.iter().filter(|e| e.event_time_ns <= cursor_ns) {
+        for (i, env) in arrival_order.iter().enumerate() {
             let seq = self.next_seq;
             self.next_seq += 1;
             let event = ingested(seq, partition_key_for(env), env.clone());
-            let (_class, released) = self
-                .watermark
-                .push(event)
-                .map_err(|e| e.to_string())?;
+            let (_class, released) = self.watermark.push(event).map_err(|e| e.to_string())?;
             for r in released {
                 self.ingest_released(r)?;
             }
+            // Processing-time advances with each arrival for idle bookkeeping.
+            self.watermark
+                .advance_processing_time((i as i64 + 1).saturating_mul(1_000_000));
         }
-        // End of partial source at cursor: flush buffers and advance watermark.
         for r in self.watermark.drain_all() {
             self.ingest_released(r)?;
         }
         for batch in self.batcher.flush_all().map_err(|e| e.to_string())? {
             self.run_batch(batch, cursor_ns)?;
         }
-        let wm = if cursor_ns > 0 {
-            cursor_ns
-        } else {
-            self.watermark.global_watermark_ns()
-        };
+        let wm = cursor_ns.max(self.watermark.global_watermark_ns());
         let _ = self.window.on_watermark(wm);
-        self.sink
-            .apply_emits(self.window.last_emits(), cursor_ns);
+        self.sink.apply_emits(self.window.last_emits(), cursor_ns);
         Ok(self
             .sink
             .last_projection()
@@ -141,6 +149,39 @@ impl HeatmapStreamingPipeline {
                 bucket_width_ns: 1_000_000_000,
                 cells: Vec::new(),
             }))
+    }
+
+    /// Deterministic adversarial arrival schedule (same seed → same order).
+    pub fn adversarial_arrival_order(
+        envelopes: &[TelemetryEnvelope],
+        seed: u64,
+    ) -> Vec<TelemetryEnvelope> {
+        let mut metrics: Vec<_> = envelopes
+            .iter()
+            .filter(|e| e.signal == faultline_common::TelemetrySignal::Metric)
+            .cloned()
+            .collect();
+        if metrics.is_empty() {
+            return envelopes.to_vec();
+        }
+        // Seeded rotate + inject duplicate + move one event late in the arrival list.
+        let n = metrics.len();
+        let rot = (seed as usize) % n;
+        metrics.rotate_left(rot);
+        if n > 4 {
+            let dup = metrics[1].clone();
+            metrics.insert(3, dup);
+            let late = metrics.remove(2);
+            metrics.push(late);
+        }
+        // Keep non-metrics after, stable.
+        let mut rest: Vec<_> = envelopes
+            .iter()
+            .filter(|e| e.signal != faultline_common::TelemetrySignal::Metric)
+            .cloned()
+            .collect();
+        metrics.append(&mut rest);
+        metrics
     }
 
     fn ingest_released(&mut self, event: faultline_ingest::IngestedEvent) -> Result<(), String> {
@@ -250,5 +291,22 @@ mod tests {
         let a = p.rebuild_until(&envs, 2_500_000_000).unwrap();
         let b = p.rebuild_until(&envs, 2_500_000_000).unwrap();
         assert_eq!(a.cells, b.cells);
+    }
+
+    #[test]
+    fn adversarial_schedule_is_seed_stable() {
+        let envs = vec![
+            metric("a", 1, "frontend", "frontend_lat", 1.0),
+            metric("b", 2, "frontend", "frontend_lat", 2.0),
+            metric("c", 3, "frontend", "frontend_lat", 3.0),
+            metric("d", 4, "frontend", "frontend_lat", 4.0),
+            metric("e", 5, "frontend", "frontend_lat", 5.0),
+        ];
+        let a = HeatmapStreamingPipeline::adversarial_arrival_order(&envs, 7);
+        let b = HeatmapStreamingPipeline::adversarial_arrival_order(&envs, 7);
+        assert_eq!(
+            a.iter().map(|e| e.event_id.as_str()).collect::<Vec<_>>(),
+            b.iter().map(|e| e.event_id.as_str()).collect::<Vec<_>>()
+        );
     }
 }

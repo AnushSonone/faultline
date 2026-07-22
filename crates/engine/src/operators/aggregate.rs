@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-use arrow::array::{
-    Array, Float64Array, Float64Builder, Int64Builder, StringArray, StringBuilder,
-};
+use arrow::array::{Array, Float64Array, Float64Builder, Int64Builder, StringArray, StringBuilder};
 use arrow::datatypes::{DataType, Field, Schema};
 use arrow::record_batch::RecordBatch;
 use indexmap::IndexMap;
@@ -141,7 +139,7 @@ impl HashAggregateExec {
             let s = col
                 .as_any()
                 .downcast_ref::<StringArray>()
-                .ok_or_else(|| OperatorError::Message(format!("{name} utf8").into()))?;
+                .ok_or_else(|| OperatorError::Message(format!("{name} utf8")))?;
             parts.push(if s.is_null(row) {
                 "".into()
             } else {

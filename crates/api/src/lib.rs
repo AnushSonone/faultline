@@ -15,7 +15,8 @@ pub use websocket::PROTOCOL_VERSION;
 
 use routes::{
     create_session, get_trace, list_incidents, load_session, pause_session, play_session,
-    reset_session, resync_session, seek_session, speed_session,
+    reset_session, resync_session, runtime_inspector, seek_session, set_projection_mode,
+    speed_session,
 };
 use websocket::stream_handler;
 
@@ -47,6 +48,11 @@ pub fn router(state: SharedState) -> Router {
         .route("/api/v1/sessions/{id}/speed", post(speed_session))
         .route("/api/v1/sessions/{id}/reset", post(reset_session))
         .route("/api/v1/sessions/{id}/resync", post(resync_session))
+        .route(
+            "/api/v1/sessions/{id}/projection-mode",
+            post(set_projection_mode),
+        )
+        .route("/api/v1/sessions/{id}/runtime", get(runtime_inspector))
         .route("/api/v1/sessions/{id}/stream", get(stream_handler))
         .route("/api/v1/traces/{trace_id}", get(get_trace))
         .with_state(state)

@@ -210,11 +210,9 @@ impl WatermarkTracker {
             part.beyond_grace += 1;
             self.metrics.beyond_grace_events += 1;
             EventClass::BeyondGrace
-        } else if self.global_watermark_ns != i64::MIN && et <= self.global_watermark_ns {
-            part.late_events += 1;
-            self.metrics.late_events += 1;
-            EventClass::LateRevisable
-        } else if part.watermark_ns != i64::MIN && et <= part.watermark_ns {
+        } else if (self.global_watermark_ns != i64::MIN && et <= self.global_watermark_ns)
+            || (part.watermark_ns != i64::MIN && et <= part.watermark_ns)
+        {
             part.late_events += 1;
             self.metrics.late_events += 1;
             EventClass::LateRevisable
@@ -283,7 +281,12 @@ impl WatermarkTracker {
                 .event_time_ns
                 .cmp(&b.envelope.event_time_ns)
                 .then(a.sequence.cmp(&b.sequence))
-                .then(a.envelope.event_id.as_str().cmp(b.envelope.event_id.as_str()))
+                .then(
+                    a.envelope
+                        .event_id
+                        .as_str()
+                        .cmp(b.envelope.event_id.as_str()),
+                )
         });
         self.refresh_metrics();
         out
@@ -316,7 +319,12 @@ impl WatermarkTracker {
                 .event_time_ns
                 .cmp(&b.envelope.event_time_ns)
                 .then(a.sequence.cmp(&b.sequence))
-                .then(a.envelope.event_id.as_str().cmp(b.envelope.event_id.as_str()))
+                .then(
+                    a.envelope
+                        .event_id
+                        .as_str()
+                        .cmp(b.envelope.event_id.as_str()),
+                )
         });
         out
     }
@@ -437,7 +445,11 @@ mod tests {
         }
     }
 
-    fn feed(tracker: &mut WatermarkTracker, seq: u64, env: TelemetryEnvelope) -> Vec<IngestedEvent> {
+    fn feed(
+        tracker: &mut WatermarkTracker,
+        seq: u64,
+        env: TelemetryEnvelope,
+    ) -> Vec<IngestedEvent> {
         let pk = partition_key_for(&env);
         let (_c, out) = tracker.push(ingested(seq, pk, env)).unwrap();
         out

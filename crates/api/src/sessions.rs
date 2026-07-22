@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use faultline_catalog::Labels;
+use faultline_engine::{HeatmapStreamingPipeline, ProjectionMode, RuntimeInspectorDto};
 use faultline_graph::TraceDag;
 use faultline_ingest::{IngestPipeline, DEFAULT_CAPACITY};
 use faultline_projection::{
@@ -37,6 +38,9 @@ pub struct LoadRequest {
     pub incident_path: Option<String>,
     #[serde(default)]
     pub incident_id: Option<String>,
+    /// When true, metric arrival order is adversarially shuffled (seeded).
+    #[serde(default)]
+    pub adversarial: bool,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -47,6 +51,11 @@ pub struct SeekRequest {
 #[derive(Clone, Debug, Deserialize)]
 pub struct SpeedRequest {
     pub speed: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct ProjectionModeRequest {
+    pub mode: String,
 }
 
 pub struct Session {
@@ -62,6 +71,9 @@ pub struct Session {
     /// Bumped on each play request so only one tick loop remains active.
     pub playback_epoch: u64,
     pub broadcast: broadcast::Sender<WsEnvelope>,
+    pub heatmap_pipeline: HeatmapStreamingPipeline,
+    pub adversarial: bool,
+    pub adversarial_seed: u64,
 }
 
 impl Session {
@@ -79,10 +91,14 @@ impl Session {
             ws_sequence: 0,
             playback_epoch: 0,
             broadcast,
+            // Default heatmap to streaming after M3 core parity on synthetic fixture.
+            heatmap_pipeline: HeatmapStreamingPipeline::new(ProjectionMode::Streaming),
+            adversarial: false,
+            adversarial_seed: 42,
         }
     }
 
-    pub fn load_from_path(&mut self, path: &Path) -> Result<(), String> {
+    pub fn load_from_path(&mut self, path: &Path, adversarial: bool) -> Result<(), String> {
         let loaded = load_incident(path).map_err(|e| e.to_string())?;
         let start = loaded.manifest.start_time_ns;
         let end = loaded.manifest.end_time_ns;
@@ -90,6 +106,7 @@ impl Session {
         self.incident_path = Some(loaded.dir.clone());
         self.labels = Some(loaded.labels);
         self.envelopes = loaded.envelopes;
+        self.adversarial = adversarial;
         self.clock = ReplayClock::new(start, end);
         let cap = self.envelopes.len().max(DEFAULT_CAPACITY);
         self.ingest = IngestPipeline::new(cap);
@@ -97,6 +114,7 @@ impl Session {
         self.projection_version = 0;
         self.ws_sequence = 0;
         self.playback_epoch = self.playback_epoch.saturating_add(1);
+        self.heatmap_pipeline.reset();
 
         for env in &self.envelopes {
             self.ingest
@@ -135,8 +153,9 @@ impl Session {
 
         let topology = build_topology(&self.envelopes, cursor, ver);
         let timeline = build_timeline(&self.envelopes, cursor, ver);
-        let heatmap = build_heatmap(&self.envelopes, cursor, 1_000_000_000, ver);
+        let heatmap = self.build_heatmap(cursor, ver);
         let traces = build_trace_projection(&self.envelopes, cursor, ver);
+        let mode = self.heatmap_pipeline.mode();
 
         self.emit(
             "replay.status",
@@ -144,6 +163,7 @@ impl Session {
                 "state": format!("{:?}", self.clock.state()).to_ascii_lowercase(),
                 "speed": format!("{:?}", self.clock.speed()),
                 "event_time_ns": cursor,
+                "heatmap_mode": format!("{mode:?}").to_ascii_lowercase(),
             }),
         );
         self.emit("clock.tick", json!({ "event_time_ns": cursor }));
@@ -163,6 +183,56 @@ impl Session {
             "trace.available",
             serde_json::to_value(&traces).unwrap_or(json!({})),
         );
+        let inspector = self.heatmap_pipeline.inspector();
+        self.emit(
+            "runtime.inspector",
+            serde_json::to_value(&inspector).unwrap_or(json!({})),
+        );
+    }
+
+    fn build_heatmap(&mut self, cursor: i64, ver: u64) -> faultline_projection::HeatmapProjection {
+        match self.heatmap_pipeline.mode() {
+            ProjectionMode::Precomputed => {
+                build_heatmap(&self.envelopes, cursor, 1_000_000_000, ver)
+            }
+            ProjectionMode::Streaming => {
+                let result = if self.adversarial {
+                    let filtered: Vec<_> = self
+                        .envelopes
+                        .iter()
+                        .filter(|e| e.event_time_ns <= cursor)
+                        .cloned()
+                        .collect();
+                    let arrival = HeatmapStreamingPipeline::adversarial_arrival_order(
+                        &filtered,
+                        self.adversarial_seed,
+                    );
+                    self.heatmap_pipeline
+                        .rebuild_arrival_order(&arrival, cursor)
+                } else {
+                    self.heatmap_pipeline.rebuild_until(&self.envelopes, cursor)
+                };
+                match result {
+                    Ok(mut heat) => {
+                        heat.projection_version = ver;
+                        heat
+                    }
+                    Err(e) => {
+                        tracing::warn!("streaming heatmap failed, falling back: {e}");
+                        build_heatmap(&self.envelopes, cursor, 1_000_000_000, ver)
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn set_projection_mode(&mut self, mode: ProjectionMode) {
+        self.heatmap_pipeline.set_mode(mode);
+        self.heatmap_pipeline.reset();
+    }
+
+    pub fn inspector(&self) -> RuntimeInspectorDto {
+        self.heatmap_pipeline.inspector()
     }
 
     pub fn get_trace(&self, trace_id: &str) -> Option<TraceDag> {
@@ -177,6 +247,7 @@ impl Session {
     pub fn reset_replay(&mut self) {
         self.playback_epoch = self.playback_epoch.saturating_add(1);
         self.clock.reset();
+        self.heatmap_pipeline.reset();
         self.publish_projections();
     }
 }
