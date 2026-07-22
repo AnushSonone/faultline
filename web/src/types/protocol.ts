@@ -36,6 +36,13 @@ export type HeatmapCell = {
   bucket_start_ns: number;
   value: number;
   sample_count: number;
+  p50?: number | null;
+  p95?: number | null;
+  p99?: number | null;
+  metric_kind?: string | null;
+  operator_id?: string | null;
+  window_id?: string | null;
+  value_source?: string | null;
 };
 
 export type HeatmapPayload = {
@@ -43,6 +50,29 @@ export type HeatmapPayload = {
   cursor_event_time_ns: number;
   bucket_width_ns: number;
   cells: HeatmapCell[];
+  streaming_note?: string | null;
+};
+
+export type DeploymentCorrelation = {
+  change_id: string;
+  service: string;
+  change_type: string;
+  deployed_version?: string | null;
+  deployed_at_ns: number;
+  first_anomaly_ns?: number | null;
+  delay_ns?: number | null;
+  associated_anomalous_windows: number;
+  p99_before?: number | null;
+  p99_after?: number | null;
+  match_confidence: string;
+  evidence_refs: string[];
+  language: string;
+};
+
+export type CorrelationPayload = {
+  projection_version: number;
+  cursor_event_time_ns: number;
+  correlations: DeploymentCorrelation[];
 };
 
 export type TraceSummary = {

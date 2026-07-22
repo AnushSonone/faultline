@@ -8,6 +8,11 @@ export function IncidentTimeline() {
   const timeline = useInvestigation((s) => s.timeline);
   const selected = useInvestigation((s) => s.selectedEventTime);
   const selectedService = useInvestigation((s) => s.selectedService);
+  const selectedChangeId = useInvestigation((s) => s.selectedChangeId);
+  const correlations = useInvestigation((s) => s.correlations);
+  const selectChange = useInvestigation((s) => s.selectChange);
+  const selectService = useInvestigation((s) => s.selectService);
+  const selectOperator = useInvestigation((s) => s.selectOperator);
   const sessionId = useInvestigation((s) => s.sessionId);
 
   const markers = useMemo(() => {
@@ -69,17 +74,41 @@ export function IncidentTimeline() {
       .attr("r", 3)
       .attr("fill", "#8b9aab");
 
+    const deployTimes = new Set(
+      correlations.map((c) => c.deployed_at_ns).filter((t) => Number.isFinite(t)),
+    );
+    const selectedDeploy = correlations.find((c) => c.change_id === selectedChangeId);
+
     svg
       .selectAll("rect.mark")
       .data(deployOrLog)
       .enter()
       .append("rect")
       .attr("class", "mark")
+      .attr("data-testid", "deploy-marker")
       .attr("x", (d) => x(d.event_time_ns) - 2)
       .attr("y", 18)
       .attr("width", 4)
       .attr("height", 36)
-      .attr("fill", "#f5d76e");
+      .attr("fill", (d) => {
+        if (selectedDeploy && d.event_time_ns === selectedDeploy.deployed_at_ns) {
+          return "#e85d4c";
+        }
+        if (deployTimes.has(d.event_time_ns)) return "#f5d76e";
+        return "#f5d76e";
+      })
+      .style("cursor", "pointer")
+      .on("click", (event, d) => {
+        event.stopPropagation();
+        const match = correlations.find((c) => c.deployed_at_ns === d.event_time_ns);
+        if (match) {
+          selectChange(match.change_id);
+          selectService(match.service);
+          selectOperator("deploy_temporal_join");
+        } else if (d.service) {
+          selectService(d.service);
+        }
+      });
 
     if (selected != null) {
       svg
@@ -98,12 +127,27 @@ export function IncidentTimeline() {
       const t = Math.round(x.invert(mx));
       await seek(sessionId, t);
     });
-  }, [timeline, selected, selectedService, sessionId, deployOrLog, markers]);
+  }, [
+    timeline,
+    selected,
+    selectedService,
+    sessionId,
+    deployOrLog,
+    markers,
+    correlations,
+    selectedChangeId,
+    selectChange,
+    selectService,
+    selectOperator,
+  ]);
 
   return (
     <div className="panel-body" data-testid="timeline">
       <svg ref={svgRef} width="100%" height={72} role="img" aria-label="Incident timeline" />
-      <p className="hint">Click timeline to scrub event time. Yellow = deploy/log markers.</p>
+      <p className="hint">
+        Click timeline to scrub. Yellow markers are deployments/logs (precomputed base events).
+        Selecting a deploy highlights the associated service via streaming temporal join.
+      </p>
     </div>
   );
 }

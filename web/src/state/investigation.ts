@@ -1,11 +1,14 @@
 import { create } from "zustand";
 import type {
+  CorrelationPayload,
+  HeatmapCell,
   HeatmapPayload,
   TimelinePayload,
   TopologyPayload,
   TraceListPayload,
   WsEnvelope,
 } from "../types/protocol";
+
 export type GroundTruth = {
   source: string;
   not_inferred: boolean;
@@ -25,12 +28,19 @@ export type ReplayStatus = {
 };
 
 export type RuntimeInspector = {
+  runtime_projection_version?: number;
   global_watermark_ns: number;
   allowed_lateness_ns: number;
   late_events: number;
   beyond_grace_events?: number;
   reorder_buffer_size: number;
-  operators: Array<{ operator_id: string; rows_in?: number; batches_in?: number; queue_depth?: number }>;
+  operators: Array<Record<string, unknown> & { stable_id?: string; operator_id?: string }>;
+  operator_metrics?: Array<{
+    operator_id: string;
+    rows_in?: number;
+    batches_in?: number;
+    queue_depth?: number;
+  }>;
   rows_processed?: number;
   batches_processed?: number;
   queue_depth?: number;
@@ -38,6 +48,29 @@ export type RuntimeInspector = {
   finalized_window_count: number;
   heatmap_revisions: number;
   projection_mode: string;
+  ingestion?: {
+    events_received?: number;
+    duplicates?: number;
+    reorder_buffer_occupancy?: number;
+  };
+  event_time?: {
+    max_event_time_ns?: number;
+    global_watermark_ns?: number;
+    watermark_lag_ns?: number;
+    allowed_lateness_ns?: number;
+    late_but_revisable_events?: number;
+    beyond_grace_events?: number;
+    idle_partitions?: number;
+    partition_watermarks?: Array<{ partition: string; watermark_ns: number }>;
+  };
+  batching?: { batches_created?: number };
+  session?: { replay_state?: string; replay_speed?: string };
+  backpressure?: {
+    limiting_operator_id?: string | null;
+    max_queue_utilization?: number;
+    any_queue_saturated?: boolean;
+  };
+  architecture_status?: string[];
 };
 
 type InvestigationState = {
@@ -52,12 +85,16 @@ type InvestigationState = {
   timeline: TimelinePayload | null;
   heatmap: HeatmapPayload | null;
   traces: TraceListPayload | null;
+  correlations: CorrelationPayload["correlations"];
   groundTruth: GroundTruth | null;
   runtimeInspector: RuntimeInspector | null;
   heatmapMode: string;
   selectedEventTime: number | null;
   selectedService: string | null;
   selectedTrace: string | null;
+  selectedOperator: string | null;
+  selectedChangeId: string | null;
+  selectedHeatmapCell: HeatmapCell | null;
   setSession: (id: string) => void;
   setIncident: (id: string | null) => void;
   setConnected: (v: boolean) => void;
@@ -68,6 +105,9 @@ type InvestigationState = {
   selectService: (s: string | null) => void;
   selectTrace: (t: string | null) => void;
   selectTime: (t: number | null) => void;
+  selectOperator: (id: string | null) => void;
+  selectChange: (id: string | null) => void;
+  selectHeatmapCell: (c: HeatmapCell | null) => void;
   applyWs: (msg: WsEnvelope) => void;
 };
 
@@ -83,12 +123,16 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   timeline: null,
   heatmap: null,
   traces: null,
+  correlations: [],
   groundTruth: null,
   runtimeInspector: null,
   heatmapMode: "streaming",
   selectedEventTime: null,
   selectedService: null,
   selectedTrace: null,
+  selectedOperator: null,
+  selectedChangeId: null,
+  selectedHeatmapCell: null,
   setSession: (id) => set({ sessionId: id }),
   setIncident: (id) => set({ incidentId: id }),
   setConnected: (v) => set({ connected: v }),
@@ -100,16 +144,23 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
       selectedService: null,
       selectedTrace: null,
       selectedEventTime: null,
+      selectedOperator: null,
+      selectedChangeId: null,
+      selectedHeatmapCell: null,
       topology: null,
       timeline: null,
       heatmap: null,
       traces: null,
+      correlations: [],
       lastSequence: 0,
       needsResync: false,
     }),
   selectService: (s) => set({ selectedService: s }),
   selectTrace: (t) => set({ selectedTrace: t }),
   selectTime: (t) => set({ selectedEventTime: t }),
+  selectOperator: (id) => set({ selectedOperator: id }),
+  selectChange: (id) => set({ selectedChangeId: id }),
+  selectHeatmapCell: (c) => set({ selectedHeatmapCell: c }),
   applyWs: (msg) => {
     const prev = get().lastSequence;
     if (prev && msg.sequence > prev + 1) {
@@ -136,13 +187,16 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
         patch.topology = msg.payload as TopologyPayload;
         break;
       case "timeline.append":
-        // M2 emits full timeline payloads under this type name.
         patch.timeline = msg.payload as TimelinePayload;
         break;
       case "heatmap.delta":
-        // Full heatmap payloads (precomputed or streaming); replace by version.
         patch.heatmap = msg.payload as HeatmapPayload;
         break;
+      case "correlation.snapshot": {
+        const corr = msg.payload as CorrelationPayload;
+        patch.correlations = corr.correlations ?? [];
+        break;
+      }
       case "runtime.inspector":
         patch.runtimeInspector = msg.payload as RuntimeInspector;
         if ((msg.payload as RuntimeInspector).projection_mode) {

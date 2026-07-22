@@ -16,6 +16,7 @@ import { IncidentTimeline } from "../views/IncidentTimeline/IncidentTimeline";
 import { AnomalyHeatmap } from "../views/AnomalyHeatmap/AnomalyHeatmap";
 import { TraceWaterfall } from "../views/TraceWaterfall/TraceWaterfall";
 import { RuntimeInspectorPanel } from "../views/RuntimeInspector/RuntimeInspector";
+import { DeploymentCorrelationPanel } from "../views/DeploymentCorrelation/DeploymentCorrelation";
 
 const DEFAULT_INCIDENT = "rec-mem-001";
 
@@ -142,12 +143,14 @@ export function App() {
         <strong>Development status</strong>
         <ul>
           <li>Incident: {incidentId ?? DEFAULT_INCIDENT} (synthetic fixture)</li>
-          <li>Heatmap: {heatmapMode}</li>
-          <li>Topology: precomputed</li>
-          <li>Timeline: precomputed</li>
-          <li>Traces: precomputed</li>
-          <li>Root cause: fixture ground truth</li>
-          <li>Inference engine: not implemented</li>
+          <li>Heatmap values: {heatmapMode}</li>
+          <li>Heatmap p95/p99: streaming percentile</li>
+          <li>Deployment correlation: streaming temporal join</li>
+          <li>Topology structure: precomputed</li>
+          <li>Timeline base events: precomputed</li>
+          <li>Trace waterfall: precomputed</li>
+          <li>Root-cause value: fixture ground truth</li>
+          <li>Root-cause inference: not implemented</li>
           <li>Replay: {adversarial ? "adversarial arrival order" : "normal"}</li>
         </ul>
       </aside>
@@ -166,6 +169,10 @@ export function App() {
         <section className="panel">
           <h2>Anomaly heatmap</h2>
           <AnomalyHeatmap />
+        </section>
+        <section className="panel">
+          <h2>Deployment correlation</h2>
+          <DeploymentCorrelationPanel />
         </section>
         <section className="panel">
           <h2>Trace waterfall</h2>

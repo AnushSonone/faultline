@@ -205,7 +205,7 @@ pub fn build_correlation_precomputed(
             language: "occurred shortly before elevated latency; supports investigation".into(),
         });
     }
-    correlations.sort_by(|a, b| a.deployed_at_ns.cmp(&b.deployed_at_ns));
+    correlations.sort_by_key(|a| a.deployed_at_ns);
     CorrelationProjection {
         projection_version,
         cursor_event_time_ns: cursor_ns,
