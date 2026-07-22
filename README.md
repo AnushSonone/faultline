@@ -60,14 +60,16 @@ Helpers: `bash scripts/run-demo.sh` or `pwsh -File scripts/run-demo.ps1`
 - RCAEval audit: `docs/references/rcaeval-audit.md` (RE2-OB go-with-fallback)
 - M2 audit: `docs/audits/M2_COMPLETION_AUDIT.md`
 
-## M3 heatmap streaming
+## M3 streaming runtime
 
-- Default heatmap path: **streaming** (watermarks → Arrow batches → tumbling windows).
-- Topology, timeline, and traces remain **precomputed** (M2).
-- UI toggles: `Heatmap: streaming|precomputed`, `Adversarial on|off`, plus a collapsible runtime inspector.
+- Default heatmap path: **streaming** (watermarks → Arrow batches → filter → window avg + DDSketch p50/p95/p99).
+- Deployment correlation: **streaming left temporal join** (not root-cause inference).
+- Topology structure, timeline base events, and traces remain **precomputed** (M2).
+- UI: heatmap mode toggle, adversarial replay, deployment correlation panel, polished runtime inspector.
 - APIs: `POST /api/v1/sessions/{id}/projection-mode`, `GET /api/v1/sessions/{id}/runtime`.
+- Audits: `docs/audits/M3_EVENT_TIME_CORE_AUDIT.md`, `docs/audits/M3_RUNTIME_DEPTH_AUDIT.md`.
 
 ## Spec
 
 See `Faultline_Agent_Project_Specification.txt` for the full agent contract.
-M3 core covers TA-021…025. Do not start TA-026+ until explicitly requested.
+M3 covers TA-021…029. Do not start M4 root-cause inference until explicitly requested.
