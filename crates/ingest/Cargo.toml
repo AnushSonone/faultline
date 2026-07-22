@@ -11,3 +11,7 @@ thiserror = { workspace = true }
 faultline-common = { workspace = true }
 tokio = { workspace = true }
 indexmap = { workspace = true }
+arrow = { workspace = true }
+
+[dev-dependencies]
+proptest = "1"
