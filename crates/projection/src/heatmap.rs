@@ -8,8 +8,24 @@ use serde::{Deserialize, Serialize};
 pub struct HeatmapCell {
     pub service: String,
     pub bucket_start_ns: i64,
+    /// Primary display value. Streaming latency cells use p99.
     pub value: f64,
     pub sample_count: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub p50: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub p95: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub p99: Option<f64>,
+    /// lat | err | mem | mixed
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub metric_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub operator_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value_source: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -18,6 +34,8 @@ pub struct HeatmapProjection {
     pub cursor_event_time_ns: i64,
     pub bucket_width_ns: i64,
     pub cells: Vec<HeatmapCell>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub streaming_note: Option<String>,
 }
 
 /// Precomputed heatmap from metric envelopes up to cursor.
@@ -62,6 +80,13 @@ pub fn build_heatmap(
                     0.0
                 },
                 sample_count,
+                p50: None,
+                p95: None,
+                p99: None,
+                metric_kind: None,
+                operator_id: None,
+                window_id: None,
+                value_source: Some("precomputed_avg".into()),
             },
         )
         .collect();
@@ -76,5 +101,6 @@ pub fn build_heatmap(
         cursor_event_time_ns,
         bucket_width_ns: width,
         cells,
+        streaming_note: Some("precomputed average over lat|err|mem metrics".into()),
     }
 }

@@ -2,29 +2,13 @@
 
 use std::collections::VecDeque;
 
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::sync::mpsc;
 
 use crate::message::{ControlMessage, RuntimeBatch, RuntimeMessage};
 use crate::operator::{Operator, OperatorError, OperatorMetrics};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RuntimeInspectorDto {
-    pub global_watermark_ns: i64,
-    pub allowed_lateness_ns: i64,
-    pub late_events: u64,
-    pub beyond_grace_events: u64,
-    pub reorder_buffer_size: usize,
-    pub operators: Vec<OperatorMetrics>,
-    pub rows_processed: u64,
-    pub batches_processed: u64,
-    pub queue_depth: usize,
-    pub active_window_count: usize,
-    pub finalized_window_count: usize,
-    pub heatmap_revisions: u64,
-    pub projection_mode: String,
-}
+pub use crate::runtime_projection::RuntimeInspectorDto;
 
 #[derive(Debug, Error)]
 pub enum RuntimeError {
