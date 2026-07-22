@@ -82,6 +82,25 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   font-size: 0.95rem;
 }
 
+.inspector {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.inspector summary {
+  cursor: pointer;
+  color: var(--fg);
+}
+
+.inspector-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+}
+
 .selection-bar {
   display: flex;
   gap: 1.25rem;

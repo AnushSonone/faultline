@@ -21,6 +21,19 @@ export type ReplayStatus = {
   state: string;
   speed?: string;
   event_time_ns?: number;
+  heatmap_mode?: string;
+};
+
+export type RuntimeInspector = {
+  global_watermark_ns: number;
+  allowed_lateness_ns: number;
+  late_events: number;
+  reorder_buffer_size: number;
+  operators: Array<{ operator_id: string; rows_in?: number; batches_in?: number; queue_depth?: number }>;
+  active_window_count: number;
+  finalized_window_count: number;
+  heatmap_revisions: number;
+  projection_mode: string;
 };
 
 type InvestigationState = {
@@ -36,6 +49,8 @@ type InvestigationState = {
   heatmap: HeatmapPayload | null;
   traces: TraceListPayload | null;
   groundTruth: GroundTruth | null;
+  runtimeInspector: RuntimeInspector | null;
+  heatmapMode: string;
   selectedEventTime: number | null;
   selectedService: string | null;
   selectedTrace: string | null;
@@ -65,6 +80,8 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   heatmap: null,
   traces: null,
   groundTruth: null,
+  runtimeInspector: null,
+  heatmapMode: "streaming",
   selectedEventTime: null,
   selectedService: null,
   selectedTrace: null,
@@ -102,9 +119,12 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
       selectedEventTime: msg.event_time_ns,
     };
     switch (msg.type) {
-      case "replay.status":
-        patch.replay = msg.payload as ReplayStatus;
+      case "replay.status": {
+        const st = msg.payload as ReplayStatus;
+        patch.replay = st;
+        if (st.heatmap_mode) patch.heatmapMode = st.heatmap_mode;
         break;
+      }
       case "clock.tick":
         patch.selectedEventTime = (msg.payload as { event_time_ns: number }).event_time_ns;
         break;
@@ -116,8 +136,14 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
         patch.timeline = msg.payload as TimelinePayload;
         break;
       case "heatmap.delta":
-        // M2 emits full heatmap payloads under this type name.
+        // Full heatmap payloads (precomputed or streaming); replace by version.
         patch.heatmap = msg.payload as HeatmapPayload;
+        break;
+      case "runtime.inspector":
+        patch.runtimeInspector = msg.payload as RuntimeInspector;
+        if ((msg.payload as RuntimeInspector).projection_mode) {
+          patch.heatmapMode = (msg.payload as RuntimeInspector).projection_mode;
+        }
         break;
       case "trace.available":
         patch.traces = msg.payload as TraceListPayload;
