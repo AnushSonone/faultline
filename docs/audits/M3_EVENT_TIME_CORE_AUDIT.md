@@ -69,4 +69,12 @@ Streaming rebuild on synthetic fixture produces non-empty service×bucket cells;
 
 ## Commits (this branch)
 
-See `git log main..HEAD --oneline`.
+```text
+9d664f9 docs: start M3 event-time runtime
+3ea137a feat(ingest): add reorder buffers, watermarks, and Arrow batching
+3b57886 feat(engine): add bounded runtime, operators, and event-time windows
+4a4d473 feat(projection): stream heatmap updates with dual projection modes
+7c82188 feat(web): add runtime inspector and heatmap mode controls
+6a5d25d docs: record M3 event-time core status
+6c72f94 chore: apply rustfmt after M3 core land
+```
