@@ -138,6 +138,20 @@ export function App() {
         <span data-testid="heatmap-mode">heatmap: {heatmapMode}</span>
       </div>
 
+      <aside className="arch-status" data-testid="arch-status">
+        <strong>Development status</strong>
+        <ul>
+          <li>Incident: {incidentId ?? DEFAULT_INCIDENT} (synthetic fixture)</li>
+          <li>Heatmap: {heatmapMode}</li>
+          <li>Topology: precomputed</li>
+          <li>Timeline: precomputed</li>
+          <li>Traces: precomputed</li>
+          <li>Root cause: fixture ground truth</li>
+          <li>Inference engine: not implemented</li>
+          <li>Replay: {adversarial ? "adversarial arrival order" : "normal"}</li>
+        </ul>
+      </aside>
+
       <RuntimeInspectorPanel />
 
       <div className="grid">

@@ -28,8 +28,12 @@ export type RuntimeInspector = {
   global_watermark_ns: number;
   allowed_lateness_ns: number;
   late_events: number;
+  beyond_grace_events?: number;
   reorder_buffer_size: number;
   operators: Array<{ operator_id: string; rows_in?: number; batches_in?: number; queue_depth?: number }>;
+  rows_processed?: number;
+  batches_processed?: number;
+  queue_depth?: number;
   active_window_count: number;
   finalized_window_count: number;
   heatmap_revisions: number;

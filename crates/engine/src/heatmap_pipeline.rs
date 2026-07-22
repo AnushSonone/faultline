@@ -216,16 +216,24 @@ impl HeatmapStreamingPipeline {
 
     pub fn inspector(&self) -> RuntimeInspectorDto {
         let wm = self.watermark.metrics();
+        let ops = vec![
+            self.filter.metrics(),
+            self.window.metrics(),
+            self.sink.metrics(),
+        ];
+        let rows_processed = ops.iter().map(|o| o.rows_in).sum();
+        let batches_processed = ops.iter().map(|o| o.batches_in).sum();
+        let queue_depth = ops.iter().map(|o| o.queue_depth).sum();
         RuntimeInspectorDto {
             global_watermark_ns: wm.global_watermark_ns,
             allowed_lateness_ns: self.watermark.config().allowed_lateness_ns,
             late_events: wm.late_events,
+            beyond_grace_events: wm.beyond_grace_events,
             reorder_buffer_size: wm.reorder_buffer_size,
-            operators: vec![
-                self.filter.metrics(),
-                self.window.metrics(),
-                self.sink.metrics(),
-            ],
+            operators: ops,
+            rows_processed,
+            batches_processed,
+            queue_depth,
             active_window_count: self.window.active_window_count(),
             finalized_window_count: self.window.finalized_window_count(),
             heatmap_revisions: self.sink.revisions(),

@@ -4,9 +4,17 @@ Interactive Incident Replay and Root-Cause Visualization.
 
 GitHub: https://github.com/AnushSonone/faultline
 
-## Quick start (M2 demo)
+## Quick start (local product review)
 
-### macOS / Linux
+```bash
+make demo
+# Frontend: http://127.0.0.1:5173
+# Ctrl+C stops API + UI
+```
+
+Requires: Rust (`cargo`), Node.js (`npm`), `curl`. First run installs `web/node_modules` if missing.
+
+### Manual two-terminal start (macOS / Linux)
 
 ```bash
 # Terminal 1 — API
