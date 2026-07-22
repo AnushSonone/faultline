@@ -1,0 +1,37 @@
+{
+  "fixture": "datasets/fixtures/synthetic-ob/v1/rec-mem-001",
+  "generated": "2026-07-21",
+  "comparisons": [
+    {
+      "name": "heatmap_service_grouping",
+      "classification": "expected_match",
+      "notes": "Both paths group by canonical service string."
+    },
+    {
+      "name": "heatmap_bucket_alignment",
+      "classification": "expected_match",
+      "notes": "1s tumbling buckets on event_time_ns."
+    },
+    {
+      "name": "heatmap_average_vs_p99",
+      "classification": "event_time_semantic_difference",
+      "notes": "Streaming latency cells use DDSketch p99; precomputed path still emits average of lat|err|mem. Compare p99 only against exact reference, not against precomputed average."
+    },
+    {
+      "name": "p99_vs_exact_sorted",
+      "classification": "expected_approximation_error",
+      "bound": "relative_error <= 0.02 for alpha=0.01 on controlled fixtures; absolute fallback 1.0 for tiny windows",
+      "notes": "See crates/engine/tests/percentile_accuracy.rs"
+    },
+    {
+      "name": "deployment_correlation",
+      "classification": "expected_match",
+      "notes": "Streaming join and precomputed assist both surface deploy-rec-v2 for recommendationservice when cursor passes deploy time."
+    },
+    {
+      "name": "topology_structure",
+      "classification": "precomputed_only",
+      "notes": "Topology remains M2 precomputed; not compared to streaming operators."
+    }
+  ]
+}
