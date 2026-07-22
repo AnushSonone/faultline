@@ -6,6 +6,7 @@ import {
   pause,
   play,
   reset,
+  setProjectionMode,
   setSpeed,
   type StreamHandle,
 } from "../api/client";
@@ -14,18 +15,21 @@ import { ServiceMap } from "../views/ServiceMap/ServiceMap";
 import { IncidentTimeline } from "../views/IncidentTimeline/IncidentTimeline";
 import { AnomalyHeatmap } from "../views/AnomalyHeatmap/AnomalyHeatmap";
 import { TraceWaterfall } from "../views/TraceWaterfall/TraceWaterfall";
+import { RuntimeInspectorPanel } from "../views/RuntimeInspector/RuntimeInspector";
 
 const DEFAULT_INCIDENT = "rec-mem-001";
 
 export function App() {
   const wsRef = useRef<StreamHandle | null>(null);
   const [booting, setBooting] = useState(true);
+  const [adversarial, setAdversarial] = useState(false);
   const sessionId = useInvestigation((s) => s.sessionId);
   const connected = useInvestigation((s) => s.connected);
   const replay = useInvestigation((s) => s.replay);
   const incidentId = useInvestigation((s) => s.incidentId);
   const lastError = useInvestigation((s) => s.lastError);
   const groundTruth = useInvestigation((s) => s.groundTruth);
+  const heatmapMode = useInvestigation((s) => s.heatmapMode);
   const selectedService = useInvestigation((s) => s.selectedService);
   const selectedTrace = useInvestigation((s) => s.selectedTrace);
   const selectedEventTime = useInvestigation((s) => s.selectedEventTime);
@@ -44,7 +48,7 @@ export function App() {
         setSession(id);
         wsRef.current = connectStream(id);
         clearSelection();
-        const loaded = await loadIncident(id, DEFAULT_INCIDENT);
+        const loaded = await loadIncident(id, DEFAULT_INCIDENT, { adversarial });
         setIncident(loaded.incident_id ?? DEFAULT_INCIDENT);
         setGroundTruth(loaded.ground_truth ?? null);
         await setSpeed(id, "10");
@@ -58,7 +62,7 @@ export function App() {
       cancelled = true;
       wsRef.current?.close();
     };
-  }, [setSession, setIncident, setError, setGroundTruth, clearSelection]);
+  }, [setSession, setIncident, setError, setGroundTruth, clearSelection, adversarial]);
 
   return (
     <div className="shell investigation">
@@ -89,6 +93,25 @@ export function App() {
           >
             Reset
           </button>
+          <button
+            type="button"
+            disabled={!sessionId}
+            data-testid="heatmap-mode-toggle"
+            onClick={() => {
+              if (!sessionId) return;
+              const next = heatmapMode === "streaming" ? "precomputed" : "streaming";
+              void setProjectionMode(sessionId, next);
+            }}
+          >
+            Heatmap: {heatmapMode}
+          </button>
+          <button
+            type="button"
+            data-testid="adversarial-toggle"
+            onClick={() => setAdversarial((v) => !v)}
+          >
+            {adversarial ? "Adversarial on" : "Adversarial off"}
+          </button>
           <span className="pill" data-testid="connection">
             {connected ? "ws live" : "ws down"}
           </span>
@@ -112,7 +135,24 @@ export function App() {
         <span>time: {selectedEventTime ?? "-"}</span>
         <span>service: {selectedService ?? "-"}</span>
         <span>trace: {selectedTrace ?? "-"}</span>
+        <span data-testid="heatmap-mode">heatmap: {heatmapMode}</span>
       </div>
+
+      <aside className="arch-status" data-testid="arch-status">
+        <strong>Development status</strong>
+        <ul>
+          <li>Incident: {incidentId ?? DEFAULT_INCIDENT} (synthetic fixture)</li>
+          <li>Heatmap: {heatmapMode}</li>
+          <li>Topology: precomputed</li>
+          <li>Timeline: precomputed</li>
+          <li>Traces: precomputed</li>
+          <li>Root cause: fixture ground truth</li>
+          <li>Inference engine: not implemented</li>
+          <li>Replay: {adversarial ? "adversarial arrival order" : "normal"}</li>
+        </ul>
+      </aside>
+
+      <RuntimeInspectorPanel />
 
       <div className="grid">
         <section className="panel">

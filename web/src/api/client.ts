@@ -14,11 +14,18 @@ export async function createSession(): Promise<string> {
   return j.session_id as string;
 }
 
-export async function loadIncident(sessionId: string, incidentId: string) {
+export async function loadIncident(
+  sessionId: string,
+  incidentId: string,
+  opts?: { adversarial?: boolean },
+) {
   const r = await fetch(`/api/v1/sessions/${sessionId}/load`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ incident_id: incidentId }),
+    body: JSON.stringify({
+      incident_id: incidentId,
+      adversarial: opts?.adversarial ?? false,
+    }),
   });
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<{
@@ -29,6 +36,14 @@ export async function loadIncident(sessionId: string, incidentId: string) {
     end_time_ns: number;
     ground_truth?: GroundTruth;
   }>;
+}
+
+export async function setProjectionMode(sessionId: string, mode: "streaming" | "precomputed") {
+  await fetch(`/api/v1/sessions/${sessionId}/projection-mode`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode }),
+  });
 }
 
 export async function play(sessionId: string) {

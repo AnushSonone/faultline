@@ -54,7 +54,7 @@ hex = "0.4"
 bytes = "1"
 futures = "0.3"
 tokio-stream = "0.1"
-arrow = { version = "58", default-features = false, features = ["json"] }
+arrow = { version = "58", default-features = false, features = ["json", "prettyprint"] }
 parquet = { version = "58", default-features = false, features = ["arrow", "snap"] }
 clap = { version = "4", features = ["derive"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }

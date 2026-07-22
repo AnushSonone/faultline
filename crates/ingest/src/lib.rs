@@ -1,4 +1,16 @@
-//! Backend ingest: schema validation, sequence, dedupe, bounded channel, partition routing.
+﻿//! Backend ingest: validation, dedupe, bounded channel, watermarks, Arrow batching.
+
+mod batcher;
+mod watermark;
+
+pub use batcher::{
+    changes_schema, logs_schema, metrics_schema, spans_schema, BatcherConfig, BatcherError,
+    BatcherStats, MultiSignalBatcher, SignalBatch, SignalBatcher, SignalKind,
+};
+pub use watermark::{
+    ingested, EventClass, OverflowPolicy, WatermarkConfig, WatermarkError, WatermarkMetrics,
+    WatermarkTracker,
+};
 
 use std::collections::HashSet;
 
@@ -74,59 +86,21 @@ impl IngestPipeline {
         &self.metrics
     }
 
-    /// Take the receiver once (for a consumer task).
     pub fn take_receiver(&mut self) -> Option<mpsc::Receiver<IngestedEvent>> {
         self.rx.take()
     }
 
-    /// Validate + dedupe + enqueue. Returns `Ok(None)` when duplicate.
     pub async fn ingest(
         &mut self,
-        mut envelope: TelemetryEnvelope,
+        envelope: TelemetryEnvelope,
     ) -> Result<Option<IngestedEvent>, IngestError> {
-        validate_envelope(&envelope)?;
-
-        if !self.seen.insert(envelope.event_id.clone()) {
-            self.metrics.duplicates += 1;
-            return Ok(None);
-        }
-
-        let sequence = self.next_seq;
-        self.next_seq = self.next_seq.saturating_add(1);
-        envelope.ingest_time_ns = sequence as i64; // placeholder until wall clock wired
-        let partition_key = partition_key_for(&envelope);
-        let event = IngestedEvent {
-            sequence,
-            partition_key,
-            envelope,
-        };
-
-        match self.tx.try_send(event.clone()) {
-            Ok(()) => {
-                self.metrics.accepted += 1;
-                self.metrics.enqueued += 1;
-                Ok(Some(event))
-            }
-            Err(mpsc::error::TrySendError::Full(_)) => {
-                self.metrics.rejected += 1;
-                // Roll back dedupe so retry can succeed later.
-                self.seen.remove(&event.envelope.event_id);
-                self.next_seq = sequence;
-                Err(IngestError::ChannelFull)
-            }
-            Err(mpsc::error::TrySendError::Closed(_)) => {
-                self.metrics.rejected += 1;
-                Err(IngestError::ChannelClosed)
-            }
-        }
+        self.try_ingest(envelope)
     }
 
-    /// Blocking-style helper for tests / sync callers.
     pub fn try_ingest(
         &mut self,
         envelope: TelemetryEnvelope,
     ) -> Result<Option<IngestedEvent>, IngestError> {
-        // Use try_send path via block_on-free logic duplicated lightly.
         validate_envelope(&envelope)?;
         if !self.seen.insert(envelope.event_id.clone()) {
             self.metrics.duplicates += 1;
@@ -260,7 +234,6 @@ mod tests {
     #[test]
     fn channel_is_bounded() {
         let mut pipe = IngestPipeline::new(1);
-        // Keep receiver so channel stays open but fills.
         let _rx = pipe.take_receiver();
         pipe.try_ingest(sample_metric("a")).unwrap();
         let err = pipe.try_ingest(sample_metric("b")).unwrap_err();

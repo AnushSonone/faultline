@@ -11,6 +11,7 @@ faultline-replay = { workspace = true }
 faultline-ingest = { workspace = true }
 faultline-graph = { workspace = true }
 faultline-projection = { workspace = true }
+faultline-engine = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -7,9 +7,10 @@ use serde::Serialize;
 use serde_json::{json, Value};
 
 use crate::sessions::{
-    clock_state_label, parse_speed, CreateSessionResponse, LoadRequest, SeekRequest, SharedState,
-    SpeedRequest,
+    clock_state_label, parse_speed, CreateSessionResponse, LoadRequest, ProjectionModeRequest,
+    SeekRequest, SharedState, SpeedRequest,
 };
+use faultline_engine::ProjectionMode;
 
 pub fn api_prefix() -> &'static str {
     "/api/v1"
@@ -84,7 +85,7 @@ pub async fn load_session(
         )
     })?;
     session
-        .load_from_path(&path)
+        .load_from_path(&path, body.adversarial)
         .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({"error": e}))))?;
     let ground_truth = session.labels.as_ref().map(|labels| {
         json!({
@@ -228,6 +229,37 @@ pub async fn resync_session(
             "projection_version": s.projection_version,
             "ws_sequence": s.ws_sequence,
         })
+    })
+}
+
+pub async fn set_projection_mode(
+    State(state): State<SharedState>,
+    Path(session_id): Path<String>,
+    Json(body): Json<ProjectionModeRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let mode = match body.mode.to_ascii_lowercase().as_str() {
+        "streaming" => ProjectionMode::Streaming,
+        "precomputed" => ProjectionMode::Precomputed,
+        other => {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": format!("invalid mode: {other}")})),
+            ));
+        }
+    };
+    with_session(&state, &session_id, |s| {
+        s.set_projection_mode(mode);
+        s.publish_projections();
+        json!({ "mode": body.mode })
+    })
+}
+
+pub async fn runtime_inspector(
+    State(state): State<SharedState>,
+    Path(session_id): Path<String>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    with_session(&state, &session_id, |s| {
+        serde_json::to_value(s.inspector()).unwrap_or(json!({}))
     })
 }
 

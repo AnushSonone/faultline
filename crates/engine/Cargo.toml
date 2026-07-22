@@ -9,4 +9,18 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 faultline-common = { workspace = true }
+faultline-ingest = { workspace = true }
+faultline-projection = { workspace = true }
+arrow = { workspace = true, features = ["json"] }
+arrow-select = "58"
+tokio = { workspace = true }
+indexmap = { workspace = true }
+tracing = { workspace = true }
 
+[dev-dependencies]
+proptest = "1"
+tokio = { workspace = true }
+
+[[bench]]
+name = "batch_sizes"
+harness = false
