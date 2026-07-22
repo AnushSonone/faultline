@@ -9,7 +9,8 @@ use faultline_engine::{HeatmapStreamingPipeline, ProjectionMode, RuntimeInspecto
 use faultline_graph::TraceDag;
 use faultline_ingest::{IngestPipeline, DEFAULT_CAPACITY};
 use faultline_projection::{
-    build_heatmap, build_timeline, build_topology, build_trace_projection, get_trace, WsEnvelope,
+    build_correlation_precomputed, build_heatmap, build_timeline, build_topology,
+    build_trace_projection, get_trace, WsEnvelope,
 };
 use faultline_replay::{load_incident, ClockState, ReplayClock, ReplaySpeed};
 use parking_lot::Mutex;
@@ -156,12 +157,22 @@ impl Session {
         let heatmap = self.build_heatmap(cursor, ver);
         let traces = build_trace_projection(&self.envelopes, cursor, ver);
         let mode = self.heatmap_pipeline.mode();
+        let replay_state = format!("{:?}", self.clock.state()).to_ascii_lowercase();
+        let replay_speed = format!("{:?}", self.clock.speed());
+        self.heatmap_pipeline.set_session_meta(
+            &replay_state,
+            &replay_speed,
+            ver,
+            self.broadcast.receiver_count(),
+            0,
+            0,
+        );
 
         self.emit(
             "replay.status",
             json!({
-                "state": format!("{:?}", self.clock.state()).to_ascii_lowercase(),
-                "speed": format!("{:?}", self.clock.speed()),
+                "state": replay_state,
+                "speed": replay_speed,
                 "event_time_ns": cursor,
                 "heatmap_mode": format!("{mode:?}").to_ascii_lowercase(),
             }),
@@ -182,6 +193,20 @@ impl Session {
         self.emit(
             "trace.available",
             serde_json::to_value(&traces).unwrap_or(json!({})),
+        );
+        let correlation = match mode {
+            ProjectionMode::Streaming => self
+                .heatmap_pipeline
+                .last_correlation()
+                .cloned()
+                .unwrap_or_else(|| build_correlation_precomputed(&self.envelopes, cursor, ver)),
+            ProjectionMode::Precomputed => {
+                build_correlation_precomputed(&self.envelopes, cursor, ver)
+            }
+        };
+        self.emit(
+            "correlation.snapshot",
+            serde_json::to_value(&correlation).unwrap_or(json!({})),
         );
         let inspector = self.heatmap_pipeline.inspector();
         self.emit(
