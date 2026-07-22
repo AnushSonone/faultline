@@ -52,7 +52,14 @@ Helpers: `bash scripts/run-demo.sh` or `pwsh -File scripts/run-demo.ps1`
 - RCAEval audit: `docs/references/rcaeval-audit.md` (RE2-OB go-with-fallback)
 - M2 audit: `docs/audits/M2_COMPLETION_AUDIT.md`
 
+## M3 heatmap streaming
+
+- Default heatmap path: **streaming** (watermarks → Arrow batches → tumbling windows).
+- Topology, timeline, and traces remain **precomputed** (M2).
+- UI toggles: `Heatmap: streaming|precomputed`, `Adversarial on|off`, plus a collapsible runtime inspector.
+- APIs: `POST /api/v1/sessions/{id}/projection-mode`, `GET /api/v1/sessions/{id}/runtime`.
+
 ## Spec
 
 See `Faultline_Agent_Project_Specification.txt` for the full agent contract.
-M2 uses precomputed projections. M3+ (operators, RCA, SQL) starts only after an explicit TA-021 request.
+M3 core covers TA-021…025. Do not start TA-026+ until explicitly requested.
