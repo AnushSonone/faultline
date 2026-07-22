@@ -3,7 +3,10 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use arrow::array::{Array, Float64Array, Float64Builder, Int64Array, Int64Builder, StringArray, StringBuilder, UInt64Builder};
+use arrow::array::{
+    Array, Float64Array, Float64Builder, Int64Array, Int64Builder, StringArray, StringBuilder,
+    UInt64Builder,
+};
 use arrow::datatypes::{DataType, Field, Schema};
 use arrow::record_batch::RecordBatch;
 use serde::{Deserialize, Serialize};
@@ -127,7 +130,9 @@ impl BoundedPercentileSketch {
 
     pub fn merge_from(&mut self, other: &Self) {
         let _ = self.sketch.merge(&other.sketch);
-        self.observation_count = self.observation_count.saturating_add(other.observation_count);
+        self.observation_count = self
+            .observation_count
+            .saturating_add(other.observation_count);
         for v in &other.replay_buf {
             if self.replay_buf.len() >= self.replay_cap {
                 break;
@@ -331,11 +336,9 @@ impl PercentileOperator {
         for (start, end) in self.covers(event_time_ns) {
             let g = self.state.entry(service.to_owned()).or_default();
             let st = g.entry((start, end)).or_default();
-            if st.finalized {
-                if watermark_ns != i64::MIN && end + self.late_grace_ns < watermark_ns {
-                    self.metrics.late_events += 1;
-                    continue;
-                }
+            if st.finalized && watermark_ns != i64::MIN && end + self.late_grace_ns < watermark_ns {
+                self.metrics.late_events += 1;
+                continue;
             }
             let late = watermark_ns != i64::MIN && event_time_ns <= watermark_ns;
             st.sketch_mut(self.alpha).add(value);
@@ -575,8 +578,8 @@ impl Operator for PercentileOperator {
             let revision: u64 = parts[3]
                 .parse()
                 .map_err(|e| OperatorError::Message(format!("rev: {e}")))?;
-            let bytes = hex::decode(parts[4])
-                .map_err(|e| OperatorError::Message(format!("hex: {e}")))?;
+            let bytes =
+                hex::decode(parts[4]).map_err(|e| OperatorError::Message(format!("hex: {e}")))?;
             let sketch = BoundedPercentileSketch::from_blob(&bytes)?;
             let mut st = WinSketchState {
                 sketch: Some(sketch),

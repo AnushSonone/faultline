@@ -336,9 +336,10 @@ impl HeatmapStreamingPipeline {
             let late = metrics.remove(2);
             metrics.push(late);
             // Burst: clone a few high-latency looking rows near the end (same ids skipped later).
-            if let Some(spike) = metrics.iter().find(|e| {
-                matches!(&e.payload, TelemetryPayload::Metric(m) if m.value > 100.0)
-            }) {
+            if let Some(spike) = metrics
+                .iter()
+                .find(|e| matches!(&e.payload, TelemetryPayload::Metric(m) if m.value > 100.0))
+            {
                 let mut burst = spike.clone();
                 // Distinct event id so it is not treated as duplicate; extreme late time for grace tests.
                 burst.event_id = faultline_common::EventId::new(format!(
@@ -386,10 +387,7 @@ impl HeatmapStreamingPipeline {
                 let filtered = self.filter.on_batch(rt).map_err(|e| e.to_string())?;
                 for b in filtered {
                     let _ = self.window.on_batch(b.clone()).map_err(|e| e.to_string())?;
-                    let _ = self
-                        .percentile
-                        .on_batch(b)
-                        .map_err(|e| e.to_string())?;
+                    let _ = self.percentile.on_batch(b).map_err(|e| e.to_string())?;
                     self.sink
                         .apply_emits(self.window.last_emits(), self.cursor_ns);
                     self.sink
@@ -544,8 +542,8 @@ impl HeatmapStreamingPipeline {
         let ops_flat = vec![filter_m, window_m, perc_m, join_m, sink_m];
         let rows_processed = ops_flat.iter().map(|o| o.rows_in).sum();
         let batches_processed = ops_flat.iter().map(|o| o.batches_in).sum();
-        let queue_depth = ops_flat.iter().map(|o| o.queue_depth).sum::<usize>()
-            + wm.reorder_buffer_size;
+        let queue_depth =
+            ops_flat.iter().map(|o| o.queue_depth).sum::<usize>() + wm.reorder_buffer_size;
         let max_util = nodes
             .iter()
             .map(|n| {
@@ -670,6 +668,7 @@ impl HeatmapStreamingPipeline {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn op_node_from(
     m: &crate::operator::OperatorMetrics,
     op_type: &str,

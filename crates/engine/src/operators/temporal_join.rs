@@ -179,6 +179,7 @@ impl TemporalIntervalJoin {
         emits
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn push_deployment(
         &mut self,
         event_id: impl Into<String>,
@@ -282,8 +283,7 @@ impl TemporalIntervalJoin {
         };
         let mut pending: Vec<(String, i64, i64, i64)> = Vec::new();
         for left in lefts.iter_mut() {
-            if !Self::in_interval(lookback, lookahead, left.event_time_ns, right.event_time_ns)
-            {
+            if !Self::in_interval(lookback, lookahead, left.event_time_ns, right.event_time_ns) {
                 continue;
             }
             let key = Self::pair_key(&left.telemetry_ref, &right.change_id);
