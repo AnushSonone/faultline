@@ -10,9 +10,16 @@ use crate::operator::{Operator, OperatorError, OperatorMetrics};
 #[derive(Clone, Debug)]
 pub enum ProjectExpr {
     Column(String),
-    Alias { name: String, from: String },
+    Alias {
+        name: String,
+        from: String,
+    },
     /// value * scale (simple derived numeric).
-    Scale { name: String, from: String, scale: f64 },
+    Scale {
+        name: String,
+        from: String,
+        scale: f64,
+    },
 }
 
 pub struct ProjectionExec {

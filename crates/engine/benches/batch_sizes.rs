@@ -6,7 +6,9 @@ use faultline_common::{
     EventId, MetricKind, MetricPoint, TelemetryEnvelope, TelemetryPayload, TelemetrySignal,
     SCHEMA_VERSION,
 };
-use faultline_ingest::{partition_key_for, BatcherConfig, IngestedEvent, SignalBatcher, SignalKind};
+use faultline_ingest::{
+    partition_key_for, BatcherConfig, IngestedEvent, SignalBatcher, SignalKind,
+};
 use indexmap::IndexMap;
 
 fn metric(i: usize) -> IngestedEvent {

@@ -83,7 +83,10 @@ impl SyncRuntime {
         self.drive(RuntimeMessage::Watermark { watermark_ns })
     }
 
-    pub fn push_control(&mut self, ctrl: ControlMessage) -> Result<Vec<RuntimeBatch>, RuntimeError> {
+    pub fn push_control(
+        &mut self,
+        ctrl: ControlMessage,
+    ) -> Result<Vec<RuntimeBatch>, RuntimeError> {
         let is_cancel = matches!(ctrl, ControlMessage::Cancel);
         let out = self.drive(RuntimeMessage::Control(ctrl))?;
         if is_cancel {
@@ -223,8 +226,8 @@ pub async fn run_bounded_chain(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::operator::{Operator, OperatorMetrics};
     use crate::message::RuntimeBatch;
+    use crate::operator::{Operator, OperatorMetrics};
     use arrow::array::Int64Array;
     use arrow::datatypes::{DataType, Field, Schema};
     use arrow::record_batch::RecordBatch;
@@ -271,11 +274,8 @@ mod tests {
 
     fn tiny_batch() -> RuntimeBatch {
         let schema = Arc::new(Schema::new(vec![Field::new("v", DataType::Int64, false)]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int64Array::from(vec![1, 2, 3]))],
-        )
-        .unwrap();
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int64Array::from(vec![1, 2, 3]))]).unwrap();
         RuntimeBatch {
             signal: SignalKind::Metrics,
             batch,

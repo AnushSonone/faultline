@@ -269,7 +269,9 @@ impl Operator for WindowOperator {
                 "window expects service,event_time_ns,value".into(),
             ));
         };
-        let wm = batch.watermark_ns.unwrap_or(self.metrics.current_watermark_ns);
+        let wm = batch
+            .watermark_ns
+            .unwrap_or(self.metrics.current_watermark_ns);
         for i in 0..batch.batch.num_rows() {
             if services.is_null(i) || values.is_null(i) {
                 continue;

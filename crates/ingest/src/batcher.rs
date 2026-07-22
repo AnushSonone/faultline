@@ -2,9 +2,7 @@
 
 use std::sync::Arc;
 
-use arrow::array::{
-    Float64Builder, Int64Builder, StringBuilder, UInt64Builder,
-};
+use arrow::array::{Float64Builder, Int64Builder, StringBuilder, UInt64Builder};
 use arrow::datatypes::{DataType, Field, Schema};
 use arrow::record_batch::RecordBatch;
 use faultline_common::{TelemetryEnvelope, TelemetryPayload, TelemetrySignal};
@@ -448,8 +446,8 @@ impl MultiSignalBatcher {
     }
 
     pub fn push(&mut self, event: IngestedEvent) -> Result<Vec<SignalBatch>, BatcherError> {
-        let kind = SignalKind::from_envelope(&event.envelope)
-            .ok_or(BatcherError::UnsupportedSignal)?;
+        let kind =
+            SignalKind::from_envelope(&event.envelope).ok_or(BatcherError::UnsupportedSignal)?;
         let flushed = match kind {
             SignalKind::Metrics => self.metrics.push(event)?,
             SignalKind::Spans => self.spans.push(event)?,

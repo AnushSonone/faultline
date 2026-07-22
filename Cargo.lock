@@ -600,6 +600,7 @@ dependencies = [
  "axum",
  "faultline-catalog",
  "faultline-common",
+ "faultline-engine",
  "faultline-graph",
  "faultline-ingest",
  "faultline-projection",
