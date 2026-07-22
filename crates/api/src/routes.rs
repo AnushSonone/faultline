@@ -86,20 +86,35 @@ pub async fn load_session(
     session
         .load_from_path(&path)
         .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({"error": e}))))?;
+    let ground_truth = session.labels.as_ref().map(|labels| {
+        json!({
+            "source": "fixture_ground_truth",
+            "not_inferred": true,
+            "fault_type": labels.fault_type,
+            "root_cause_services": labels.root_cause_services,
+            "root_cause_indicators": labels.root_cause_indicators,
+            "fault_start_time_ns": labels.fault_start_time_ns,
+            "fault_end_time_ns": labels.fault_end_time_ns,
+            "notes": labels.notes,
+        })
+    });
     session.emit(
         "session.ready",
         json!({
             "session_id": session_id,
             "incident_id": session.incident_id,
             "event_count": session.envelopes.len(),
+            "ground_truth": ground_truth.clone(),
         }),
     );
+    session.publish_projections();
     Ok(Json(json!({
         "session_id": session_id,
         "incident_id": session.incident_id,
         "event_count": session.envelopes.len(),
         "start_time_ns": session.clock.start_ns(),
         "end_time_ns": session.clock.end_ns(),
+        "ground_truth": ground_truth,
     })))
 }
 
@@ -107,11 +122,20 @@ pub async fn play_session(
     State(state): State<SharedState>,
     Path(session_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let label = with_session(&state, &session_id, |s| {
-        s.clock.play();
-        s.publish_projections();
-        json!({ "state": clock_state_label(s.clock.state()) })
-    })?;
+    let epoch = {
+        let mut sessions = state.sessions.lock();
+        let session = sessions.get_mut(&session_id).ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "session not found"})),
+            )
+        })?;
+        session.playback_epoch = session.playback_epoch.saturating_add(1);
+        let epoch = session.playback_epoch;
+        session.clock.play();
+        session.publish_projections();
+        epoch
+    };
 
     let state_tick = state.clone();
     let sid = session_id.clone();
@@ -124,18 +148,18 @@ pub async fn play_session(
             let Some(session) = sessions.get_mut(&sid) else {
                 break;
             };
-            if session.clock.state() != ClockState::Playing {
+            if session.playback_epoch != epoch || session.clock.state() != ClockState::Playing {
                 break;
             }
             session.clock.tick_wall(Duration::from_millis(150));
             session.publish_projections();
-            if session.clock.state() != ClockState::Playing {
+            if session.playback_epoch != epoch || session.clock.state() != ClockState::Playing {
                 break;
             }
         }
     });
 
-    Ok(label)
+    Ok(Json(json!({ "state": "playing", "playback_epoch": epoch })))
 }
 
 pub async fn pause_session(
@@ -143,6 +167,7 @@ pub async fn pause_session(
     Path(session_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     with_session(&state, &session_id, |s| {
+        s.playback_epoch = s.playback_epoch.saturating_add(1);
         s.clock.pause();
         s.emit(
             "replay.status",
@@ -174,6 +199,35 @@ pub async fn speed_session(
     with_session(&state, &session_id, |s| {
         s.clock.set_speed(speed);
         json!({ "speed": body.speed })
+    })
+}
+
+pub async fn reset_session(
+    State(state): State<SharedState>,
+    Path(session_id): Path<String>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    with_session(&state, &session_id, |s| {
+        s.reset_replay();
+        json!({
+            "state": clock_state_label(s.clock.state()),
+            "event_time_ns": s.clock.current_event_time_ns(),
+        })
+    })
+}
+
+/// Republish full projection snapshots (WS gap / reconnect recovery for M2).
+pub async fn resync_session(
+    State(state): State<SharedState>,
+    Path(session_id): Path<String>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    with_session(&state, &session_id, |s| {
+        s.publish_projections();
+        json!({
+            "session_id": session_id,
+            "event_time_ns": s.clock.current_event_time_ns(),
+            "projection_version": s.projection_version,
+            "ws_sequence": s.ws_sequence,
+        })
     })
 }
 

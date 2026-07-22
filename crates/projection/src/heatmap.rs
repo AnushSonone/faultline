@@ -45,25 +45,25 @@ pub fn build_heatmap(
             continue;
         }
         let bucket = (env.event_time_ns / width) * width;
-        let entry = acc
-            .entry((service.to_owned(), bucket))
-            .or_insert((0.0, 0));
+        let entry = acc.entry((service.to_owned(), bucket)).or_insert((0.0, 0));
         entry.0 += *value;
         entry.1 += 1;
     }
 
     let mut cells: Vec<_> = acc
         .into_iter()
-        .map(|((service, bucket_start_ns), (sum, sample_count))| HeatmapCell {
-            service,
-            bucket_start_ns,
-            value: if sample_count > 0 {
-                sum / sample_count as f64
-            } else {
-                0.0
+        .map(
+            |((service, bucket_start_ns), (sum, sample_count))| HeatmapCell {
+                service,
+                bucket_start_ns,
+                value: if sample_count > 0 {
+                    sum / sample_count as f64
+                } else {
+                    0.0
+                },
+                sample_count,
             },
-            sample_count,
-        })
+        )
         .collect();
     cells.sort_by(|a, b| {
         a.service

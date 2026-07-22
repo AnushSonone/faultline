@@ -1,4 +1,5 @@
-﻿//! Faultline state crate.
+//! Faultline state crate.
 
-pub fn crate_name() -> &'static str { "faultline-state" }
-
+pub fn crate_name() -> &'static str {
+    "faultline-state"
+}

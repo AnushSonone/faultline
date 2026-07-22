@@ -8,8 +8,8 @@ use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
 use faultline_catalog::{validate_incident_dir, Labels, Manifest};
 use faultline_common::{
-    ChangeEvent, ChangeType, EventId, LogEvent, MetricKind, MetricPoint, SCHEMA_VERSION,
-    SpanEvent, SpanKind, SpanStatus, TelemetryEnvelope, TelemetryPayload, TelemetrySignal,
+    ChangeEvent, ChangeType, EventId, LogEvent, MetricKind, MetricPoint, SpanEvent, SpanKind,
+    SpanStatus, TelemetryEnvelope, TelemetryPayload, TelemetrySignal, SCHEMA_VERSION,
 };
 use indexmap::IndexMap;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
@@ -40,8 +40,8 @@ pub enum ReaderError {
 /// Load an incident directory: validate manifest/labels, read all Parquet `payload_json`.
 pub fn load_incident(dir: impl AsRef<Path>) -> Result<LoadedIncident, ReaderError> {
     let dir = dir.as_ref().to_path_buf();
-    let (manifest, labels) = validate_incident_dir(&dir)
-        .map_err(|e| ReaderError::Catalog(e.to_string()))?;
+    let (manifest, labels) =
+        validate_incident_dir(&dir).map_err(|e| ReaderError::Catalog(e.to_string()))?;
 
     let mut envelopes = Vec::new();
     for file in &manifest.files {
@@ -50,9 +50,7 @@ pub fn load_incident(dir: impl AsRef<Path>) -> Result<LoadedIncident, ReaderErro
         let rows = read_payload_rows(&path)?;
         for (idx, payload) in rows.into_iter().enumerate() {
             let env = payload_to_envelope(&manifest, &file.path, signal_dir, &payload)
-                .map_err(|e| {
-                    ReaderError::Payload(format!("{} row {idx}: {e}", file.path))
-                })?;
+                .map_err(|e| ReaderError::Payload(format!("{} row {idx}: {e}", file.path)))?;
             envelopes.push(env);
         }
     }

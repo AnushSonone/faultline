@@ -1,9 +1,9 @@
-﻿//! Backend ingest: schema validation, sequence, dedupe, bounded channel, partition routing.
+//! Backend ingest: schema validation, sequence, dedupe, bounded channel, partition routing.
 
 use std::collections::HashSet;
 
 use faultline_common::{
-    EventId, FaultlineError, SCHEMA_VERSION, TelemetryEnvelope, TelemetryPayload, TelemetrySignal,
+    EventId, FaultlineError, TelemetryEnvelope, TelemetryPayload, TelemetrySignal, SCHEMA_VERSION,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

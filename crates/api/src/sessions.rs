@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use faultline_catalog::Labels;
 use faultline_graph::TraceDag;
 use faultline_ingest::{IngestPipeline, DEFAULT_CAPACITY};
 use faultline_projection::{
@@ -55,8 +56,11 @@ pub struct Session {
     pub ingest: IngestPipeline,
     pub incident_id: Option<String>,
     pub incident_path: Option<PathBuf>,
+    pub labels: Option<Labels>,
     pub projection_version: u64,
     pub ws_sequence: u64,
+    /// Bumped on each play request so only one tick loop remains active.
+    pub playback_epoch: u64,
     pub broadcast: broadcast::Sender<WsEnvelope>,
 }
 
@@ -70,8 +74,10 @@ impl Session {
             ingest: IngestPipeline::new(DEFAULT_CAPACITY),
             incident_id: None,
             incident_path: None,
+            labels: None,
             projection_version: 0,
             ws_sequence: 0,
+            playback_epoch: 0,
             broadcast,
         }
     }
@@ -82,6 +88,7 @@ impl Session {
         let end = loaded.manifest.end_time_ns;
         self.incident_id = Some(loaded.manifest.incident_id.clone());
         self.incident_path = Some(loaded.dir.clone());
+        self.labels = Some(loaded.labels);
         self.envelopes = loaded.envelopes;
         self.clock = ReplayClock::new(start, end);
         let cap = self.envelopes.len().max(DEFAULT_CAPACITY);
@@ -89,6 +96,7 @@ impl Session {
         // Keep receiver alive so try_ingest does not see a closed channel.
         self.projection_version = 0;
         self.ws_sequence = 0;
+        self.playback_epoch = self.playback_epoch.saturating_add(1);
 
         for env in &self.envelopes {
             self.ingest
@@ -158,7 +166,18 @@ impl Session {
     }
 
     pub fn get_trace(&self, trace_id: &str) -> Option<TraceDag> {
-        get_trace(&self.envelopes, trace_id)
+        // Cursor-bounded so seek-back cannot retain later spans.
+        get_trace(
+            &self.envelopes,
+            trace_id,
+            self.clock.current_event_time_ns(),
+        )
+    }
+
+    pub fn reset_replay(&mut self) {
+        self.playback_epoch = self.playback_epoch.saturating_add(1);
+        self.clock.reset();
+        self.publish_projections();
     }
 }
 
@@ -177,7 +196,9 @@ impl AppState {
 
     pub fn create_session(&self) -> String {
         let id = Uuid::new_v4().to_string();
-        self.sessions.lock().insert(id.clone(), Session::new(id.clone()));
+        self.sessions
+            .lock()
+            .insert(id.clone(), Session::new(id.clone()));
         id
     }
 
@@ -191,11 +212,7 @@ impl AppState {
         }
         if let Some(id) = &req.incident_id {
             // Prefer synthetic fixture layout: synthetic-ob/v1/<id>
-            let candidate = self
-                .fixtures_root
-                .join("synthetic-ob")
-                .join("v1")
-                .join(id);
+            let candidate = self.fixtures_root.join("synthetic-ob").join("v1").join(id);
             if candidate.exists() {
                 return Ok(candidate);
             }

@@ -13,11 +13,12 @@ pub enum ClockState {
 }
 
 /// Supported replay speed multipliers (spec §14).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ReplaySpeed {
     #[serde(rename = "0.5")]
     X0_5,
+    #[default]
     #[serde(rename = "1")]
     X1,
     #[serde(rename = "2")]
@@ -58,12 +59,6 @@ impl ReplaySpeed {
             "max" | "max-throughput" => Some(Self::Max),
             _ => None,
         }
-    }
-}
-
-impl Default for ReplaySpeed {
-    fn default() -> Self {
-        Self::X1
     }
 }
 
