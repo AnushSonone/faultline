@@ -73,6 +73,15 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   margin-bottom: 1rem;
 }
 
+.banner.ground-truth {
+  background: #1c2a1a;
+  border-left: 3px solid #7dbf6a;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  color: var(--fg);
+  font-size: 0.95rem;
+}
+
 .selection-bar {
   display: flex;
   gap: 1.25rem;

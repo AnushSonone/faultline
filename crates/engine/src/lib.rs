@@ -1,4 +1,5 @@
-﻿//! Faultline engine crate.
+//! Faultline engine crate.
 
-pub fn crate_name() -> &'static str { "faultline-engine" }
-
+pub fn crate_name() -> &'static str {
+    "faultline-engine"
+}

@@ -5,7 +5,9 @@ import {
   loadIncident,
   pause,
   play,
+  reset,
   setSpeed,
+  type StreamHandle,
 } from "../api/client";
 import { useInvestigation } from "../state/investigation";
 import { ServiceMap } from "../views/ServiceMap/ServiceMap";
@@ -16,19 +18,22 @@ import { TraceWaterfall } from "../views/TraceWaterfall/TraceWaterfall";
 const DEFAULT_INCIDENT = "rec-mem-001";
 
 export function App() {
-  const wsRef = useRef<WebSocket | null>(null);
+  const wsRef = useRef<StreamHandle | null>(null);
   const [booting, setBooting] = useState(true);
   const sessionId = useInvestigation((s) => s.sessionId);
   const connected = useInvestigation((s) => s.connected);
   const replay = useInvestigation((s) => s.replay);
   const incidentId = useInvestigation((s) => s.incidentId);
   const lastError = useInvestigation((s) => s.lastError);
+  const groundTruth = useInvestigation((s) => s.groundTruth);
   const selectedService = useInvestigation((s) => s.selectedService);
   const selectedTrace = useInvestigation((s) => s.selectedTrace);
   const selectedEventTime = useInvestigation((s) => s.selectedEventTime);
   const setSession = useInvestigation((s) => s.setSession);
   const setIncident = useInvestigation((s) => s.setIncident);
   const setError = useInvestigation((s) => s.setError);
+  const setGroundTruth = useInvestigation((s) => s.setGroundTruth);
+  const clearSelection = useInvestigation((s) => s.clearSelection);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,8 +43,10 @@ export function App() {
         if (cancelled) return;
         setSession(id);
         wsRef.current = connectStream(id);
-        await loadIncident(id, DEFAULT_INCIDENT);
-        setIncident(DEFAULT_INCIDENT);
+        clearSelection();
+        const loaded = await loadIncident(id, DEFAULT_INCIDENT);
+        setIncident(loaded.incident_id ?? DEFAULT_INCIDENT);
+        setGroundTruth(loaded.ground_truth ?? null);
         await setSpeed(id, "10");
         setBooting(false);
       } catch (e) {
@@ -51,7 +58,7 @@ export function App() {
       cancelled = true;
       wsRef.current?.close();
     };
-  }, [setSession, setIncident, setError]);
+  }, [setSession, setIncident, setError, setGroundTruth, clearSelection]);
 
   return (
     <div className="shell investigation">
@@ -75,21 +82,36 @@ export function App() {
           >
             Pause
           </button>
+          <button
+            type="button"
+            disabled={!sessionId}
+            onClick={() => sessionId && reset(sessionId)}
+          >
+            Reset
+          </button>
           <span className="pill" data-testid="connection">
             {connected ? "ws live" : "ws down"}
           </span>
-          <span className="pill">{replay.state}</span>
-          <span className="pill">{incidentId ?? "—"}</span>
+          <span className="pill" data-testid="replay-state">
+            {replay.state}
+          </span>
+          <span className="pill">{incidentId ?? "-"}</span>
         </div>
       </header>
 
       {lastError && <div className="banner error">{lastError}</div>}
+      {groundTruth && (
+        <div className="banner ground-truth" data-testid="ground-truth">
+          Fixture ground truth (not inferred):{" "}
+          {groundTruth.root_cause_services.join(", ")} / {groundTruth.fault_type}
+        </div>
+      )}
       {booting && <p className="muted">Loading session…</p>}
 
       <div className="selection-bar" data-testid="selection-bar">
-        <span>time: {selectedEventTime ?? "—"}</span>
-        <span>service: {selectedService ?? "—"}</span>
-        <span>trace: {selectedTrace ?? "—"}</span>
+        <span>time: {selectedEventTime ?? "-"}</span>
+        <span>service: {selectedService ?? "-"}</span>
+        <span>trace: {selectedTrace ?? "-"}</span>
       </div>
 
       <div className="grid">

@@ -42,6 +42,10 @@ pub fn build_trace_projection(
     }
 }
 
-pub fn get_trace(envelopes: &[TelemetryEnvelope], trace_id: &str) -> Option<TraceDag> {
-    TraceStore::from_envelopes_until(envelopes, i64::MAX).get(trace_id)
+pub fn get_trace(
+    envelopes: &[TelemetryEnvelope],
+    trace_id: &str,
+    cursor_event_time_ns: i64,
+) -> Option<TraceDag> {
+    TraceStore::from_envelopes_until(envelopes, cursor_event_time_ns).get(trace_id)
 }

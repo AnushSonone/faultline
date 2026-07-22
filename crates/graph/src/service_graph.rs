@@ -148,7 +148,7 @@ impl ServiceGraph {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use faultline_common::{EventId, SCHEMA_VERSION, SpanKind, TelemetrySignal};
+    use faultline_common::{EventId, SpanKind, TelemetrySignal, SCHEMA_VERSION};
     use indexmap::IndexMap;
 
     fn span_env(
