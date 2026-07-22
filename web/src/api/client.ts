@@ -1,5 +1,11 @@
 import type { WsEnvelope } from "../types/protocol";
-import { useInvestigation } from "../state/investigation";
+import { useInvestigation, type GroundTruth } from "../state/investigation";
+
+export type { GroundTruth };
+
+export type StreamHandle = {
+  close: () => void;
+};
 
 export async function createSession(): Promise<string> {
   const r = await fetch("/api/v1/sessions", { method: "POST" });
@@ -15,7 +21,14 @@ export async function loadIncident(sessionId: string, incidentId: string) {
     body: JSON.stringify({ incident_id: incidentId }),
   });
   if (!r.ok) throw new Error(await r.text());
-  return r.json();
+  return r.json() as Promise<{
+    session_id: string;
+    incident_id: string;
+    event_count: number;
+    start_time_ns: number;
+    end_time_ns: number;
+    ground_truth?: GroundTruth;
+  }>;
 }
 
 export async function play(sessionId: string) {
@@ -42,28 +55,65 @@ export async function setSpeed(sessionId: string, speed: string) {
   });
 }
 
+export async function reset(sessionId: string) {
+  await fetch(`/api/v1/sessions/${sessionId}/reset`, { method: "POST" });
+}
+
+export async function resync(sessionId: string) {
+  await fetch(`/api/v1/sessions/${sessionId}/resync`, { method: "POST" });
+}
+
 export async function fetchTrace(traceId: string) {
   const r = await fetch(`/api/v1/traces/${encodeURIComponent(traceId)}`);
   if (!r.ok) throw new Error("trace not found");
   return r.json();
 }
 
-export function connectStream(sessionId: string): WebSocket {
-  const proto = window.location.protocol === "https:" ? "wss" : "ws";
-  // Prefer same-origin so Vite WS proxy works in dev.
-  const url = `${proto}://${window.location.host}/api/v1/sessions/${sessionId}/stream`;
-  const ws = new WebSocket(url);
-  const store = useInvestigation.getState();
-  ws.onopen = () => store.setConnected(true);
-  ws.onclose = () => store.setConnected(false);
-  ws.onerror = () => store.setError("websocket error");
-  ws.onmessage = (ev) => {
-    try {
-      const msg = JSON.parse(String(ev.data)) as WsEnvelope;
-      useInvestigation.getState().applyWs(msg);
-    } catch {
-      store.setError("bad ws payload");
-    }
+export function connectStream(sessionId: string): StreamHandle {
+  let stopped = false;
+  let socket: WebSocket | null = null;
+
+  const open = () => {
+    if (stopped) return;
+    const proto = window.location.protocol === "https:" ? "wss" : "ws";
+    const url = `${proto}://${window.location.host}/api/v1/sessions/${sessionId}/stream`;
+    const ws = new WebSocket(url);
+    socket = ws;
+    ws.onopen = () => {
+      useInvestigation.getState().setConnected(true);
+      void resync(sessionId).catch(() => {
+        useInvestigation.getState().setError("resync after connect failed");
+      });
+    };
+    ws.onclose = () => {
+      useInvestigation.getState().setConnected(false);
+      if (!stopped) {
+        window.setTimeout(open, 750);
+      }
+    };
+    ws.onerror = () => useInvestigation.getState().setError("websocket error");
+    ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(String(ev.data)) as WsEnvelope;
+        const store = useInvestigation.getState();
+        store.applyWs(msg);
+        if (useInvestigation.getState().needsResync) {
+          void resync(sessionId)
+            .then(() => useInvestigation.getState().clearNeedsResync())
+            .catch(() => store.setError("resync failed"));
+        }
+      } catch {
+        useInvestigation.getState().setError("bad ws payload");
+      }
+    };
   };
-  return ws;
+
+  open();
+  return {
+    close: () => {
+      stopped = true;
+      socket?.close();
+      socket = null;
+    },
+  };
 }

@@ -2,9 +2,24 @@ import { useEffect, useRef } from "react";
 import cytoscape, { type Core } from "cytoscape";
 import { useInvestigation } from "../../state/investigation";
 
+function graphSignature(topology: {
+  graph: {
+    nodes: Array<{ service: string }>;
+    edges: Array<{ from: string; to: string }>;
+  };
+}): string {
+  const nodes = topology.graph.nodes.map((n) => n.service).sort().join("|");
+  const edges = topology.graph.edges
+    .map((e) => `${e.from}->${e.to}`)
+    .sort()
+    .join("|");
+  return `${nodes}#${edges}`;
+}
+
 export function ServiceMap() {
   const ref = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
+  const signatureRef = useRef<string>("");
   const topology = useInvestigation((s) => s.topology);
   const selectedService = useInvestigation((s) => s.selectedService);
   const selectService = useInvestigation((s) => s.selectService);
@@ -53,7 +68,7 @@ export function ServiceMap() {
           },
         },
       ],
-      layout: { name: "circle" },
+      layout: { name: "preset" },
       userZoomingEnabled: true,
       userPanningEnabled: true,
     });
@@ -73,6 +88,7 @@ export function ServiceMap() {
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy || !topology) return;
+    const signature = graphSignature(topology);
     const nodes = topology.graph.nodes.map((n) => {
       const err = Number(n.error_count ?? 0);
       const req = Number(n.request_count ?? 1);
@@ -84,9 +100,22 @@ export function ServiceMap() {
     const edges = topology.graph.edges.map((e, i) => ({
       data: { id: `e-${i}`, source: e.from, target: e.to },
     }));
-    cy.elements().remove();
-    cy.add([...nodes, ...edges]);
-    cy.layout({ name: "circle", animate: false }).run();
+
+    if (signature !== signatureRef.current) {
+      signatureRef.current = signature;
+      cy.elements().remove();
+      cy.add([...nodes, ...edges]);
+      cy.layout({ name: "circle", animate: false, fit: true }).run();
+      return;
+    }
+
+    // Same topology identity: update hot classes without re-layout.
+    for (const n of nodes) {
+      const el = cy.$id(n.data.id);
+      if (el.empty()) continue;
+      el.removeClass("hot");
+      if (n.classes.includes("hot")) el.addClass("hot");
+    }
   }, [topology]);
 
   useEffect(() => {
