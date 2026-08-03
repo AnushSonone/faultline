@@ -182,7 +182,10 @@ pub fn default_architecture_status() -> Vec<String> {
         "Topology structure: precomputed".into(),
         "Timeline base events: precomputed".into(),
         "Trace waterfall: precomputed".into(),
-        "Root-cause value: fixture ground truth".into(),
-        "Root-cause inference: not implemented".into(),
+        "Root-cause inference: deterministic evidence ranking (M4)".into(),
+        "Trace comparison: vs median healthy baseline (M5)".into(),
+        "Checkpoint recovery: idempotent projections, not exactly-once (M6)".into(),
+        "Query planner: EXPLAIN ANALYZE over session events (M7)".into(),
+        "Ground truth: hidden unless evaluation mode".into(),
     ]
 }

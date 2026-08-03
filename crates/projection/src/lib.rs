@@ -1,11 +1,13 @@
-﻿//! Projection DTOs and WebSocket protocol for visual replay.
+//! Projection DTOs and WebSocket protocol for visual replay.
 
 pub mod correlation;
 pub mod heatmap;
 pub mod protocol;
+pub mod root_cause;
 pub mod timeline;
 pub mod topology;
 pub mod trace;
+pub mod trace_detail;
 
 pub use correlation::{
     build_correlation_from_emits, build_correlation_precomputed, CorrelationProjection,
@@ -13,6 +15,10 @@ pub use correlation::{
 };
 pub use heatmap::{build_heatmap, HeatmapCell, HeatmapProjection};
 pub use protocol::{WsEnvelope, PROTOCOL_VERSION};
+pub use root_cause::{
+    build_inference_projections, build_root_causes, EvidenceGraphProjection, RootCauseProjection,
+};
 pub use timeline::{build_timeline, TimelineEvent, TimelineProjection};
 pub use topology::{build_topology, TopologyProjection};
 pub use trace::{build_trace_projection, get_trace, TraceAvailable, TraceProjection};
+pub use trace_detail::{build_trace_detail, TraceDetail};

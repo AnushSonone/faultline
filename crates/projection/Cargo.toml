@@ -10,4 +10,5 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 faultline-common = { workspace = true }
 faultline-graph = { workspace = true }
+faultline-inference = { workspace = true }
 indexmap = { workspace = true }
