@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { useInvestigation } from "../../state/investigation";
 import { seek } from "../../api/client";
 import type { HeatmapCell } from "../../types/protocol";
+import { fmtOffset } from "../../lib/format";
+import { InfoTip } from "../../components/InfoTip";
 
 export function AnomalyHeatmap() {
   const heatmap = useInvestigation((s) => s.heatmap);
@@ -11,6 +13,7 @@ export function AnomalyHeatmap() {
   const selectOperator = useInvestigation((s) => s.selectOperator);
   const selectHeatmapCell = useInvestigation((s) => s.selectHeatmapCell);
   const sessionId = useInvestigation((s) => s.sessionId);
+  const incidentStartNs = useInvestigation((s) => s.incidentStartNs);
 
   const { services, buckets, grid, maxV } = useMemo(() => {
     if (!heatmap) {
@@ -34,17 +37,25 @@ export function AnomalyHeatmap() {
     return { services, buckets, grid, maxV };
   }, [heatmap]);
 
-  if (!heatmap) return <div className="panel-body muted">No heatmap yet</div>;
+  if (!heatmap) {
+    return (
+      <div className="empty-state" data-testid="heatmap">
+        <span className="glyph" aria-hidden="true">
+          ▦
+        </span>
+        <span>No heatmap yet. Play or seek to stream anomaly cells.</span>
+      </div>
+    );
+  }
 
   return (
     <div className="panel-body heatmap-wrap" data-testid="heatmap">
-      {heatmap.streaming_note && <p className="hint">{heatmap.streaming_note}</p>}
       <table className="heatmap">
         <thead>
           <tr>
             <th>service</th>
-            {buckets.map((b) => (
-              <th key={b}>{((b % 1_000_000_000_000) / 1e9).toFixed(0)}s</th>
+            {buckets.map((b, i) => (
+              <th key={b}>{i % 5 === 0 ? fmtOffset(b, incidentStartNs) : ""}</th>
             ))}
           </tr>
         </thead>
@@ -60,19 +71,22 @@ export function AnomalyHeatmap() {
                 const cell = grid.get(`${svc}|${b}`);
                 const v = cell?.value ?? 0;
                 const intensity = Math.min(1, v / maxV);
-                const pattern = intensity > 0.6 ? "dense" : intensity > 0.3 ? "mid" : "low";
                 const linked =
                   selectedOperator &&
                   cell?.operator_id &&
                   selectedOperator === cell.operator_id;
                 const title = cell
-                  ? `${svc} @ ${b}: value=${v.toFixed(2)} p95=${cell.p95?.toFixed?.(2) ?? "-"} p99=${cell.p99?.toFixed?.(2) ?? "-"} (${cell.value_source ?? "unknown"})`
-                  : `${svc} @ ${b}: 0`;
+                  ? `${svc} @ ${fmtOffset(b, incidentStartNs)}: value=${v.toFixed(2)} p95=${cell.p95?.toFixed?.(2) ?? "-"} p99=${cell.p99?.toFixed?.(2) ?? "-"} (${cell.value_source ?? "unknown"})`
+                  : `${svc} @ ${fmtOffset(b, incidentStartNs)}: 0`;
                 return (
                   <td
                     key={b}
-                    className={`cell ${pattern}${linked ? " cell-linked" : ""}`}
-                    style={{ opacity: 0.35 + intensity * 0.65 }}
+                    className={`cell${linked ? " cell-linked" : ""}`}
+                    style={{
+                      // Sequential single-hue ramp: magnitude = mix toward the
+                      // bright endpoint in OKLab.
+                      background: `color-mix(in oklab, var(--seq-lo), var(--seq-hi) ${Math.round(intensity * 100)}%)`,
+                    }}
                     title={title}
                     data-testid={cell?.p99 != null ? "heatmap-p99-cell" : undefined}
                     onClick={async (e) => {
@@ -89,8 +103,13 @@ export function AnomalyHeatmap() {
           ))}
         </tbody>
       </table>
-      <p className="hint">
-        Latency cells show streaming p99 when available. Topology structure remains precomputed.
+      <p className="panel-caption">
+        Cell intensity: approximate p99 via DDSketch (alpha 0.01).
+        <InfoTip>
+          {heatmap.streaming_note ? `${heatmap.streaming_note} ` : ""}
+          Latency cells show streaming p99 when available. Topology structure remains
+          precomputed.
+        </InfoTip>
       </p>
     </div>
   );

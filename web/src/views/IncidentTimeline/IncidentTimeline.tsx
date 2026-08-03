@@ -2,6 +2,10 @@ import { useEffect, useMemo, useRef } from "react";
 import * as d3 from "d3";
 import { useInvestigation } from "../../state/investigation";
 import { seek } from "../../api/client";
+import { COLORS } from "../../theme/tokens";
+import { fmtOffset } from "../../lib/format";
+import { InfoTip } from "../../components/InfoTip";
+import { EmptyState } from "../../components/EmptyState";
 
 export function IncidentTimeline() {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -14,6 +18,7 @@ export function IncidentTimeline() {
   const selectService = useInvestigation((s) => s.selectService);
   const selectOperator = useInvestigation((s) => s.selectOperator);
   const sessionId = useInvestigation((s) => s.sessionId);
+  const incidentStartNs = useInvestigation((s) => s.incidentStartNs);
 
   const markers = useMemo(() => {
     if (!timeline) return [];
@@ -42,7 +47,7 @@ export function IncidentTimeline() {
     if (!timeline || timeline.events.length === 0) return;
 
     const width = 640;
-    const height = 72;
+    const height = 84;
     const times = timeline.events.map((e) => e.event_time_ns);
     const minT = d3.min(times)!;
     const maxT = d3.max(times)!;
@@ -56,8 +61,23 @@ export function IncidentTimeline() {
       .attr("x2", width - 16)
       .attr("y1", 36)
       .attr("y2", 36)
-      .attr("stroke", "#5a6b7d")
+      .attr("stroke", COLORS.borderStrong)
       .attr("stroke-width", 2);
+
+    // Four evenly spaced axis tick labels along the bottom.
+    const tickTimes = [0, 1, 2, 3].map((i) => minT + ((maxT - minT) * i) / 3);
+    svg
+      .selectAll("text.axis-tick")
+      .data(tickTimes)
+      .enter()
+      .append("text")
+      .attr("class", "axis-tick")
+      .attr("x", (d) => x(d))
+      .attr("y", height - 4)
+      .attr("fill", COLORS.muted)
+      .attr("font-size", 9)
+      .attr("text-anchor", (_, i) => (i === 0 ? "start" : i === 3 ? "end" : "middle"))
+      .text((d) => fmtOffset(d, incidentStartNs));
 
     const filtered = selectedService
       ? timeline.events.filter((e) => !e.service || e.service === selectedService)
@@ -72,11 +92,8 @@ export function IncidentTimeline() {
       .attr("cx", (d) => x(d.event_time_ns))
       .attr("cy", 36)
       .attr("r", 3)
-      .attr("fill", "#8b9aab");
+      .attr("fill", COLORS.muted);
 
-    const deployTimes = new Set(
-      correlations.map((c) => c.deployed_at_ns).filter((t) => Number.isFinite(t)),
-    );
     const selectedDeploy = correlations.find((c) => c.change_id === selectedChangeId);
 
     svg
@@ -92,10 +109,9 @@ export function IncidentTimeline() {
       .attr("height", 36)
       .attr("fill", (d) => {
         if (selectedDeploy && d.event_time_ns === selectedDeploy.deployed_at_ns) {
-          return "#e85d4c";
+          return COLORS.danger;
         }
-        if (deployTimes.has(d.event_time_ns)) return "#f5d76e";
-        return "#f5d76e";
+        return COLORS.warn;
       })
       .style("cursor", "pointer")
       .on("click", (event, d) => {
@@ -117,7 +133,7 @@ export function IncidentTimeline() {
         .attr("x2", x(selected))
         .attr("y1", 8)
         .attr("y2", 64)
-        .attr("stroke", "#3d9bfd")
+        .attr("stroke", COLORS.accent)
         .attr("stroke-width", 2);
     }
 
@@ -132,6 +148,7 @@ export function IncidentTimeline() {
     selected,
     selectedService,
     sessionId,
+    incidentStartNs,
     deployOrLog,
     markers,
     correlations,
@@ -141,13 +158,25 @@ export function IncidentTimeline() {
     selectOperator,
   ]);
 
+  const hasData = timeline != null && timeline.events.length > 0;
+
   return (
     <div className="panel-body" data-testid="timeline">
-      <svg ref={svgRef} width="100%" height={72} role="img" aria-label="Incident timeline" />
-      <p className="hint">
-        Click timeline to scrub. Yellow markers are deployments/logs (precomputed base events).
-        Selecting a deploy highlights the associated service via streaming temporal join.
-      </p>
+      {hasData ? (
+        <>
+          <svg ref={svgRef} width="100%" height={84} role="img" aria-label="Incident timeline" />
+          <p className="panel-caption">
+            Click to scrub. Markers: deployments.
+            <InfoTip>
+              Click timeline to scrub. Yellow markers are deployments/logs (precomputed base
+              events). Selecting a deploy highlights the associated service via streaming
+              temporal join.
+            </InfoTip>
+          </p>
+        </>
+      ) : (
+        <EmptyState title="Waiting for timeline" />
+      )}
     </div>
   );
 }

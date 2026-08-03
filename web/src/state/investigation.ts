@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import type {
   CorrelationPayload,
+  EvidenceGraphPayload,
   HeatmapCell,
   HeatmapPayload,
+  RootCausePayload,
   TimelinePayload,
   TopologyPayload,
   TraceListPayload,
@@ -73,10 +75,19 @@ export type RuntimeInspector = {
   architecture_status?: string[];
 };
 
+export type TabId = "overview" | "root-causes" | "signals" | "runtime";
+
+export type WsStatus = "connecting" | "live" | "reconnecting";
+
 type InvestigationState = {
   sessionId: string | null;
   incidentId: string | null;
+  activeTab: TabId;
+  incidentStartNs: number | null;
+  incidentEndNs: number | null;
   connected: boolean;
+  wsStatus: WsStatus;
+  wsRetries: number;
   lastError: string | null;
   lastSequence: number;
   needsResync: boolean;
@@ -86,6 +97,11 @@ type InvestigationState = {
   heatmap: HeatmapPayload | null;
   traces: TraceListPayload | null;
   correlations: CorrelationPayload["correlations"];
+  rootCauses: RootCausePayload | null;
+  evidenceGraph: EvidenceGraphPayload | null;
+  lastCheckpoint: Record<string, unknown> | null;
+  recoveryReport: Record<string, unknown> | null;
+  recoveryState: "idle" | "recovering" | "recovered";
   groundTruth: GroundTruth | null;
   runtimeInspector: RuntimeInspector | null;
   heatmapMode: string;
@@ -97,7 +113,11 @@ type InvestigationState = {
   selectedHeatmapCell: HeatmapCell | null;
   setSession: (id: string) => void;
   setIncident: (id: string | null) => void;
+  setTab: (tab: TabId) => void;
+  setIncidentRange: (start: number | null, end: number | null) => void;
   setConnected: (v: boolean) => void;
+  wsOpened: () => void;
+  wsClosed: () => void;
   setError: (e: string | null) => void;
   setGroundTruth: (g: GroundTruth | null) => void;
   clearNeedsResync: () => void;
@@ -114,7 +134,12 @@ type InvestigationState = {
 export const useInvestigation = create<InvestigationState>((set, get) => ({
   sessionId: null,
   incidentId: null,
+  activeTab: "overview",
+  incidentStartNs: null,
+  incidentEndNs: null,
   connected: false,
+  wsStatus: "connecting" as WsStatus,
+  wsRetries: 0,
   lastError: null,
   lastSequence: 0,
   needsResync: false,
@@ -124,6 +149,11 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   heatmap: null,
   traces: null,
   correlations: [],
+  rootCauses: null,
+  evidenceGraph: null,
+  lastCheckpoint: null,
+  recoveryReport: null,
+  recoveryState: "idle",
   groundTruth: null,
   runtimeInspector: null,
   heatmapMode: "streaming",
@@ -135,7 +165,12 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   selectedHeatmapCell: null,
   setSession: (id) => set({ sessionId: id }),
   setIncident: (id) => set({ incidentId: id }),
+  setTab: (tab) => set({ activeTab: tab }),
+  setIncidentRange: (start, end) => set({ incidentStartNs: start, incidentEndNs: end }),
   setConnected: (v) => set({ connected: v }),
+  wsOpened: () => set({ connected: true, wsStatus: "live", wsRetries: 0 }),
+  wsClosed: () =>
+    set((s) => ({ connected: false, wsStatus: "reconnecting", wsRetries: s.wsRetries + 1 })),
   setError: (e) => set({ lastError: e }),
   setGroundTruth: (g) => set({ groundTruth: g }),
   clearNeedsResync: () => set({ needsResync: false, lastError: null }),
@@ -152,6 +187,8 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
       heatmap: null,
       traces: null,
       correlations: [],
+      rootCauses: null,
+      evidenceGraph: null,
       lastSequence: 0,
       needsResync: false,
     }),
@@ -197,6 +234,22 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
         patch.correlations = corr.correlations ?? [];
         break;
       }
+      case "root_causes.snapshot":
+        patch.rootCauses = msg.payload as RootCausePayload;
+        break;
+      case "evidence.updated":
+        patch.evidenceGraph = msg.payload as EvidenceGraphPayload;
+        break;
+      case "checkpoint.completed":
+        patch.lastCheckpoint = msg.payload as Record<string, unknown>;
+        break;
+      case "recovery.started":
+        patch.recoveryState = "recovering";
+        break;
+      case "recovery.completed":
+        patch.recoveryReport = msg.payload as Record<string, unknown>;
+        patch.recoveryState = "recovered";
+        break;
       case "runtime.inspector":
         patch.runtimeInspector = msg.payload as RuntimeInspector;
         if ((msg.payload as RuntimeInspector).projection_mode) {

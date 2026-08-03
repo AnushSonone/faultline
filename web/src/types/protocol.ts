@@ -75,6 +75,117 @@ export type CorrelationPayload = {
   correlations: DeploymentCorrelation[];
 };
 
+export type ScoreComponent = {
+  name: string;
+  feature_value: number;
+  weight: number;
+  contribution: number;
+};
+
+export type RootCauseCandidate = {
+  rank: number;
+  service: string;
+  score: number;
+  components: ScoreComponent[];
+  features: {
+    onset_ns?: number | null;
+    peak_abs_z: number;
+    impacted_anomalous: string[];
+    preceding_impacted: string[];
+    [k: string]: unknown;
+  };
+};
+
+export type RootCauseEvidence = {
+  evidence_id: string;
+  incident_id: string;
+  candidate_service: string;
+  type: string;
+  event_time_range: [number, number];
+  strength: number;
+  direction: "supports" | "contradicts";
+  source_refs: string[];
+  human_label: string;
+  details: Record<string, unknown>;
+};
+
+export type RootCausePayload = {
+  projection_version: number;
+  cursor_event_time_ns: number;
+  incident_onset_ns?: number | null;
+  language: string;
+  candidates: RootCauseCandidate[];
+  evidence: RootCauseEvidence[];
+};
+
+export type EvidenceGraphNode = {
+  id: string;
+  kind: string;
+  label: string;
+  service?: string | null;
+  time_ns?: number | null;
+  strength: number;
+  source_refs: string[];
+};
+
+export type EvidenceGraphEdge = {
+  id: string;
+  from: string;
+  to: string;
+  kind: string;
+  label: string;
+};
+
+export type EvidenceGraphPayload = {
+  projection_version: number;
+  cursor_event_time_ns: number;
+  graph: {
+    incident_id: string;
+    nodes: EvidenceGraphNode[];
+    edges: EvidenceGraphEdge[];
+  };
+};
+
+export type SpanDelta = {
+  service?: string | null;
+  operation: string;
+  path_key: string;
+  failed_span_id?: string | null;
+  healthy_span_id?: string | null;
+  failed_duration_ns?: number | null;
+  healthy_duration_ns?: number | null;
+  delta_ns?: number | null;
+};
+
+export type TraceComparison = {
+  failed_trace_id: string;
+  healthy_trace_id: string;
+  comparable_confidence: number;
+  total_excess_ns: number;
+  failed_critical_ns: number;
+  healthy_critical_ns: number;
+  critical_path_delta_ns: number;
+  aligned: SpanDelta[];
+  added_services: string[];
+  removed_services: string[];
+};
+
+export type TraceDetail = {
+  dag: { trace_id: string; spans: unknown[]; incomplete: boolean };
+  critical_path?: {
+    span_ids: string[];
+    critical_duration_ns: number;
+    total_duration_ns: number;
+    service_contribution_ns: Record<string, number>;
+  } | null;
+  cohort?: {
+    cohort_trace_ids: string[];
+    median_trace_id?: string | null;
+    confidence: number;
+  } | null;
+  comparison?: TraceComparison | null;
+};
+
 export type TraceSummary = {
   trace_id: string;
   span_count: number;

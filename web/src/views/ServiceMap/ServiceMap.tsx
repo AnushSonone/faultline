@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import cytoscape, { type Core } from "cytoscape";
 import { useInvestigation } from "../../state/investigation";
+import { COLORS } from "../../theme/tokens";
+import { EmptyState } from "../../components/EmptyState";
 
 function graphSignature(topology: {
   graph: {
@@ -33,8 +35,8 @@ export function ServiceMap() {
           selector: "node",
           style: {
             label: "data(label)",
-            "background-color": "#3d9bfd",
-            color: "#e8eef4",
+            "background-color": COLORS.accent,
+            color: COLORS.fg,
             "font-size": 10,
             "text-valign": "center",
             width: 28,
@@ -45,24 +47,24 @@ export function ServiceMap() {
         {
           selector: "node.hot",
           style: {
-            "background-color": "#e85d4c",
+            "background-color": COLORS.danger,
             "border-width": 2,
-            "border-color": "#ffb4a8",
+            "border-color": COLORS.dangerSoft,
           },
         },
         {
           selector: "node.selected",
           style: {
             "border-width": 3,
-            "border-color": "#f5d76e",
+            "border-color": COLORS.accent,
           },
         },
         {
           selector: "edge",
           style: {
             width: 2,
-            "line-color": "#5a6b7d",
-            "target-arrow-color": "#5a6b7d",
+            "line-color": COLORS.borderStrong,
+            "target-arrow-color": COLORS.borderStrong,
             "target-arrow-shape": "triangle",
             "curve-style": "bezier",
           },
@@ -127,5 +129,35 @@ export function ServiceMap() {
     }
   }, [selectedService]);
 
-  return <div className="panel-body graph" ref={ref} data-testid="service-map" />;
+  // Single-view layout: sections are always visible, so track container size
+  // directly instead of tab activation.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      const cy = cyRef.current;
+      if (!cy) return;
+      cy.resize();
+      if (cy.elements().length > 0) cy.fit(undefined, 20);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Cytoscape owns the container's children, so React must never render
+  // inside it (removeChild conflicts). The empty state is a sibling overlay;
+  // the testid stays on the wrapper so it is present in both states.
+  return (
+    <div className="panel-body graph graph-wrap" data-testid="service-map">
+      <div className="graph-canvas" ref={ref} />
+      {!topology && (
+        <div className="graph-overlay">
+          <EmptyState
+            title="Waiting for topology"
+            hint="Appears as soon as the session loads"
+          />
+        </div>
+      )}
+    </div>
+  );
 }

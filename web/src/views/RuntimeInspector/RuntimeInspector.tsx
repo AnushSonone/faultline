@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
 import { useInvestigation } from "../../state/investigation";
+import { fmtBytes, fmtCount, fmtDurationNs, fmtOffset, titleCase } from "../../lib/format";
+import { Stat } from "../../components/Stat";
+import { InfoTip } from "../../components/InfoTip";
 
 const TIPS: Record<string, string> = {
   watermark:
@@ -37,9 +40,17 @@ type OpNode = {
   } | null;
 };
 
+function fmtQueue(depth: number | undefined, capacity: number | undefined): string {
+  const d = depth ?? 0;
+  const cap = capacity ?? 0;
+  const pct = cap > 0 ? Math.round((d / cap) * 100) : 0;
+  return `${d} / ${cap} (${pct}%)`;
+}
+
 export function RuntimeInspectorPanel() {
   const inspector = useInvestigation((s) => s.runtimeInspector);
   const heatmapMode = useInvestigation((s) => s.heatmapMode);
+  const incidentStartNs = useInvestigation((s) => s.incidentStartNs);
   const selectedOperator = useInvestigation((s) => s.selectedOperator);
   const selectOperator = useInvestigation((s) => s.selectOperator);
   const selectedHeatmapCell = useInvestigation((s) => s.selectedHeatmapCell);
@@ -63,7 +74,7 @@ export function RuntimeInspectorPanel() {
   if (!inspector) {
     return (
       <details className="inspector" data-testid="runtime-inspector">
-        <summary>Runtime inspector (M3)</summary>
+        <summary>Runtime inspector</summary>
         <p className="muted">No runtime metrics yet.</p>
       </details>
     );
@@ -71,6 +82,7 @@ export function RuntimeInspectorPanel() {
 
   const et = inspector.event_time;
   const bp = inspector.backpressure;
+  const wm = et?.global_watermark_ns ?? inspector.global_watermark_ns;
   const dag = operators
     .map((o) => o.operator_type)
     .filter(Boolean)
@@ -84,32 +96,60 @@ export function RuntimeInspectorPanel() {
       onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
     >
       <summary>
-        Runtime inspector - mode:{heatmapMode} wm:
-        {et?.global_watermark_ns ?? inspector.global_watermark_ns}
+        Runtime inspector · {heatmapMode} · watermark {fmtOffset(wm, incidentStartNs)}
       </summary>
 
       <section className="inspector-section" data-testid="inspector-overview">
         <h3>Overview</h3>
-        <ul className="inspector-list">
-          <li>projection_mode: {inspector.projection_mode}</li>
-          <li>replay: {inspector.session?.replay_state ?? "-"} @ {inspector.session?.replay_speed ?? "-"}</li>
-          <li title={TIPS.watermark}>
-            global_watermark_ns: {et?.global_watermark_ns ?? inspector.global_watermark_ns}
-          </li>
-          <li title={TIPS.watermark}>
-            watermark_lag_ns: {et?.watermark_lag_ns ?? 0}
-          </li>
-          <li>events_processed: {inspector.ingestion?.events_received ?? inspector.rows_processed ?? 0}</li>
-          <li>batches_processed: {inspector.batching?.batches_created ?? inspector.batches_processed ?? 0}</li>
-          <li>active_windows: {inspector.active_window_count}</li>
-          <li title={TIPS.revision}>late_events: {et?.late_but_revisable_events ?? inspector.late_events}</li>
-          <li>beyond_grace_events: {et?.beyond_grace_events ?? inspector.beyond_grace_events ?? 0}</li>
-          <li title={TIPS.backpressure}>
-            backpressure: {bp?.any_queue_saturated ? "saturated" : "ok"} (
-            {((bp?.max_queue_utilization ?? 0) * 100).toFixed(0)}%
-            {bp?.limiting_operator_id ? `, limit=${bp.limiting_operator_id}` : ""})
-          </li>
-        </ul>
+        <div className="stat-grid">
+          <Stat label="Projection mode" value={inspector.projection_mode} />
+          <Stat
+            label="Replay"
+            value={`${inspector.session?.replay_state ?? "-"} @ ${inspector.session?.replay_speed ?? "-"}`}
+          />
+          <Stat
+            label="Global watermark"
+            mono
+            value={fmtOffset(wm, incidentStartNs)}
+            tip={<InfoTip>{TIPS.watermark}</InfoTip>}
+          />
+          <Stat
+            label="Watermark lag"
+            mono
+            value={fmtDurationNs(et?.watermark_lag_ns ?? 0)}
+            tip={<InfoTip>{TIPS.watermark}</InfoTip>}
+          />
+          <Stat
+            label="Events processed"
+            mono
+            value={fmtCount(inspector.ingestion?.events_received ?? inspector.rows_processed ?? 0)}
+          />
+          <Stat
+            label="Batches processed"
+            mono
+            value={fmtCount(inspector.batching?.batches_created ?? inspector.batches_processed ?? 0)}
+          />
+          <Stat label="Active windows" mono value={fmtCount(inspector.active_window_count)} />
+          <Stat
+            label="Late events"
+            mono
+            value={fmtCount(et?.late_but_revisable_events ?? inspector.late_events)}
+            tip={<InfoTip>{TIPS.revision}</InfoTip>}
+          />
+          <Stat
+            label="Beyond grace events"
+            mono
+            value={fmtCount(et?.beyond_grace_events ?? inspector.beyond_grace_events ?? 0)}
+          />
+          <Stat
+            label="Backpressure"
+            value={`${bp?.any_queue_saturated ? "saturated" : "ok"} (${(
+              (bp?.max_queue_utilization ?? 0) * 100
+            ).toFixed(0)}%)`}
+            hint={bp?.limiting_operator_id ? `limit: ${bp.limiting_operator_id}` : undefined}
+            tip={<InfoTip>{TIPS.backpressure}</InfoTip>}
+          />
+        </div>
       </section>
 
       <section className="inspector-section" data-testid="inspector-operator-graph">
@@ -128,16 +168,19 @@ export function RuntimeInspectorPanel() {
                   selectOperator(selectedOperator === o.stable_id ? null : o.stable_id)
                 }
               >
-                {o.operator_type} ({o.stable_id})
+                {titleCase(o.operator_type)}{" "}
+                <span className="mono hint">{o.stable_id}</span>
               </button>
               <span className="muted">
                 {" "}
-                in:{o.rows_in ?? 0} state:{o.state_bytes ?? 0}
+                in:{fmtCount(o.rows_in ?? 0)} state:{fmtBytes(o.state_bytes ?? 0)}
                 {o.percentile?.estimated_p99 != null
                   ? ` p99:${o.percentile.estimated_p99.toFixed(1)}`
                   : ""}
                 {o.temporal_join
-                  ? ` join L/R:${o.temporal_join.left_state_rows}/${o.temporal_join.right_state_rows}`
+                  ? ` join L/R:${fmtCount(o.temporal_join.left_state_rows ?? 0)}/${fmtCount(
+                      o.temporal_join.right_state_rows ?? 0,
+                    )}`
                   : ""}
               </span>
             </li>
@@ -146,51 +189,79 @@ export function RuntimeInspectorPanel() {
         {selected && (
           <div className="inspector-detail" data-testid="operator-detail">
             <strong>{selected.stable_id}</strong>
-            <ul className="inspector-list">
-              <li>type: {selected.operator_type}</li>
-              <li>query: {selected.query_id ?? "-"}</li>
-              <li>rows in/out: {selected.rows_in ?? 0}/{selected.rows_out ?? 0}</li>
-              <li title={TIPS.state}>state_bytes: {selected.state_bytes ?? 0}</li>
-              <li>
-                windows active/final: {selected.active_windows ?? 0}/
-                {selected.finalized_windows ?? 0}
-              </li>
-              <li title={TIPS.watermark}>watermark_ns: {selected.watermark_ns ?? "-"}</li>
-              <li title={TIPS.backpressure}>
-                queue: {selected.queue_depth ?? 0}/{selected.queue_capacity ?? 0}
-              </li>
+            <dl className="kv-grid">
+              <dt>Type</dt>
+              <dd>{titleCase(selected.operator_type)}</dd>
+              <dt>Query</dt>
+              <dd className="mono">{selected.query_id ?? "-"}</dd>
+              <dt>Rows in / out</dt>
+              <dd className="mono">
+                {fmtCount(selected.rows_in ?? 0)} / {fmtCount(selected.rows_out ?? 0)}
+              </dd>
+              <dt>
+                State <InfoTip>{TIPS.state}</InfoTip>
+              </dt>
+              <dd className="mono">{fmtBytes(selected.state_bytes ?? 0)}</dd>
+              <dt>Windows active / final</dt>
+              <dd className="mono">
+                {fmtCount(selected.active_windows ?? 0)} /{" "}
+                {fmtCount(selected.finalized_windows ?? 0)}
+              </dd>
+              <dt>
+                Watermark <InfoTip>{TIPS.watermark}</InfoTip>
+              </dt>
+              <dd className="mono">{fmtOffset(selected.watermark_ns, incidentStartNs)}</dd>
+              <dt>
+                Queue <InfoTip>{TIPS.backpressure}</InfoTip>
+              </dt>
+              <dd className="mono">{fmtQueue(selected.queue_depth, selected.queue_capacity)}</dd>
               {selected.percentile && (
                 <>
-                  <li>sketch observations: {selected.percentile.observations ?? 0}</li>
-                  <li>sketch bytes: {selected.percentile.sketch_state_bytes ?? 0}</li>
-                  <li>alpha: {selected.percentile.alpha ?? "-"}</li>
+                  <dt>Sketch observations</dt>
+                  <dd className="mono">{fmtCount(selected.percentile.observations ?? 0)}</dd>
+                  <dt>Sketch bytes</dt>
+                  <dd className="mono">{fmtBytes(selected.percentile.sketch_state_bytes ?? 0)}</dd>
+                  <dt>Alpha</dt>
+                  <dd className="mono">{selected.percentile.alpha ?? "-"}</dd>
                 </>
               )}
               {selected.temporal_join && (
                 <>
-                  <li>matches: {selected.temporal_join.matches ?? 0}</li>
-                  <li>unmatched: {selected.temporal_join.unmatched_rows ?? 0}</li>
-                  <li>expired: {selected.temporal_join.expired_rows ?? 0}</li>
+                  <dt>Matches</dt>
+                  <dd className="mono">{fmtCount(selected.temporal_join.matches ?? 0)}</dd>
+                  <dt>Unmatched</dt>
+                  <dd className="mono">{fmtCount(selected.temporal_join.unmatched_rows ?? 0)}</dd>
+                  <dt>Expired</dt>
+                  <dd className="mono">{fmtCount(selected.temporal_join.expired_rows ?? 0)}</dd>
                 </>
               )}
-            </ul>
+            </dl>
           </div>
         )}
       </section>
 
       <section className="inspector-section" data-testid="inspector-watermark">
         <h3>Watermark</h3>
-        <ul className="inspector-list">
-          <li title={TIPS.watermark}>
-            global: {et?.global_watermark_ns ?? inspector.global_watermark_ns}
-          </li>
-          <li>max_event_time: {et?.max_event_time_ns ?? "-"}</li>
-          <li title={TIPS.lateness}>
-            allowed_lateness_ns: {et?.allowed_lateness_ns ?? inspector.allowed_lateness_ns}
-          </li>
-          <li>lag_ns: {et?.watermark_lag_ns ?? 0}</li>
-          <li>idle_partitions: {et?.idle_partitions ?? 0}</li>
-        </ul>
+        <dl className="kv-grid">
+          <dt>
+            Global <InfoTip>{TIPS.watermark}</InfoTip>
+          </dt>
+          <dd className="mono">
+            {fmtOffset(et?.global_watermark_ns ?? inspector.global_watermark_ns, incidentStartNs)}
+          </dd>
+          <dt>Max event time</dt>
+          <dd className="mono">{fmtOffset(et?.max_event_time_ns, incidentStartNs)}</dd>
+          <dt>
+            Allowed lateness <InfoTip>{TIPS.lateness}</InfoTip>
+          </dt>
+          <dd className="mono">
+            {fmtDurationNs(et?.allowed_lateness_ns ?? inspector.allowed_lateness_ns)}
+          </dd>
+          <dt>Lag</dt>
+          <dd className="mono">{fmtDurationNs(et?.watermark_lag_ns ?? 0)}</dd>
+          <dt>Idle partitions</dt>
+          <dd className="mono">{fmtCount(et?.idle_partitions ?? 0)}</dd>
+        </dl>
         <div className="wm-bar" title={TIPS.watermark} data-testid="wm-timeline">
           <div
             className="wm-fill"
@@ -211,7 +282,7 @@ export function RuntimeInspectorPanel() {
         <ul className="inspector-list compact">
           {(et?.partition_watermarks ?? []).slice(0, 8).map((p) => (
             <li key={p.partition}>
-              {p.partition}: {p.watermark_ns}
+              {p.partition}: <span className="mono">{fmtOffset(p.watermark_ns, incidentStartNs)}</span>
             </li>
           ))}
         </ul>
@@ -220,8 +291,11 @@ export function RuntimeInspectorPanel() {
       <section className="inspector-section" data-testid="inspector-state">
         <h3>State</h3>
         <ul className="inspector-list">
-          <li>reorder_buffer: {inspector.ingestion?.reorder_buffer_occupancy ?? inspector.reorder_buffer_size}</li>
-          <li>heatmap_revisions: {inspector.heatmap_revisions}</li>
+          <li>
+            reorder_buffer:{" "}
+            {fmtCount(inspector.ingestion?.reorder_buffer_occupancy ?? inspector.reorder_buffer_size)}
+          </li>
+          <li>heatmap_revisions: {fmtCount(inspector.heatmap_revisions)}</li>
           {selectedHeatmapCell && (
             <li data-testid="cell-operator-link">
               selected cell → op:{selectedHeatmapCell.operator_id ?? "-"} window:

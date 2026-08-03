@@ -12,6 +12,8 @@ test.describe("M3 runtime depth", () => {
     await page.waitForTimeout(1500);
     await page.getByRole("button", { name: "Pause" }).click();
 
+    // Runtime tab: inspector + arch status.
+    await page.getByTestId("tab-runtime").click();
     const inspector = page.getByTestId("runtime-inspector");
     await expect(inspector).toBeVisible();
     await inspector.locator("summary").click();
@@ -26,19 +28,23 @@ test.describe("M3 runtime depth", () => {
 
     await expect(page.getByTestId("wm-timeline")).toBeVisible();
     await expect(page.getByTestId("arch-status")).toContainText("streaming percentile");
-    await expect(page.getByTestId("arch-status")).toContainText("not implemented");
+    await expect(page.getByTestId("arch-status")).toContainText("evidence ranking");
 
-    // Heatmap may show p99 cells after play.
+    // Signals tab: heatmap may show p99 cells after play.
+    await page.getByTestId("tab-signals").click();
     const p99 = page.getByTestId("heatmap-p99-cell");
     if (await p99.count()) {
       await p99.first().click();
     }
 
+    // Root-causes tab: correlation card links back to the join operator.
+    await page.getByTestId("tab-root-causes").click();
     const corr = page.getByTestId("deployment-correlation");
     await expect(corr).toBeVisible();
     const card = page.locator("[data-testid^='correlation-']").first();
     if (await card.count()) {
       await card.click();
+      await page.getByTestId("tab-runtime").click();
       await expect(page.getByTestId("op-deploy_temporal_join")).toBeVisible();
     }
 
