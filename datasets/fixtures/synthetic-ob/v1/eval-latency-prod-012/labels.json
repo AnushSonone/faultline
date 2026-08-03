@@ -1,0 +1,17 @@
+{
+  "incident_id": "eval-latency-prod-012",
+  "root_cause_services": [
+    "productcatalogservice"
+  ],
+  "root_cause_indicators": [
+    "productcatalogservice_latency"
+  ],
+  "fault_type": "latency",
+  "fault_start_time_ns": 1710684007000000000,
+  "fault_end_time_ns": 1710684019000000000,
+  "expected_downstream_services": [
+    "frontend",
+    "cartservice"
+  ],
+  "notes": "Synthetic latency fault on productcatalogservice (evaluation suite, seed 1703729684)."
+}

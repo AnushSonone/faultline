@@ -9,4 +9,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 faultline-common = { workspace = true }
+faultline-state = { workspace = true }
+faultline-engine = { workspace = true }
+faultline-replay = { workspace = true }
+faultline-inference = { workspace = true }
 

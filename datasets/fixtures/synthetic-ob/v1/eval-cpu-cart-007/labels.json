@@ -1,0 +1,16 @@
+{
+  "incident_id": "eval-cpu-cart-007",
+  "root_cause_services": [
+    "cartservice"
+  ],
+  "root_cause_indicators": [
+    "cartservice_cpu"
+  ],
+  "fault_type": "cpu",
+  "fault_start_time_ns": 1710739006000000000,
+  "fault_end_time_ns": 1710739019000000000,
+  "expected_downstream_services": [
+    "frontend"
+  ],
+  "notes": "Synthetic cpu fault on cartservice (evaluation suite, seed 1796035739)."
+}

@@ -1,0 +1,16 @@
+{
+  "incident_id": "eval-mem-cart-003",
+  "root_cause_services": [
+    "cartservice"
+  ],
+  "root_cause_indicators": [
+    "cartservice_mem"
+  ],
+  "fault_type": "mem",
+  "fault_start_time_ns": 1710457005000000000,
+  "fault_end_time_ns": 1710457019000000000,
+  "expected_downstream_services": [
+    "frontend"
+  ],
+  "notes": "Synthetic mem fault on cartservice (evaluation suite, seed 404285457)."
+}

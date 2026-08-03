@@ -1,0 +1,17 @@
+{
+  "incident_id": "eval-error-prod-016",
+  "root_cause_services": [
+    "productcatalogservice"
+  ],
+  "root_cause_indicators": [
+    "productcatalogservice_error_rate"
+  ],
+  "fault_type": "error",
+  "fault_start_time_ns": 1710792005000000000,
+  "fault_end_time_ns": 1710792019000000000,
+  "expected_downstream_services": [
+    "frontend",
+    "cartservice"
+  ],
+  "notes": "Synthetic error fault on productcatalogservice (evaluation suite, seed 505913792)."
+}

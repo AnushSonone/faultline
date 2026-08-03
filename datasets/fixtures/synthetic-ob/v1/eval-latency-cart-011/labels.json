@@ -1,0 +1,16 @@
+{
+  "incident_id": "eval-latency-cart-011",
+  "root_cause_services": [
+    "cartservice"
+  ],
+  "root_cause_indicators": [
+    "cartservice_latency"
+  ],
+  "fault_type": "latency",
+  "fault_start_time_ns": 1710473005000000000,
+  "fault_end_time_ns": 1710473019000000000,
+  "expected_downstream_services": [
+    "frontend"
+  ],
+  "notes": "Synthetic latency fault on cartservice (evaluation suite, seed 265695473)."
+}

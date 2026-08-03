@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-ob",
+  "dataset_version": "v1",
+  "incident_id": "eval-error-reco-013",
+  "system": "online-boutique-synthetic",
+  "start_time_ns": 1710216000000000000,
+  "end_time_ns": 1710216019000000000,
+  "signals": [
+    "metrics",
+    "spans",
+    "logs",
+    "changes"
+  ],
+  "event_counts": {
+    "metrics": 400,
+    "spans": 240,
+    "logs": 1,
+    "changes": 1
+  },
+  "files": [
+    {
+      "path": "metrics/part-00000.parquet",
+      "sha256": "3a3d93787b684b3f30e87291263471f55da70d4c1813ec3cb8e32d525fa5cf58",
+      "rows": 400
+    },
+    {
+      "path": "spans/part-00000.parquet",
+      "sha256": "6306de0ebeecfea02548de4e2b7e1b872cf9b18da313244b818ebfe1bd76492a",
+      "rows": 240
+    },
+    {
+      "path": "logs/part-00000.parquet",
+      "sha256": "4b4c0d902d40595eebf95dc57051e4bd36524a95b60220fdbc8f075a13063f0a",
+      "rows": 1
+    },
+    {
+      "path": "changes/part-00000.parquet",
+      "sha256": "e66c5bc7213ad298da9fafb8f0130cb963bd52505a82f849a443dc495b5623eb",
+      "rows": 1
+    }
+  ]
+}

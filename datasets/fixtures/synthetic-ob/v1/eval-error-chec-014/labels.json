@@ -1,0 +1,16 @@
+{
+  "incident_id": "eval-error-chec-014",
+  "root_cause_services": [
+    "checkoutservice"
+  ],
+  "root_cause_indicators": [
+    "checkoutservice_error_rate"
+  ],
+  "fault_type": "error",
+  "fault_start_time_ns": 1710485005000000000,
+  "fault_end_time_ns": 1710485019000000000,
+  "expected_downstream_services": [
+    "frontend"
+  ],
+  "notes": "Synthetic error fault on checkoutservice (evaluation suite, seed 571981485)."
+}

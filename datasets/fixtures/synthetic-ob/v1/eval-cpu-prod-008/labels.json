@@ -1,0 +1,17 @@
+{
+  "incident_id": "eval-cpu-prod-008",
+  "root_cause_services": [
+    "productcatalogservice"
+  ],
+  "root_cause_indicators": [
+    "productcatalogservice_cpu"
+  ],
+  "fault_type": "cpu",
+  "fault_start_time_ns": 1710716005000000000,
+  "fault_end_time_ns": 1710716019000000000,
+  "expected_downstream_services": [
+    "frontend",
+    "cartservice"
+  ],
+  "notes": "Synthetic cpu fault on productcatalogservice (evaluation suite, seed 1033639716)."
+}

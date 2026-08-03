@@ -1,0 +1,17 @@
+{
+  "incident_id": "eval-latency-reco-009",
+  "root_cause_services": [
+    "recommendationservice"
+  ],
+  "root_cause_indicators": [
+    "recommendationservice_latency"
+  ],
+  "fault_type": "latency",
+  "fault_start_time_ns": 1710038005000000000,
+  "fault_end_time_ns": 1710038019000000000,
+  "expected_downstream_services": [
+    "frontend",
+    "checkoutservice"
+  ],
+  "notes": "Synthetic latency fault on recommendationservice (evaluation suite, seed 1823296038)."
+}

@@ -1,0 +1,17 @@
+{
+  "incident_id": "eval-mem-prod-004",
+  "root_cause_services": [
+    "productcatalogservice"
+  ],
+  "root_cause_indicators": [
+    "productcatalogservice_mem"
+  ],
+  "fault_type": "mem",
+  "fault_start_time_ns": 1710477006000000000,
+  "fault_end_time_ns": 1710477019000000000,
+  "expected_downstream_services": [
+    "frontend",
+    "cartservice"
+  ],
+  "notes": "Synthetic mem fault on productcatalogservice (evaluation suite, seed 249103477)."
+}

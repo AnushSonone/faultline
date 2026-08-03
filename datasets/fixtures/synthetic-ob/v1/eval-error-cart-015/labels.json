@@ -1,0 +1,16 @@
+{
+  "incident_id": "eval-error-cart-015",
+  "root_cause_services": [
+    "cartservice"
+  ],
+  "root_cause_indicators": [
+    "cartservice_error_rate"
+  ],
+  "fault_type": "error",
+  "fault_start_time_ns": 1710482006000000000,
+  "fault_end_time_ns": 1710482019000000000,
+  "expected_downstream_services": [
+    "frontend"
+  ],
+  "notes": "Synthetic error fault on cartservice (evaluation suite, seed 1800188482)."
+}
