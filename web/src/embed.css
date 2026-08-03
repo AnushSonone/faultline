@@ -1,0 +1,31 @@
+/* Embed-only layout for the blog mount. This file already targets
+   #faultline-demo-root; the prefixer leaves selectors that start with the
+   root id unchanged, so these rules land on the root exactly once.
+
+   The breakout recipe (left 50% + translateX) frees the demo from the
+   blog's narrow prose column. The font/color/line-height re-assertions
+   matter: the blog body is Times serif, and the app's scoped body{} rule
+   must win on this root with the app's own sans stack.
+
+   min-height: 0 neutralizes the app's body { min-height: 100vh } once the
+   scoper rewrites body onto this root; the embed caps height instead. */
+
+#faultline-demo-root {
+  box-sizing: border-box;
+  width: min(72rem, calc(100vw - 2rem));
+  max-width: min(72rem, calc(100vw - 2rem));
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0 0 3rem;
+  height: min(85vh, 56rem);
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  color: var(--fg);
+  line-height: 1.4;
+}
