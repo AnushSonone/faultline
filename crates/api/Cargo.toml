@@ -12,6 +12,8 @@ faultline-ingest = { workspace = true }
 faultline-graph = { workspace = true }
 faultline-projection = { workspace = true }
 faultline-engine = { workspace = true }
+faultline-state = { workspace = true }
+faultline-planner = { workspace = true }
 axum = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -24,5 +26,6 @@ parking_lot = { workspace = true }
 anyhow = { workspace = true }
 
 [dev-dependencies]
+tempfile = "3"
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"

@@ -154,6 +154,34 @@ impl HeatmapStreamingPipeline {
         self.last_correlation.as_ref()
     }
 
+    /// Snapshot the stateful operators for checkpointing (TA-039/040).
+    pub fn snapshot_operators(&self) -> Vec<crate::operator::OperatorSnapshot> {
+        vec![
+            self.window.snapshot(),
+            self.percentile.snapshot(),
+            self.join.snapshot(),
+        ]
+    }
+
+    /// Restore operator state from checkpoint snapshots, matched by
+    /// operator id. Unknown ids are an error (spec 23: missing operator
+    /// state is a recovery failure case).
+    pub fn restore_operators(
+        &mut self,
+        snapshots: &[crate::operator::OperatorSnapshot],
+    ) -> Result<(), String> {
+        for snap in snapshots {
+            let result = match snap.operator_id.as_str() {
+                "heatmap_tumbling" => self.window.restore(snap.clone()),
+                "latency_percentile" => self.percentile.restore(snap.clone()),
+                "deploy_temporal_join" => self.join.restore(snap.clone()),
+                other => return Err(format!("unknown operator in checkpoint: {other}")),
+            };
+            result.map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    }
+
     pub fn reset(&mut self) {
         self.watermark.reset();
         self.batcher.reset();
@@ -422,7 +450,10 @@ impl HeatmapStreamingPipeline {
         self.percentile.last_emits()
     }
 
-    pub fn inspector(&self) -> RuntimeInspectorDto {
+    pub fn inspector(&mut self) -> RuntimeInspectorDto {
+        // Watermark derived metrics refresh lazily; bring them current for
+        // this read (O(partitions), once per inspector snapshot).
+        self.watermark.refresh_metrics();
         let wm = self.watermark.metrics();
         let filter_m = self.filter.metrics();
         let window_m = self.window.metrics();
