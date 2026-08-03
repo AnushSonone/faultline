@@ -1,0 +1,47 @@
+{
+  "statement": "SELECT service, TUMBLE(event_time, '1s'), P99(value) AS p99 FROM metrics WHERE name LIKE '%latency%' GROUP BY service",
+  "logical_plan": "Sink\n  Project [service, window_start, p99]\n    Aggregate group_by=[service] aggs=[P99(value)]\n      Window Tumble { size_ns: 1000000000 }\n        Filter Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%latency%\")) }\n          Scan metrics [*]\n",
+  "optimized_logical_plan": "Sink\n  Aggregate group_by=[service] aggs=[P99(value)]\n    Window Tumble { size_ns: 1000000000 }\n      Filter Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%latency%\")) }\n        Scan metrics [service, name, value, event_time]\n",
+  "physical_plan": {
+    "operators": [
+      {
+        "operator_id": "scan_metrics",
+        "kind": "source",
+        "detail": "replay envelopes -> metrics rows [service, name, value, event_time]"
+      },
+      {
+        "operator_id": "filter",
+        "kind": "filter",
+        "detail": "Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%latency%\")) }"
+      },
+      {
+        "operator_id": "window_assign",
+        "kind": "window",
+        "detail": "Tumble { size_ns: 1000000000 }"
+      },
+      {
+        "operator_id": "latency_percentile",
+        "kind": "aggregate",
+        "detail": "DDSketch percentile operator (shared with streaming heatmap)"
+      },
+      {
+        "operator_id": "result_sink",
+        "kind": "sink",
+        "detail": "row collection"
+      }
+    ],
+    "partitioning": "single partition (session replay)",
+    "state_retention": "windows retained until watermark + 1s grace",
+    "watermark_policy": "bounded out-of-orderness, 2s allowed lateness"
+  },
+  "operator_ids": [
+    "scan_metrics",
+    "filter",
+    "window_assign",
+    "latency_percentile",
+    "result_sink"
+  ],
+  "partitioning": "single partition (session replay)",
+  "state_retention": "windows retained until watermark + 1s grace",
+  "watermark_policy": "bounded out-of-orderness, 2s allowed lateness"
+}

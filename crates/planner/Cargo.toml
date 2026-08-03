@@ -9,4 +9,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 faultline-common = { workspace = true }
+faultline-engine = { workspace = true }
+sqlparser = { workspace = true }
 
+
+[dev-dependencies]
+faultline-replay = { workspace = true }

@@ -1,0 +1,59 @@
+{
+  "statement": "SELECT service, name, value, change_id, delay_ns FROM metrics JOIN deployments ON service = service WHERE name LIKE '%latency%' AND change_id != '' ORDER BY delay_ns LIMIT 20",
+  "logical_plan": "Sink\n  Limit 20\n    Sort [delay_ns]\n      Project [service, name, value, change_id, delay_ns]\n        Filter Binary { left: Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%latency%\")) }, op: And, right: Binary { left: Column(\"change_id\"), op: NotEq, right: Literal(Text(\"\")) } }\n          TemporalJoin deployments lookback=5000000000ns lookahead=10000000000ns\n            Scan metrics [*]\n",
+  "optimized_logical_plan": "Sink\n  Limit 20 (top-k)\n    Sort [delay_ns]\n      Project [service, name, value, change_id, delay_ns]\n        Filter Binary { left: Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%latency%\")) }, op: And, right: Binary { left: Column(\"change_id\"), op: NotEq, right: Literal(Text(\"\")) } }\n          TemporalJoin deployments lookback=5000000000ns lookahead=10000000000ns\n            Scan metrics [service, name, value, event_time]\n",
+  "physical_plan": {
+    "operators": [
+      {
+        "operator_id": "scan_metrics",
+        "kind": "source",
+        "detail": "replay envelopes -> metrics rows [service, name, value, event_time]"
+      },
+      {
+        "operator_id": "deploy_temporal_join",
+        "kind": "temporal_join",
+        "detail": "left interval join vs deployments (shared operator)"
+      },
+      {
+        "operator_id": "filter",
+        "kind": "filter",
+        "detail": "Binary { left: Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%latency%\")) }, op: And, right: Binary { left: Column(\"change_id\"), op: NotEq, right: Literal(Text(\"\")) } }"
+      },
+      {
+        "operator_id": "project",
+        "kind": "project",
+        "detail": "service, name, value, change_id, delay_ns"
+      },
+      {
+        "operator_id": "sort",
+        "kind": "sort",
+        "detail": "[OrderBy { column: \"delay_ns\", descending: false }]"
+      },
+      {
+        "operator_id": "top_k",
+        "kind": "limit",
+        "detail": "20"
+      },
+      {
+        "operator_id": "result_sink",
+        "kind": "sink",
+        "detail": "row collection"
+      }
+    ],
+    "partitioning": "single partition (session replay)",
+    "state_retention": "windows retained until watermark + 1s grace",
+    "watermark_policy": "bounded out-of-orderness, 2s allowed lateness"
+  },
+  "operator_ids": [
+    "scan_metrics",
+    "deploy_temporal_join",
+    "filter",
+    "project",
+    "sort",
+    "top_k",
+    "result_sink"
+  ],
+  "partitioning": "single partition (session replay)",
+  "state_retention": "windows retained until watermark + 1s grace",
+  "watermark_policy": "bounded out-of-orderness, 2s allowed lateness"
+}

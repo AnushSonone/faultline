@@ -44,7 +44,7 @@ thiserror = "2"
 anyhow = "1"
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.8", features = ["ws"] }
-tower-http = { version = "0.6", features = ["cors", "trace"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4", "serde"] }
@@ -57,6 +57,7 @@ tokio-stream = "0.1"
 arrow = { version = "58", default-features = false, features = ["json", "prettyprint"] }
 parquet = { version = "58", default-features = false, features = ["arrow", "snap"] }
 clap = { version = "4", features = ["derive"] }
+sqlparser = "0.53"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 parking_lot = "0.12"
 indexmap = { version = "2", features = ["serde"] }
