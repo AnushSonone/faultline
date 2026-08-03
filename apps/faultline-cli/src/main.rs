@@ -15,10 +15,10 @@ struct Cli {
 enum Commands {
     /// Print version
     Version,
-    /// Validate a manifest (TA-003+)
+    /// Validate an incident directory's manifest.json and labels.json (TA-003)
     Validate {
         #[arg(long)]
-        path: Option<String>,
+        path: String,
     },
     /// Engine benchmark suite (TA-049): row baseline vs Arrow batch sizes.
     BenchEngine {
@@ -65,7 +65,13 @@ fn main() -> Result<()> {
             println!("faultline-cli {}", env!("CARGO_PKG_VERSION"));
         }
         Commands::Validate { path } => {
-            println!("validate stub path={path:?} (TA-003)");
+            let (manifest, labels) =
+                faultline_catalog::validate_incident_dir(std::path::Path::new(&path))
+                    .map_err(|e| anyhow::anyhow!("{path}: {e}"))?;
+            println!(
+                "valid: incident_id={} system={} fault_type={}",
+                manifest.incident_id, manifest.system, labels.fault_type
+            );
         }
         Commands::BenchEngine { rows, runs, json } => {
             let report = faultline_cli::bench::bench_engine(rows, runs);

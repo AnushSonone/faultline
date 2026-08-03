@@ -13,7 +13,3 @@ pub mod evidence;
 pub mod evidence_graph;
 pub mod features;
 pub mod ranking;
-
-pub fn crate_name() -> &'static str {
-    "faultline-inference"
-}

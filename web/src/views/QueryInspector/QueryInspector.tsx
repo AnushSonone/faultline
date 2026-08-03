@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useInvestigation } from "../../state/investigation";
+import { runQuery } from "../../api/client";
 import { fmtCount, titleCase } from "../../lib/format";
 import { EmptyState } from "../../components/EmptyState";
 
@@ -40,12 +41,7 @@ export function QueryInspectorPanel() {
     if (!sessionId || busy) return;
     setBusy(true);
     try {
-      const r = await fetch("/api/v1/queries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sql, session_id: sessionId }),
-      });
-      setResponse((await r.json()) as RunResponse);
+      setResponse((await runQuery(sessionId, sql)) as RunResponse);
     } catch (e) {
       setResponse({ error: String(e) });
     } finally {

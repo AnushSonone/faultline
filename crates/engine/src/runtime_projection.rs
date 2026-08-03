@@ -2,8 +2,6 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::operator::OperatorMetrics;
-
 pub const RUNTIME_PROJECTION_VERSION: u32 = 1;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -108,6 +106,7 @@ pub struct SessionRuntimeStats {
     pub cursor_event_time_ns: i64,
     pub session_uptime_ms: u64,
     pub projection_versions: u64,
+    pub heatmap_revisions: u64,
     pub websocket_clients: usize,
     pub resync_count: u64,
 }
@@ -123,20 +122,6 @@ pub struct RuntimeInspectorDto {
     pub backpressure: BackpressureStats,
     /// Compact architecture honesty (product boundary).
     pub architecture_status: Vec<String>,
-    // Backward-compatible flat fields used by the M3 core UI.
-    pub global_watermark_ns: i64,
-    pub allowed_lateness_ns: i64,
-    pub late_events: u64,
-    pub beyond_grace_events: u64,
-    pub reorder_buffer_size: usize,
-    pub rows_processed: u64,
-    pub batches_processed: u64,
-    pub queue_depth: usize,
-    pub active_window_count: usize,
-    pub finalized_window_count: usize,
-    pub heatmap_revisions: u64,
-    pub projection_mode: String,
-    pub operator_metrics: Vec<OperatorMetrics>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -157,19 +142,6 @@ impl Default for RuntimeInspectorDto {
             session: SessionRuntimeStats::default(),
             backpressure: BackpressureStats::default(),
             architecture_status: default_architecture_status(),
-            global_watermark_ns: i64::MIN,
-            allowed_lateness_ns: 0,
-            late_events: 0,
-            beyond_grace_events: 0,
-            reorder_buffer_size: 0,
-            rows_processed: 0,
-            batches_processed: 0,
-            queue_depth: 0,
-            active_window_count: 0,
-            finalized_window_count: 0,
-            heatmap_revisions: 0,
-            projection_mode: "streaming".into(),
-            operator_metrics: Vec::new(),
         }
     }
 }

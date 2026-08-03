@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "faultline-graph"
 version.workspace = true
 edition.workspace = true

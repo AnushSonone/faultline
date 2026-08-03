@@ -56,18 +56,10 @@ export function RuntimeInspectorPanel() {
   const selectedHeatmapCell = useInvestigation((s) => s.selectedHeatmapCell);
   const [open, setOpen] = useState(false);
 
-  const operators: OpNode[] = useMemo(() => {
-    if (!inspector) return [];
-    if (Array.isArray(inspector.operators) && inspector.operators.length) {
-      return inspector.operators as OpNode[];
-    }
-    return (inspector.operator_metrics ?? []).map((m) => ({
-      stable_id: m.operator_id,
-      operator_type: m.operator_id,
-      rows_in: m.rows_in,
-      queue_depth: m.queue_depth,
-    }));
-  }, [inspector]);
+  const operators: OpNode[] = useMemo(
+    () => (inspector?.operators ?? []) as OpNode[],
+    [inspector],
+  );
 
   const selected = operators.find((o) => o.stable_id === selectedOperator) ?? null;
 
@@ -82,7 +74,8 @@ export function RuntimeInspectorPanel() {
 
   const et = inspector.event_time;
   const bp = inspector.backpressure;
-  const wm = et?.global_watermark_ns ?? inspector.global_watermark_ns;
+  const wm = et?.global_watermark_ns ?? 0;
+  const activeWindows = operators.reduce((sum, o) => sum + (o.active_windows ?? 0), 0);
   const dag = operators
     .map((o) => o.operator_type)
     .filter(Boolean)
@@ -102,7 +95,7 @@ export function RuntimeInspectorPanel() {
       <section className="inspector-section" data-testid="inspector-overview">
         <h3>Overview</h3>
         <div className="stat-grid">
-          <Stat label="Projection mode" value={inspector.projection_mode} />
+          <Stat label="Projection mode" value={inspector.session?.projection_mode ?? heatmapMode} />
           <Stat
             label="Replay"
             value={`${inspector.session?.replay_state ?? "-"} @ ${inspector.session?.replay_speed ?? "-"}`}
@@ -122,24 +115,24 @@ export function RuntimeInspectorPanel() {
           <Stat
             label="Events processed"
             mono
-            value={fmtCount(inspector.ingestion?.events_received ?? inspector.rows_processed ?? 0)}
+            value={fmtCount(inspector.ingestion?.events_received ?? 0)}
           />
           <Stat
             label="Batches processed"
             mono
-            value={fmtCount(inspector.batching?.batches_created ?? inspector.batches_processed ?? 0)}
+            value={fmtCount(inspector.batching?.batches_created ?? 0)}
           />
-          <Stat label="Active windows" mono value={fmtCount(inspector.active_window_count)} />
+          <Stat label="Active windows" mono value={fmtCount(activeWindows)} />
           <Stat
             label="Late events"
             mono
-            value={fmtCount(et?.late_but_revisable_events ?? inspector.late_events)}
+            value={fmtCount(et?.late_but_revisable_events ?? 0)}
             tip={<InfoTip>{TIPS.revision}</InfoTip>}
           />
           <Stat
             label="Beyond grace events"
             mono
-            value={fmtCount(et?.beyond_grace_events ?? inspector.beyond_grace_events ?? 0)}
+            value={fmtCount(et?.beyond_grace_events ?? 0)}
           />
           <Stat
             label="Backpressure"
@@ -246,17 +239,13 @@ export function RuntimeInspectorPanel() {
           <dt>
             Global <InfoTip>{TIPS.watermark}</InfoTip>
           </dt>
-          <dd className="mono">
-            {fmtOffset(et?.global_watermark_ns ?? inspector.global_watermark_ns, incidentStartNs)}
-          </dd>
+          <dd className="mono">{fmtOffset(wm, incidentStartNs)}</dd>
           <dt>Max event time</dt>
           <dd className="mono">{fmtOffset(et?.max_event_time_ns, incidentStartNs)}</dd>
           <dt>
             Allowed lateness <InfoTip>{TIPS.lateness}</InfoTip>
           </dt>
-          <dd className="mono">
-            {fmtDurationNs(et?.allowed_lateness_ns ?? inspector.allowed_lateness_ns)}
-          </dd>
+          <dd className="mono">{fmtDurationNs(et?.allowed_lateness_ns ?? 0)}</dd>
           <dt>Lag</dt>
           <dd className="mono">{fmtDurationNs(et?.watermark_lag_ns ?? 0)}</dd>
           <dt>Idle partitions</dt>
@@ -270,7 +259,7 @@ export function RuntimeInspectorPanel() {
                 100,
                 (() => {
                   const maxEt = et?.max_event_time_ns ?? 0;
-                  const gwm = et?.global_watermark_ns ?? inspector.global_watermark_ns;
+                  const gwm = wm;
                   const lag = et?.watermark_lag_ns || 1;
                   if (maxEt <= 0) return 10;
                   return ((gwm - (maxEt - lag)) / lag) * 100;
@@ -292,10 +281,9 @@ export function RuntimeInspectorPanel() {
         <h3>State</h3>
         <ul className="inspector-list">
           <li>
-            reorder_buffer:{" "}
-            {fmtCount(inspector.ingestion?.reorder_buffer_occupancy ?? inspector.reorder_buffer_size)}
+            reorder_buffer: {fmtCount(inspector.ingestion?.reorder_buffer_occupancy ?? 0)}
           </li>
-          <li>heatmap_revisions: {fmtCount(inspector.heatmap_revisions)}</li>
+          <li>heatmap_revisions: {fmtCount(inspector.session?.heatmap_revisions ?? 0)}</li>
           {selectedHeatmapCell && (
             <li data-testid="cell-operator-link">
               selected cell → op:{selectedHeatmapCell.operator_id ?? "-"} window:

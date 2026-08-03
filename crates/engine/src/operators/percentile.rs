@@ -529,10 +529,7 @@ impl Operator for PercentileOperator {
                 self.finalized_windows = 0;
                 self.last_emits.clear();
                 self.last_validation_error = None;
-                self.metrics = OperatorMetrics {
-                    operator_id: self.id.clone(),
-                    ..Default::default()
-                };
+                self.metrics = OperatorMetrics::reset_for(&self.id);
             }
         }
         Ok(Vec::new())
@@ -609,24 +606,9 @@ impl Operator for PercentileOperator {
     }
 }
 
-/// Exact percentile on a sorted ascending slice (linear rank).
-pub fn exact_percentile_sorted(sorted: &[f64], q: f64) -> Option<f64> {
-    if sorted.is_empty() || !(0.0..=1.0).contains(&q) {
-        return None;
-    }
-    if sorted.len() == 1 {
-        return Some(sorted[0]);
-    }
-    let rank = q * (sorted.len() as f64 - 1.0);
-    let lo = rank.floor() as usize;
-    let hi = rank.ceil() as usize;
-    if lo == hi {
-        Some(sorted[lo])
-    } else {
-        let w = rank - lo as f64;
-        Some(sorted[lo] * (1.0 - w) + sorted[hi] * w)
-    }
-}
+/// Exact percentile on a sorted ascending slice (linear rank). Shared with
+/// projections and the CLI via faultline-common.
+pub use faultline_common::exact_percentile_sorted;
 
 #[cfg(test)]
 mod tests {

@@ -1,6 +1,7 @@
 import { useInvestigation } from "../../state/investigation";
 import { fmtCount, fmtDurationNs, fmtOffset } from "../../lib/format";
 import { InfoTip } from "../../components/InfoTip";
+import { EmptyState } from "../../components/EmptyState";
 
 const MS_TO_NS = 1e6;
 
@@ -14,12 +15,11 @@ export function DeploymentCorrelationPanel() {
 
   if (!correlations.length) {
     return (
-      <div className="empty-state" data-testid="deployment-correlation">
-        <span className="glyph" aria-hidden="true">
-          ⇅
-        </span>
-        <span>No deployment correlations yet. Play or seek past a deploy marker.</span>
-      </div>
+      <EmptyState
+        glyph="⇅"
+        title="No deployment correlations yet. Play or seek past a deploy marker."
+        testId="deployment-correlation"
+      />
     );
   }
 

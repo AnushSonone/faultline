@@ -192,10 +192,7 @@ impl Operator for HeatmapSinkExec {
             self.cells.clear();
             self.revisions = 0;
             self.last_projection = None;
-            self.metrics = OperatorMetrics {
-                operator_id: self.id.clone(),
-                ..Default::default()
-            };
+            self.metrics = OperatorMetrics::reset_for(&self.id);
         }
         Ok(Vec::new())
     }

@@ -31,25 +31,9 @@ export type ReplayStatus = {
 
 export type RuntimeInspector = {
   runtime_projection_version?: number;
-  global_watermark_ns: number;
-  allowed_lateness_ns: number;
-  late_events: number;
-  beyond_grace_events?: number;
-  reorder_buffer_size: number;
-  operators: Array<Record<string, unknown> & { stable_id?: string; operator_id?: string }>;
-  operator_metrics?: Array<{
-    operator_id: string;
-    rows_in?: number;
-    batches_in?: number;
-    queue_depth?: number;
-  }>;
-  rows_processed?: number;
-  batches_processed?: number;
-  queue_depth?: number;
-  active_window_count: number;
-  finalized_window_count: number;
-  heatmap_revisions: number;
-  projection_mode: string;
+  operators: Array<
+    Record<string, unknown> & { stable_id?: string; operator_id?: string; active_windows?: number }
+  >;
   ingestion?: {
     events_received?: number;
     duplicates?: number;
@@ -66,7 +50,12 @@ export type RuntimeInspector = {
     partition_watermarks?: Array<{ partition: string; watermark_ns: number }>;
   };
   batching?: { batches_created?: number };
-  session?: { replay_state?: string; replay_speed?: string };
+  session?: {
+    projection_mode?: string;
+    replay_state?: string;
+    replay_speed?: string;
+    heatmap_revisions?: number;
+  };
   backpressure?: {
     limiting_operator_id?: string | null;
     max_queue_utilization?: number;
@@ -250,12 +239,14 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
         patch.recoveryReport = msg.payload as Record<string, unknown>;
         patch.recoveryState = "recovered";
         break;
-      case "runtime.inspector":
-        patch.runtimeInspector = msg.payload as RuntimeInspector;
-        if ((msg.payload as RuntimeInspector).projection_mode) {
-          patch.heatmapMode = (msg.payload as RuntimeInspector).projection_mode;
+      case "runtime.inspector": {
+        const inspector = msg.payload as RuntimeInspector;
+        patch.runtimeInspector = inspector;
+        if (inspector.session?.projection_mode) {
+          patch.heatmapMode = inspector.session.projection_mode;
         }
         break;
+      }
       case "trace.available":
         patch.traces = msg.payload as TraceListPayload;
         break;

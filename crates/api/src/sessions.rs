@@ -1,4 +1,4 @@
-﻿//! Investigation session state: replay envelopes, clock, ingest, projections.
+//! Investigation session state: replay envelopes, clock, ingest, projections.
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -636,34 +636,11 @@ impl AppState {
             return Err(format!("incident_path not found: {path}"));
         }
         if let Some(id) = &req.incident_id {
-            // Prefer synthetic fixture layout: synthetic-ob/v1/<id>
-            let candidate = self.fixtures_root.join("synthetic-ob").join("v1").join(id);
-            if candidate.exists() {
-                return Ok(candidate);
-            }
-            // Generic <dataset>/<version>/<id> layout (e.g. rcaeval-re2-ob/v2).
-            if let Ok(datasets) = std::fs::read_dir(&self.fixtures_root) {
-                for dataset in datasets.flatten() {
-                    let dataset_path = dataset.path();
-                    if !dataset_path.is_dir() {
-                        continue;
-                    }
-                    if let Ok(versions) = std::fs::read_dir(&dataset_path) {
-                        for version in versions.flatten() {
-                            let candidate = version.path().join(id);
-                            if candidate.join("manifest.json").exists() {
-                                return Ok(candidate);
-                            }
-                        }
-                    }
-                }
-            }
-            // Also try fixtures_root/<id>
-            let direct = self.fixtures_root.join(id);
-            if direct.exists() {
-                return Ok(direct);
-            }
-            return Err(format!("incident_id not found: {id}"));
+            return faultline_catalog::discover_incidents(&self.fixtures_root)
+                .into_iter()
+                .find(|i| &i.incident_id == id)
+                .map(|i| i.path)
+                .ok_or_else(|| format!("incident_id not found: {id}"));
         }
         Err("incident_path or incident_id required".into())
     }

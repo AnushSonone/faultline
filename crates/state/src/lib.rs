@@ -17,7 +17,3 @@ pub use manifest::{CheckpointFile, CheckpointManifest, CHECKPOINT_SCHEMA_VERSION
 pub use recovery::{recover_latest, RecoveryOutcome};
 pub use snapshot::{CheckpointDoc, OperatorState, ReplayPosition, SessionMeta};
 pub use store::{CheckpointMetrics, CheckpointStore};
-
-pub fn crate_name() -> &'static str {
-    "faultline-state"
-}

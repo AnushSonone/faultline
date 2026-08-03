@@ -67,6 +67,7 @@ export function App({ embedded = false }: { embedded?: boolean } = {}) {
   const wsRetries = useInvestigation((s) => s.wsRetries);
   const groundTruth = useInvestigation((s) => s.groundTruth);
   const heatmapMode = useInvestigation((s) => s.heatmapMode);
+  const inspector = useInvestigation((s) => s.runtimeInspector);
   const selectedService = useInvestigation((s) => s.selectedService);
   const selectedTrace = useInvestigation((s) => s.selectedTrace);
   const selectService = useInvestigation((s) => s.selectService);
@@ -385,35 +386,19 @@ export function App({ embedded = false }: { embedded?: boolean } = {}) {
               <h2>Streaming vs precomputed</h2>
               <div className="panel-body">
                 <aside className="arch-status" data-testid="arch-status">
-                  <div className="arch-cols">
-                    <div>
-                      <span className="eyebrow">Streaming</span>
-                      <ul>
-                        <li>Heatmap values: {heatmapMode}</li>
-                        <li>Heatmap p95/p99: streaming percentile</li>
-                        <li>Deployment correlation: streaming temporal join</li>
-                        <li>Root-cause inference: deterministic evidence ranking (M4)</li>
-                        <li>Trace comparison: vs median healthy baseline (M5)</li>
-                        <li>Checkpoint recovery: idempotent projections, not exactly-once (M6)</li>
-                        <li>Query planner: EXPLAIN ANALYZE over session events (M7)</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <span className="eyebrow">Precomputed</span>
-                      <ul>
-                        <li>Topology structure</li>
-                        <li>Timeline base events</li>
-                        <li>Trace spans</li>
-                      </ul>
-                    </div>
-                  </div>
+                  {/* Single source of truth: the runtime projection's own status lines. */}
+                  <ul>
+                    {(inspector?.architecture_status ?? []).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
                   <dl className="kv-grid">
                     <dt>Incident</dt>
                     <dd className="mono">{incidentId ?? DEFAULT_INCIDENT}</dd>
+                    <dt>Heatmap values</dt>
+                    <dd>{heatmapMode}</dd>
                     <dt>Arrival order</dt>
                     <dd>{adversarial ? "adversarial" : "normal"}</dd>
-                    <dt>Ground truth</dt>
-                    <dd>hidden unless evaluation mode</dd>
                   </dl>
                 </aside>
               </div>

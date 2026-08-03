@@ -1,4 +1,4 @@
-﻿//! Backend ingest: validation, dedupe, bounded channel, watermarks, Arrow batching.
+//! Backend ingest: validation, dedupe, bounded channel, watermarks, Arrow batching.
 
 mod batcher;
 mod watermark;

@@ -60,10 +60,10 @@ fn synthetic_rows(n: usize) -> Vec<(String, i64, f64, String)> {
         .collect()
 }
 
-fn percentiles(mut samples: Vec<f64>) -> (f64, f64) {
-    samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let p = |q: f64| samples[((samples.len() - 1) as f64 * q) as usize];
-    (p(0.50), (p(0.99)))
+fn percentiles(samples: Vec<f64>) -> (f64, f64) {
+    let p50 = faultline_common::exact_percentile(&samples, 0.50).unwrap_or(0.0);
+    let p99 = faultline_common::exact_percentile(&samples, 0.99).unwrap_or(0.0);
+    (p50, p99)
 }
 
 /// One workload: process `rows` in chunks of `batch_size`, timing per chunk.

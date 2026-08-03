@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "faultline-planner"
 version.workspace = true
 edition.workspace = true

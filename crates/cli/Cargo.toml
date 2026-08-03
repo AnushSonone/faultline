@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "faultline-cli"
 version.workspace = true
 edition.workspace = true
@@ -9,6 +9,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 faultline-common = { workspace = true }
+faultline-catalog = { workspace = true }
 faultline-state = { workspace = true }
 faultline-engine = { workspace = true }
 faultline-replay = { workspace = true }

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useInvestigation } from "../../state/investigation";
+import { EmptyState } from "../../components/EmptyState";
 import { seek } from "../../api/client";
 import type { HeatmapCell } from "../../types/protocol";
 import { fmtOffset } from "../../lib/format";
@@ -39,12 +40,11 @@ export function AnomalyHeatmap() {
 
   if (!heatmap) {
     return (
-      <div className="empty-state" data-testid="heatmap">
-        <span className="glyph" aria-hidden="true">
-          ▦
-        </span>
-        <span>No heatmap yet. Play or seek to stream anomaly cells.</span>
-      </div>
+      <EmptyState
+        glyph="▦"
+        title="No heatmap yet. Play or seek to stream anomaly cells."
+        testId="heatmap"
+      />
     );
   }
 

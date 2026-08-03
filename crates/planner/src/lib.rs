@@ -49,7 +49,3 @@ pub fn validate_query(sql: &str) -> Result<ExplainOutput, String> {
     let physical = build_physical_plan(&optimized);
     Ok(explain(sql, &logical, &optimized, &physical, None))
 }
-
-pub fn crate_name() -> &'static str {
-    "faultline-planner"
-}

@@ -400,10 +400,7 @@ impl TemporalIntervalJoin {
         self.unmatched = 0;
         self.expired = 0;
         self.revision = 0;
-        self.metrics = OperatorMetrics {
-            operator_id: self.id.clone(),
-            ..Default::default()
-        };
+        self.metrics = OperatorMetrics::reset_for(&self.id);
     }
 }
 

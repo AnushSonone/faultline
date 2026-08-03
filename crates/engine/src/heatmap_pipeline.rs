@@ -570,11 +570,6 @@ impl HeatmapStreamingPipeline {
             ),
         ];
 
-        let ops_flat = vec![filter_m, window_m, perc_m, join_m, sink_m];
-        let rows_processed = ops_flat.iter().map(|o| o.rows_in).sum();
-        let batches_processed = ops_flat.iter().map(|o| o.batches_in).sum();
-        let queue_depth =
-            ops_flat.iter().map(|o| o.queue_depth).sum::<usize>() + wm.reorder_buffer_size;
         let max_util = nodes
             .iter()
             .map(|n| {
@@ -671,6 +666,7 @@ impl HeatmapStreamingPipeline {
                 cursor_event_time_ns: self.cursor_ns,
                 session_uptime_ms: self.session_uptime_ms,
                 projection_versions: self.projection_versions,
+                heatmap_revisions: self.sink.revisions(),
                 websocket_clients: self.websocket_clients,
                 resync_count: self.resync_count,
             },
@@ -680,21 +676,6 @@ impl HeatmapStreamingPipeline {
                 any_queue_saturated: max_util >= 0.9,
             },
             architecture_status: default_architecture_status(),
-            global_watermark_ns: wm.global_watermark_ns,
-            allowed_lateness_ns: self.watermark.config().allowed_lateness_ns,
-            late_events: wm.late_events,
-            beyond_grace_events: wm.beyond_grace_events,
-            reorder_buffer_size: wm.reorder_buffer_size,
-            rows_processed,
-            batches_processed,
-            queue_depth,
-            active_window_count: self.window.active_window_count()
-                + self.percentile.active_window_count(),
-            finalized_window_count: self.window.finalized_window_count()
-                + self.percentile.finalized_window_count(),
-            heatmap_revisions: self.sink.revisions(),
-            projection_mode: format!("{:?}", self.mode).to_ascii_lowercase(),
-            operator_metrics: ops_flat,
         }
     }
 }

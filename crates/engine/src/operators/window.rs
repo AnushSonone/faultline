@@ -316,10 +316,7 @@ impl Operator for WindowOperator {
                 self.active_windows = 0;
                 self.finalized_windows = 0;
                 self.last_emits.clear();
-                self.metrics = OperatorMetrics {
-                    operator_id: self.id.clone(),
-                    ..Default::default()
-                };
+                self.metrics = OperatorMetrics::reset_for(&self.id);
             }
         }
         Ok(Vec::new())

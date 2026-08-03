@@ -86,20 +86,11 @@ pub struct EvaluationReport {
 /// Incident directories matching `prefix` under `<fixtures>/<dataset>`.
 pub fn discover_incidents_in(fixtures_root: &Path, dataset: &str, prefix: &str) -> Vec<PathBuf> {
     let base = fixtures_root.join(dataset);
-    let mut dirs: Vec<PathBuf> = std::fs::read_dir(&base)
-        .map(|entries| {
-            entries
-                .flatten()
-                .map(|e| e.path())
-                .filter(|p| {
-                    p.join("manifest.json").exists()
-                        && p.file_name()
-                            .and_then(|n| n.to_str())
-                            .is_some_and(|n| n.starts_with(prefix))
-                })
-                .collect()
-        })
-        .unwrap_or_default();
+    let mut dirs: Vec<PathBuf> = faultline_catalog::discover_incidents(fixtures_root)
+        .into_iter()
+        .filter(|i| i.path.starts_with(&base) && i.incident_id.starts_with(prefix))
+        .map(|i| i.path)
+        .collect();
     dirs.sort();
     dirs
 }

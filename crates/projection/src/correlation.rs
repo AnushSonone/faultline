@@ -213,19 +213,4 @@ pub fn build_correlation_precomputed(
     }
 }
 
-fn percentile_approx(vals: &[f64], q: f64) -> Option<f64> {
-    if vals.is_empty() {
-        return None;
-    }
-    let mut v = vals.to_vec();
-    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let rank = q * (v.len() as f64 - 1.0);
-    let lo = rank.floor() as usize;
-    let hi = rank.ceil() as usize;
-    if lo == hi {
-        Some(v[lo])
-    } else {
-        let w = rank - lo as f64;
-        Some(v[lo] * (1.0 - w) + v[hi] * w)
-    }
-}
+use faultline_common::exact_percentile as percentile_approx;

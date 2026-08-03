@@ -12,10 +12,6 @@ use crate::sessions::{
 };
 use faultline_engine::ProjectionMode;
 
-pub fn api_prefix() -> &'static str {
-    "/api/v1"
-}
-
 #[derive(Debug, Clone, Serialize)]
 pub struct IncidentSummary {
     pub incident_id: String,
@@ -25,61 +21,16 @@ pub struct IncidentSummary {
 }
 
 pub async fn list_incidents(State(state): State<SharedState>) -> Json<Vec<IncidentSummary>> {
-    let mut out = Vec::new();
-    let root = &state.fixtures_root;
-    // Generic <dataset>/<version>/<incident> layout (synthetic-ob/v1,
-    // rcaeval-re2-ob/v2, ...).
-    if let Ok(datasets) = std::fs::read_dir(root) {
-        for dataset in datasets.flatten() {
-            let dataset_path = dataset.path();
-            if !dataset_path.is_dir() {
-                continue;
-            }
-            let dataset_id = dataset.file_name().to_string_lossy().into_owned();
-            if let Ok(versions) = std::fs::read_dir(&dataset_path) {
-                for version in versions.flatten() {
-                    let version_path = version.path();
-                    if !version_path.is_dir() {
-                        continue;
-                    }
-                    let dataset_version = version.file_name().to_string_lossy().into_owned();
-                    if let Ok(entries) = std::fs::read_dir(&version_path) {
-                        for entry in entries.flatten() {
-                            let path = entry.path();
-                            if path.join("manifest.json").exists() {
-                                let id = entry.file_name().to_string_lossy().into_owned();
-                                out.push(IncidentSummary {
-                                    incident_id: id,
-                                    dataset_id: dataset_id.clone(),
-                                    dataset_version: dataset_version.clone(),
-                                    path: path.display().to_string(),
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    // Also list direct children with manifest
-    if let Ok(entries) = std::fs::read_dir(root) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.join("manifest.json").exists() {
-                let id = entry.file_name().to_string_lossy().into_owned();
-                if !out.iter().any(|i| i.incident_id == id) {
-                    out.push(IncidentSummary {
-                        incident_id: id,
-                        dataset_id: "local".into(),
-                        dataset_version: "v1".into(),
-                        path: path.display().to_string(),
-                    });
-                }
-            }
-        }
-    }
-    out.retain(|i| state.incident_allowed(&i.incident_id));
-    out.sort_by(|a, b| a.incident_id.cmp(&b.incident_id));
+    let out = faultline_catalog::discover_incidents(&state.fixtures_root)
+        .into_iter()
+        .filter(|i| state.incident_allowed(&i.incident_id))
+        .map(|i| IncidentSummary {
+            incident_id: i.incident_id,
+            dataset_id: i.dataset_id,
+            dataset_version: i.dataset_version,
+            path: i.path.display().to_string(),
+        })
+        .collect();
     Json(out)
 }
 
@@ -119,52 +70,46 @@ pub async fn load_session(
     let path = state
         .resolve_incident_path(&body)
         .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({"error": e}))))?;
-    let mut sessions = state.sessions.lock();
-    let session = sessions.get_mut(&session_id).ok_or_else(|| {
-        (
-            StatusCode::NOT_FOUND,
-            Json(json!({"error": "session not found"})),
-        )
-    })?;
-    session.touch();
-    session
-        .load_from_path(&path, body.adversarial)
-        .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({"error": e}))))?;
-    // Ground truth is hidden outside evaluation mode (spec M4 exit criterion).
-    let ground_truth = session
-        .labels
-        .as_ref()
-        .filter(|_| body.evaluation_mode)
-        .map(|labels| {
+    with_session_try(&state, &session_id, |session| {
+        session
+            .load_from_path(&path, body.adversarial)
+            .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({"error": e}))))?;
+        // Ground truth is hidden outside evaluation mode (spec M4 exit criterion).
+        let ground_truth = session
+            .labels
+            .as_ref()
+            .filter(|_| body.evaluation_mode)
+            .map(|labels| {
+                json!({
+                    "source": "fixture_ground_truth",
+                    "not_inferred": true,
+                    "fault_type": labels.fault_type,
+                    "root_cause_services": labels.root_cause_services,
+                    "root_cause_indicators": labels.root_cause_indicators,
+                    "fault_start_time_ns": labels.fault_start_time_ns,
+                    "fault_end_time_ns": labels.fault_end_time_ns,
+                    "notes": labels.notes,
+                })
+            });
+        session.emit(
+            "session.ready",
             json!({
-                "source": "fixture_ground_truth",
-                "not_inferred": true,
-                "fault_type": labels.fault_type,
-                "root_cause_services": labels.root_cause_services,
-                "root_cause_indicators": labels.root_cause_indicators,
-                "fault_start_time_ns": labels.fault_start_time_ns,
-                "fault_end_time_ns": labels.fault_end_time_ns,
-                "notes": labels.notes,
-            })
-        });
-    session.emit(
-        "session.ready",
-        json!({
+                "session_id": session_id,
+                "incident_id": session.incident_id,
+                "event_count": session.envelopes.len(),
+                "ground_truth": ground_truth.clone(),
+            }),
+        );
+        session.publish_projections();
+        Ok(Json(json!({
             "session_id": session_id,
             "incident_id": session.incident_id,
             "event_count": session.envelopes.len(),
-            "ground_truth": ground_truth.clone(),
-        }),
-    );
-    session.publish_projections();
-    Ok(Json(json!({
-        "session_id": session_id,
-        "incident_id": session.incident_id,
-        "event_count": session.envelopes.len(),
-        "start_time_ns": session.clock.start_ns(),
-        "end_time_ns": session.clock.end_ns(),
-        "ground_truth": ground_truth,
-    })))
+            "start_time_ns": session.clock.start_ns(),
+            "end_time_ns": session.clock.end_ns(),
+            "ground_truth": ground_truth,
+        })))
+    })
 }
 
 pub async fn play_session(
@@ -349,18 +294,12 @@ pub async fn checkpoint_session(
     Path(session_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let store = state.checkpoint_store(&session_id);
-    let mut sessions = state.sessions.lock();
-    let session = sessions.get_mut(&session_id).ok_or_else(|| {
-        (
-            StatusCode::NOT_FOUND,
-            Json(json!({"error": "session not found"})),
-        )
-    })?;
-    session.touch();
-    match session.checkpoint(&store) {
-        Ok(metrics) => Ok(Json(serde_json::to_value(metrics).unwrap_or(json!({})))),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))),
-    }
+    with_session_try(&state, &session_id, |session| {
+        match session.checkpoint(&store) {
+            Ok(metrics) => Ok(Json(serde_json::to_value(metrics).unwrap_or(json!({})))),
+            Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))),
+        }
+    })
 }
 
 /// Forced crash + recovery from the latest checkpoint (TA-042).
@@ -369,18 +308,12 @@ pub async fn crash_test_session(
     Path(session_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let store = state.checkpoint_store(&session_id);
-    let mut sessions = state.sessions.lock();
-    let session = sessions.get_mut(&session_id).ok_or_else(|| {
-        (
-            StatusCode::NOT_FOUND,
-            Json(json!({"error": "session not found"})),
-        )
-    })?;
-    session.touch();
-    match session.crash_and_recover(&store) {
-        Ok(report) => Ok(Json(report)),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))),
-    }
+    with_session_try(&state, &session_id, |session| {
+        match session.crash_and_recover(&store) {
+            Ok(report) => Ok(Json(report)),
+            Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))),
+        }
+    })
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -416,19 +349,13 @@ pub async fn explain_query_route(
     let Some(session_id) = &body.session_id else {
         return validate_query_route(Json(body)).await;
     };
-    let mut sessions = state.sessions.lock();
-    let session = sessions.get_mut(session_id).ok_or_else(|| {
-        (
-            StatusCode::NOT_FOUND,
-            Json(json!({"error": "session not found"})),
-        )
-    })?;
-    session.touch();
-    let cursor = session.clock.current_event_time_ns();
-    match faultline_planner::run_query(&body.sql, &session.envelopes, cursor) {
-        Ok((_, explain)) => Ok(Json(json!({ "explain": explain }))),
-        Err(e) => Err((StatusCode::BAD_REQUEST, Json(json!({ "error": e })))),
-    }
+    with_session_try(&state, session_id, |session| {
+        let cursor = session.clock.current_event_time_ns();
+        match faultline_planner::run_query(&body.sql, &session.envelopes, cursor) {
+            Ok((_, explain)) => Ok(Json(json!({ "explain": explain }))),
+            Err(e) => Err((StatusCode::BAD_REQUEST, Json(json!({ "error": e })))),
+        }
+    })
 }
 
 /// Register + execute a query against a session at its cursor. Emits
@@ -443,34 +370,28 @@ pub async fn run_query_route(
             Json(json!({"error": "session_id required to execute"})),
         ));
     };
-    let mut sessions = state.sessions.lock();
-    let session = sessions.get_mut(session_id).ok_or_else(|| {
-        (
-            StatusCode::NOT_FOUND,
-            Json(json!({"error": "session not found"})),
-        )
-    })?;
-    session.touch();
-    let cursor = session.clock.current_event_time_ns();
-    match faultline_planner::run_query(&body.sql, &session.envelopes, cursor) {
-        Ok((result, explain)) => {
-            session.emit(
-                "query.plan",
-                serde_json::to_value(&explain).unwrap_or(json!({})),
-            );
-            session.emit(
-                "query.metrics",
-                serde_json::to_value(&result.metrics).unwrap_or(json!({})),
-            );
-            let mut queries = state.queries.lock();
-            if !queries.iter().any(|q| q["sql"] == body.sql) {
-                let id = queries.len() + 1;
-                queries.push(json!({ "id": id, "sql": body.sql }));
+    with_session_try(&state, session_id, |session| {
+        let cursor = session.clock.current_event_time_ns();
+        match faultline_planner::run_query(&body.sql, &session.envelopes, cursor) {
+            Ok((result, explain)) => {
+                session.emit(
+                    "query.plan",
+                    serde_json::to_value(&explain).unwrap_or(json!({})),
+                );
+                session.emit(
+                    "query.metrics",
+                    serde_json::to_value(&result.metrics).unwrap_or(json!({})),
+                );
+                let mut queries = state.queries.lock();
+                if !queries.iter().any(|q| q["sql"] == body.sql) {
+                    let id = queries.len() + 1;
+                    queries.push(json!({ "id": id, "sql": body.sql }));
+                }
+                Ok(Json(json!({ "result": result, "explain": explain })))
             }
-            Ok(Json(json!({ "result": result, "explain": explain })))
+            Err(e) => Err((StatusCode::BAD_REQUEST, Json(json!({ "error": e })))),
         }
-        Err(e) => Err((StatusCode::BAD_REQUEST, Json(json!({ "error": e })))),
-    }
+    })
 }
 
 /// Latest checkpoint summary for a session.
@@ -562,6 +483,19 @@ fn with_session<F>(
 where
     F: FnOnce(&mut crate::sessions::Session) -> Value,
 {
+    with_session_try(state, session_id, |s| Ok(Json(f(s))))
+}
+
+/// Like `with_session`, but the closure picks its own success type and can
+/// fail with its own status code.
+fn with_session_try<T, F>(
+    state: &SharedState,
+    session_id: &str,
+    f: F,
+) -> Result<T, (StatusCode, Json<Value>)>
+where
+    F: FnOnce(&mut crate::sessions::Session) -> Result<T, (StatusCode, Json<Value>)>,
+{
     let mut sessions = state.sessions.lock();
     let session = sessions.get_mut(session_id).ok_or_else(|| {
         (
@@ -570,5 +504,5 @@ where
         )
     })?;
     session.touch();
-    Ok(Json(f(session)))
+    f(session)
 }

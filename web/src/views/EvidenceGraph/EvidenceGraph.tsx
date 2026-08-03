@@ -3,6 +3,7 @@ import cytoscape, { type Core } from "cytoscape";
 import { useInvestigation } from "../../state/investigation";
 import { COLORS } from "../../theme/tokens";
 import { InfoTip } from "../../components/InfoTip";
+import { EmptyState } from "../../components/EmptyState";
 
 const KIND_COLORS: Record<string, string> = {
   change: COLORS.warn,
@@ -164,12 +165,7 @@ export function EvidenceGraphPanel() {
         </InfoTip>
       </div>
       {empty && (
-        <div className="empty-state">
-          <span className="glyph" aria-hidden="true">
-            ◇
-          </span>
-          <span>No evidence yet. Play or seek past the incident onset.</span>
-        </div>
+        <EmptyState glyph="◇" title="No evidence yet. Play or seek past the incident onset." />
       )}
       <div
         className="panel-body graph"

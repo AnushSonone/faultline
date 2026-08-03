@@ -156,6 +156,15 @@ export async function crashTest(sessionId: string) {
   return r.json();
 }
 
+export async function runQuery(sessionId: string, sql: string): Promise<unknown> {
+  const r = await fetch(api("/api/v1/queries"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sql, session_id: sessionId }),
+  });
+  return r.json();
+}
+
 export async function fetchTrace(traceId: string) {
   const r = await fetch(api(`/api/v1/traces/${encodeURIComponent(traceId)}`));
   if (!r.ok) throw new Error("trace not found");

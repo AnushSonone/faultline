@@ -20,7 +20,3 @@ pub use runtime::{run_bounded_chain, RuntimeError, SyncRuntime};
 pub use runtime_projection::{
     default_architecture_status, RuntimeInspectorDto, RUNTIME_PROJECTION_VERSION,
 };
-
-pub fn crate_name() -> &'static str {
-    "faultline-engine"
-}

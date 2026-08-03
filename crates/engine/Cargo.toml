@@ -22,7 +22,3 @@ hex.workspace = true
 [dev-dependencies]
 proptest = "1"
 tokio = { workspace = true }
-
-[[bench]]
-name = "batch_sizes"
-harness = false
