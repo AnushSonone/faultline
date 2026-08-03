@@ -46,12 +46,13 @@ test.describe("UI revamp: verdict-first open + case panel", () => {
       "recommendationservice",
     );
 
-    // Switch to a real RCAEval case. The whole session recreates, so give the
+    // Switch to a tracked eval-suite case (the RCAEval fixtures are local-only,
+    // so CI does not have them). The whole session recreates, so give the
     // create + load + verdict-seek path generous time.
     await page
       .getByTestId("incident-picker")
-      .selectOption("re2ob-checkoutservice-mem-1", { timeout: 20_000 });
-    await expect(page.getByTestId("scenario-blurb")).toContainText("checkoutservice", {
+      .selectOption("eval-cpu-cart-007", { timeout: 20_000 });
+    await expect(page.getByTestId("scenario-blurb")).toContainText("cartservice", {
       timeout: 20_000,
     });
 
@@ -62,9 +63,8 @@ test.describe("UI revamp: verdict-first open + case panel", () => {
 
     // The case brief reflects the newly loaded incident.
     await expect(page.getByTestId("case-panel")).toBeVisible();
-    await expect(page.getByTestId("arch-status")).toContainText(
-      "re2ob-checkoutservice-mem-1",
-      { timeout: 20_000 },
-    );
+    await expect(page.getByTestId("arch-status")).toContainText("eval-cpu-cart-007", {
+      timeout: 20_000,
+    });
   });
 });
