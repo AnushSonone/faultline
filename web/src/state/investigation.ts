@@ -1,11 +1,16 @@
 import { create } from "zustand";
 import type {
+  CorrelationPayload,
+  EvidenceGraphPayload,
+  HeatmapCell,
   HeatmapPayload,
+  RootCausePayload,
   TimelinePayload,
   TopologyPayload,
   TraceListPayload,
   WsEnvelope,
 } from "../types/protocol";
+
 export type GroundTruth = {
   source: string;
   not_inferred: boolean;
@@ -25,25 +30,53 @@ export type ReplayStatus = {
 };
 
 export type RuntimeInspector = {
-  global_watermark_ns: number;
-  allowed_lateness_ns: number;
-  late_events: number;
-  beyond_grace_events?: number;
-  reorder_buffer_size: number;
-  operators: Array<{ operator_id: string; rows_in?: number; batches_in?: number; queue_depth?: number }>;
-  rows_processed?: number;
-  batches_processed?: number;
-  queue_depth?: number;
-  active_window_count: number;
-  finalized_window_count: number;
-  heatmap_revisions: number;
-  projection_mode: string;
+  runtime_projection_version?: number;
+  operators: Array<
+    Record<string, unknown> & { stable_id?: string; operator_id?: string; active_windows?: number }
+  >;
+  ingestion?: {
+    events_received?: number;
+    duplicates?: number;
+    reorder_buffer_occupancy?: number;
+  };
+  event_time?: {
+    max_event_time_ns?: number;
+    global_watermark_ns?: number;
+    watermark_lag_ns?: number;
+    allowed_lateness_ns?: number;
+    late_but_revisable_events?: number;
+    beyond_grace_events?: number;
+    idle_partitions?: number;
+    partition_watermarks?: Array<{ partition: string; watermark_ns: number }>;
+  };
+  batching?: { batches_created?: number };
+  session?: {
+    projection_mode?: string;
+    replay_state?: string;
+    replay_speed?: string;
+    heatmap_revisions?: number;
+  };
+  backpressure?: {
+    limiting_operator_id?: string | null;
+    max_queue_utilization?: number;
+    any_queue_saturated?: boolean;
+  };
+  architecture_status?: string[];
 };
+
+export type TabId = "overview" | "root-causes" | "signals" | "runtime";
+
+export type WsStatus = "connecting" | "live" | "reconnecting";
 
 type InvestigationState = {
   sessionId: string | null;
   incidentId: string | null;
+  activeTab: TabId;
+  incidentStartNs: number | null;
+  incidentEndNs: number | null;
   connected: boolean;
+  wsStatus: WsStatus;
+  wsRetries: number;
   lastError: string | null;
   lastSequence: number;
   needsResync: boolean;
@@ -52,15 +85,28 @@ type InvestigationState = {
   timeline: TimelinePayload | null;
   heatmap: HeatmapPayload | null;
   traces: TraceListPayload | null;
+  correlations: CorrelationPayload["correlations"];
+  rootCauses: RootCausePayload | null;
+  evidenceGraph: EvidenceGraphPayload | null;
+  lastCheckpoint: Record<string, unknown> | null;
+  recoveryReport: Record<string, unknown> | null;
+  recoveryState: "idle" | "recovering" | "recovered";
   groundTruth: GroundTruth | null;
   runtimeInspector: RuntimeInspector | null;
   heatmapMode: string;
   selectedEventTime: number | null;
   selectedService: string | null;
   selectedTrace: string | null;
+  selectedOperator: string | null;
+  selectedChangeId: string | null;
+  selectedHeatmapCell: HeatmapCell | null;
   setSession: (id: string) => void;
   setIncident: (id: string | null) => void;
+  setTab: (tab: TabId) => void;
+  setIncidentRange: (start: number | null, end: number | null) => void;
   setConnected: (v: boolean) => void;
+  wsOpened: () => void;
+  wsClosed: () => void;
   setError: (e: string | null) => void;
   setGroundTruth: (g: GroundTruth | null) => void;
   clearNeedsResync: () => void;
@@ -68,13 +114,21 @@ type InvestigationState = {
   selectService: (s: string | null) => void;
   selectTrace: (t: string | null) => void;
   selectTime: (t: number | null) => void;
+  selectOperator: (id: string | null) => void;
+  selectChange: (id: string | null) => void;
+  selectHeatmapCell: (c: HeatmapCell | null) => void;
   applyWs: (msg: WsEnvelope) => void;
 };
 
 export const useInvestigation = create<InvestigationState>((set, get) => ({
   sessionId: null,
   incidentId: null,
+  activeTab: "overview",
+  incidentStartNs: null,
+  incidentEndNs: null,
   connected: false,
+  wsStatus: "connecting" as WsStatus,
+  wsRetries: 0,
   lastError: null,
   lastSequence: 0,
   needsResync: false,
@@ -83,15 +137,29 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   timeline: null,
   heatmap: null,
   traces: null,
+  correlations: [],
+  rootCauses: null,
+  evidenceGraph: null,
+  lastCheckpoint: null,
+  recoveryReport: null,
+  recoveryState: "idle",
   groundTruth: null,
   runtimeInspector: null,
   heatmapMode: "streaming",
   selectedEventTime: null,
   selectedService: null,
   selectedTrace: null,
+  selectedOperator: null,
+  selectedChangeId: null,
+  selectedHeatmapCell: null,
   setSession: (id) => set({ sessionId: id }),
   setIncident: (id) => set({ incidentId: id }),
+  setTab: (tab) => set({ activeTab: tab }),
+  setIncidentRange: (start, end) => set({ incidentStartNs: start, incidentEndNs: end }),
   setConnected: (v) => set({ connected: v }),
+  wsOpened: () => set({ connected: true, wsStatus: "live", wsRetries: 0 }),
+  wsClosed: () =>
+    set((s) => ({ connected: false, wsStatus: "reconnecting", wsRetries: s.wsRetries + 1 })),
   setError: (e) => set({ lastError: e }),
   setGroundTruth: (g) => set({ groundTruth: g }),
   clearNeedsResync: () => set({ needsResync: false, lastError: null }),
@@ -100,16 +168,25 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
       selectedService: null,
       selectedTrace: null,
       selectedEventTime: null,
+      selectedOperator: null,
+      selectedChangeId: null,
+      selectedHeatmapCell: null,
       topology: null,
       timeline: null,
       heatmap: null,
       traces: null,
+      correlations: [],
+      rootCauses: null,
+      evidenceGraph: null,
       lastSequence: 0,
       needsResync: false,
     }),
   selectService: (s) => set({ selectedService: s }),
   selectTrace: (t) => set({ selectedTrace: t }),
   selectTime: (t) => set({ selectedEventTime: t }),
+  selectOperator: (id) => set({ selectedOperator: id }),
+  selectChange: (id) => set({ selectedChangeId: id }),
+  selectHeatmapCell: (c) => set({ selectedHeatmapCell: c }),
   applyWs: (msg) => {
     const prev = get().lastSequence;
     if (prev && msg.sequence > prev + 1) {
@@ -136,19 +213,40 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
         patch.topology = msg.payload as TopologyPayload;
         break;
       case "timeline.append":
-        // M2 emits full timeline payloads under this type name.
         patch.timeline = msg.payload as TimelinePayload;
         break;
       case "heatmap.delta":
-        // Full heatmap payloads (precomputed or streaming); replace by version.
         patch.heatmap = msg.payload as HeatmapPayload;
         break;
-      case "runtime.inspector":
-        patch.runtimeInspector = msg.payload as RuntimeInspector;
-        if ((msg.payload as RuntimeInspector).projection_mode) {
-          patch.heatmapMode = (msg.payload as RuntimeInspector).projection_mode;
+      case "correlation.snapshot": {
+        const corr = msg.payload as CorrelationPayload;
+        patch.correlations = corr.correlations ?? [];
+        break;
+      }
+      case "root_causes.snapshot":
+        patch.rootCauses = msg.payload as RootCausePayload;
+        break;
+      case "evidence.updated":
+        patch.evidenceGraph = msg.payload as EvidenceGraphPayload;
+        break;
+      case "checkpoint.completed":
+        patch.lastCheckpoint = msg.payload as Record<string, unknown>;
+        break;
+      case "recovery.started":
+        patch.recoveryState = "recovering";
+        break;
+      case "recovery.completed":
+        patch.recoveryReport = msg.payload as Record<string, unknown>;
+        patch.recoveryState = "recovered";
+        break;
+      case "runtime.inspector": {
+        const inspector = msg.payload as RuntimeInspector;
+        patch.runtimeInspector = inspector;
+        if (inspector.session?.projection_mode) {
+          patch.heatmapMode = inspector.session.projection_mode;
         }
         break;
+      }
       case "trace.available":
         patch.traces = msg.payload as TraceListPayload;
         break;

@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "faultline-engine"
 version.workspace = true
 edition.workspace = true
@@ -16,11 +16,9 @@ arrow-select = "58"
 tokio = { workspace = true }
 indexmap = { workspace = true }
 tracing = { workspace = true }
+sketches-ddsketch = { version = "0.3", features = ["use_serde"] }
+hex.workspace = true
 
 [dev-dependencies]
 proptest = "1"
 tokio = { workspace = true }
-
-[[bench]]
-name = "batch_sizes"
-harness = false

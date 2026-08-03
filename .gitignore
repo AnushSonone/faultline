@@ -22,3 +22,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+.faultline-checkpoints/
+web/dist-embed/
+datasets/fixtures/rcaeval-re2-ob/

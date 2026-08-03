@@ -1,0 +1,10 @@
+git_commit: d362564bd9c893502b6446cfb73910a4c3f61b99
+git_dirty: 102 files
+date_utc: 2026-07-28T04:57:48Z
+os: Darwin 25.5.0 arm64
+rustc: rustc 1.97.1 (8bab26f4f 2026-07-14)
+node: v24.5.0
+python: Python 3.14.6
+machine: Apple M4 Pro, 24 GB
+eval_suite_seed: 7
+fixture_manifest_sha256: 31fd1cf3b54316d285f7cd32cd75f1f6adc7af1ef116a42548f8bfe7320c00c7

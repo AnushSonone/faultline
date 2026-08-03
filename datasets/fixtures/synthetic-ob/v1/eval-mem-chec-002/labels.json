@@ -1,0 +1,16 @@
+{
+  "incident_id": "eval-mem-chec-002",
+  "root_cause_services": [
+    "checkoutservice"
+  ],
+  "root_cause_indicators": [
+    "checkoutservice_mem"
+  ],
+  "fault_type": "mem",
+  "fault_start_time_ns": 1710624006000000000,
+  "fault_end_time_ns": 1710624019000000000,
+  "expected_downstream_services": [
+    "frontend"
+  ],
+  "notes": "Synthetic mem fault on checkoutservice (evaluation suite, seed 207388624)."
+}

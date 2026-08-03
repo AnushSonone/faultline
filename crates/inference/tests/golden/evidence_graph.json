@@ -1,0 +1,299 @@
+{
+  "incident_id": "rec-mem-001",
+  "nodes": [
+    {
+      "id": "cand:checkoutservice",
+      "kind": "root_cause_candidate",
+      "label": "#2 likely cause: checkoutservice",
+      "service": "checkoutservice",
+      "time_ns": 1700000007000000000,
+      "strength": 0.5000000000000001,
+      "source_refs": []
+    },
+    {
+      "id": "cand:frontend",
+      "kind": "root_cause_candidate",
+      "label": "#3 likely cause: frontend",
+      "service": "frontend",
+      "time_ns": 1700000007000000000,
+      "strength": 0.42500000000000004,
+      "source_refs": []
+    },
+    {
+      "id": "cand:recommendationservice",
+      "kind": "root_cause_candidate",
+      "label": "#1 likely cause: recommendationservice",
+      "service": "recommendationservice",
+      "time_ns": 1700000005000000000,
+      "strength": 0.9166666666666667,
+      "source_refs": []
+    },
+    {
+      "id": "change:c-deploy-rec-1",
+      "kind": "change",
+      "label": "change on recommendationservice",
+      "service": "recommendationservice",
+      "time_ns": null,
+      "strength": 1.0,
+      "source_refs": [
+        "c-deploy-rec-1"
+      ]
+    },
+    {
+      "id": "deg:checkoutservice",
+      "kind": "service_degradation",
+      "label": "checkoutservice degradation",
+      "service": "checkoutservice",
+      "time_ns": 1700000007000000000,
+      "strength": 1.0,
+      "source_refs": []
+    },
+    {
+      "id": "deg:frontend",
+      "kind": "service_degradation",
+      "label": "frontend degradation",
+      "service": "frontend",
+      "time_ns": 1700000007000000000,
+      "strength": 1.0,
+      "source_refs": []
+    },
+    {
+      "id": "deg:recommendationservice",
+      "kind": "service_degradation",
+      "label": "recommendationservice degradation",
+      "service": "recommendationservice",
+      "time_ns": 1700000005000000000,
+      "strength": 1.0,
+      "source_refs": []
+    },
+    {
+      "id": "log:l-rec-mem-1",
+      "kind": "log_pattern",
+      "label": "high-severity log on recommendationservice",
+      "service": "recommendationservice",
+      "time_ns": null,
+      "strength": 0.3333333333333333,
+      "source_refs": [
+        "l-rec-mem-1"
+      ]
+    },
+    {
+      "id": "metric:122bc18a28",
+      "kind": "metric_anomaly",
+      "label": "recommendationservice_latency anomaly (peak |z| 8.0)",
+      "service": "recommendationservice",
+      "time_ns": 1700000005000000000,
+      "strength": 1.0,
+      "source_refs": [
+        "m-recommendationservice-5-lat",
+        "m-recommendationservice-6-lat",
+        "m-recommendationservice-7-lat",
+        "m-recommendationservice-8-lat",
+        "m-recommendationservice-9-lat",
+        "m-recommendationservice-10-lat",
+        "m-recommendationservice-11-lat",
+        "m-recommendationservice-12-lat",
+        "m-recommendationservice-13-lat",
+        "m-recommendationservice-14-lat",
+        "m-recommendationservice-15-lat"
+      ]
+    },
+    {
+      "id": "metric:a1edb64d9a",
+      "kind": "metric_anomaly",
+      "label": "checkoutservice_latency anomaly (peak |z| 8.0)",
+      "service": "checkoutservice",
+      "time_ns": 1700000007000000000,
+      "strength": 1.0,
+      "source_refs": [
+        "m-checkoutservice-7-lat",
+        "m-checkoutservice-8-lat",
+        "m-checkoutservice-9-lat",
+        "m-checkoutservice-10-lat",
+        "m-checkoutservice-11-lat",
+        "m-checkoutservice-12-lat",
+        "m-checkoutservice-13-lat",
+        "m-checkoutservice-14-lat",
+        "m-checkoutservice-15-lat"
+      ]
+    },
+    {
+      "id": "metric:c7aa62acc3",
+      "kind": "metric_anomaly",
+      "label": "recommendationservice_mem anomaly (peak |z| 8.0)",
+      "service": "recommendationservice",
+      "time_ns": 1700000005000000000,
+      "strength": 1.0,
+      "source_refs": [
+        "m-recommendationservice-5-mem",
+        "m-recommendationservice-6-mem",
+        "m-recommendationservice-7-mem",
+        "m-recommendationservice-8-mem",
+        "m-recommendationservice-9-mem",
+        "m-recommendationservice-10-mem",
+        "m-recommendationservice-11-mem",
+        "m-recommendationservice-12-mem",
+        "m-recommendationservice-13-mem",
+        "m-recommendationservice-14-mem",
+        "m-recommendationservice-15-mem"
+      ]
+    },
+    {
+      "id": "metric:dadbf83f76",
+      "kind": "metric_anomaly",
+      "label": "checkoutservice_error_rate anomaly (peak |z| 8.0)",
+      "service": "checkoutservice",
+      "time_ns": 1700000007000000000,
+      "strength": 1.0,
+      "source_refs": [
+        "m-checkoutservice-7-err",
+        "m-checkoutservice-8-err",
+        "m-checkoutservice-9-err",
+        "m-checkoutservice-10-err",
+        "m-checkoutservice-11-err",
+        "m-checkoutservice-12-err",
+        "m-checkoutservice-13-err",
+        "m-checkoutservice-14-err",
+        "m-checkoutservice-15-err"
+      ]
+    },
+    {
+      "id": "metric:e0051ffa73",
+      "kind": "metric_anomaly",
+      "label": "frontend_latency anomaly (peak |z| 8.0)",
+      "service": "frontend",
+      "time_ns": 1700000007000000000,
+      "strength": 1.0,
+      "source_refs": [
+        "m-frontend-7-lat",
+        "m-frontend-8-lat",
+        "m-frontend-9-lat",
+        "m-frontend-10-lat",
+        "m-frontend-11-lat",
+        "m-frontend-12-lat",
+        "m-frontend-13-lat",
+        "m-frontend-14-lat",
+        "m-frontend-15-lat"
+      ]
+    },
+    {
+      "id": "metric:e0846d19a0",
+      "kind": "metric_anomaly",
+      "label": "frontend_error_rate anomaly (peak |z| 8.0)",
+      "service": "frontend",
+      "time_ns": 1700000007000000000,
+      "strength": 1.0,
+      "source_refs": [
+        "m-frontend-7-err",
+        "m-frontend-8-err",
+        "m-frontend-9-err",
+        "m-frontend-10-err",
+        "m-frontend-11-err",
+        "m-frontend-12-err",
+        "m-frontend-13-err",
+        "m-frontend-14-err",
+        "m-frontend-15-err"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "ee-abe1db9be5",
+      "from": "change:c-deploy-rec-1",
+      "to": "deg:recommendationservice",
+      "kind": "precedes",
+      "label": "change precedes anomaly onset; associated, not proven"
+    },
+    {
+      "id": "ee-d62246e4a8",
+      "from": "deg:checkoutservice",
+      "to": "cand:checkoutservice",
+      "kind": "contributes_to",
+      "label": "degradation supports candidate"
+    },
+    {
+      "id": "ee-cf97e43097",
+      "from": "deg:checkoutservice",
+      "to": "deg:frontend",
+      "kind": "propagates_to",
+      "label": "dependency path checkoutservice -> frontend"
+    },
+    {
+      "id": "ee-779a0bf991",
+      "from": "deg:frontend",
+      "to": "cand:frontend",
+      "kind": "contributes_to",
+      "label": "degradation supports candidate"
+    },
+    {
+      "id": "ee-f6466b8930",
+      "from": "deg:recommendationservice",
+      "to": "cand:recommendationservice",
+      "kind": "contributes_to",
+      "label": "degradation supports candidate"
+    },
+    {
+      "id": "ee-bd10b18220",
+      "from": "deg:recommendationservice",
+      "to": "deg:checkoutservice",
+      "kind": "propagates_to",
+      "label": "dependency path recommendationservice -> checkoutservice"
+    },
+    {
+      "id": "ee-01922b3b62",
+      "from": "deg:recommendationservice",
+      "to": "deg:frontend",
+      "kind": "propagates_to",
+      "label": "dependency path recommendationservice -> frontend"
+    },
+    {
+      "id": "ee-cb05d26b07",
+      "from": "log:l-rec-mem-1",
+      "to": "deg:recommendationservice",
+      "kind": "correlates_with",
+      "label": "log correlates with degradation"
+    },
+    {
+      "id": "ee-f232d0f22b",
+      "from": "metric:122bc18a28",
+      "to": "deg:recommendationservice",
+      "kind": "contributes_to",
+      "label": "metric anomaly contributes to degradation"
+    },
+    {
+      "id": "ee-685ac45f0b",
+      "from": "metric:a1edb64d9a",
+      "to": "deg:checkoutservice",
+      "kind": "contributes_to",
+      "label": "metric anomaly contributes to degradation"
+    },
+    {
+      "id": "ee-b8bcf6e8a7",
+      "from": "metric:c7aa62acc3",
+      "to": "deg:recommendationservice",
+      "kind": "contributes_to",
+      "label": "metric anomaly contributes to degradation"
+    },
+    {
+      "id": "ee-d3cd3e26ae",
+      "from": "metric:dadbf83f76",
+      "to": "deg:checkoutservice",
+      "kind": "contributes_to",
+      "label": "metric anomaly contributes to degradation"
+    },
+    {
+      "id": "ee-4e96fd1736",
+      "from": "metric:e0051ffa73",
+      "to": "deg:frontend",
+      "kind": "contributes_to",
+      "label": "metric anomaly contributes to degradation"
+    },
+    {
+      "id": "ee-2d4dbf4d7c",
+      "from": "metric:e0846d19a0",
+      "to": "deg:frontend",
+      "kind": "contributes_to",
+      "label": "metric anomaly contributes to degradation"
+    }
+  ]
+}

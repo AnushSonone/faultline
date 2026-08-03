@@ -1,0 +1,47 @@
+{
+  "statement": "SELECT service, TUMBLE(event_time, '1s'), AVG(value) AS err FROM metrics WHERE name LIKE '%error_rate%' GROUP BY service",
+  "logical_plan": "Sink\n  Project [service, window_start, err]\n    Aggregate group_by=[service] aggs=[Avg(value)]\n      Window Tumble { size_ns: 1000000000 }\n        Filter Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%error_rate%\")) }\n          Scan metrics [*]\n",
+  "optimized_logical_plan": "Sink\n  Aggregate group_by=[service] aggs=[Avg(value)]\n    Window Tumble { size_ns: 1000000000 }\n      Filter Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%error_rate%\")) }\n        Scan metrics [service, name, value, event_time]\n",
+  "physical_plan": {
+    "operators": [
+      {
+        "operator_id": "scan_metrics",
+        "kind": "source",
+        "detail": "replay envelopes -> metrics rows [service, name, value, event_time]"
+      },
+      {
+        "operator_id": "filter",
+        "kind": "filter",
+        "detail": "Binary { left: Column(\"name\"), op: Like, right: Literal(Text(\"%error_rate%\")) }"
+      },
+      {
+        "operator_id": "window_assign",
+        "kind": "window",
+        "detail": "Tumble { size_ns: 1000000000 }"
+      },
+      {
+        "operator_id": "hash_aggregate",
+        "kind": "aggregate",
+        "detail": "hash aggregate"
+      },
+      {
+        "operator_id": "result_sink",
+        "kind": "sink",
+        "detail": "row collection"
+      }
+    ],
+    "partitioning": "single partition (session replay)",
+    "state_retention": "windows retained until watermark + 1s grace",
+    "watermark_policy": "bounded out-of-orderness, 2s allowed lateness"
+  },
+  "operator_ids": [
+    "scan_metrics",
+    "filter",
+    "window_assign",
+    "hash_aggregate",
+    "result_sink"
+  ],
+  "partitioning": "single partition (session replay)",
+  "state_retention": "windows retained until watermark + 1s grace",
+  "watermark_policy": "bounded out-of-orderness, 2s allowed lateness"
+}

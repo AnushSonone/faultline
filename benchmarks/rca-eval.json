@@ -1,0 +1,413 @@
+{
+  "untuned": {
+    "incidents": 16,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0
+  },
+  "per_fault_type": {
+    "cpu": {
+      "incidents": 4,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "error": {
+      "incidents": 4,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "latency": {
+      "incidents": 4,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "mem": {
+      "incidents": 4,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    }
+  },
+  "ablations": {
+    "no_change_proximity": {
+      "incidents": 16,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "no_critical_path": {
+      "incidents": 16,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "no_failed_trace_coverage": {
+      "incidents": 16,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "no_log_evidence": {
+      "incidents": 16,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "no_temporal_precedence": {
+      "incidents": 16,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "no_topology": {
+      "incidents": 16,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    }
+  },
+  "incidents": [
+    {
+      "incident_id": "eval-cpu-cart-007",
+      "fault_type": "cpu",
+      "eval": {
+        "incident_id": "eval-cpu-cart-007",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "cartservice"
+        ],
+        "ranked_services": [
+          "cartservice",
+          "productcatalogservice",
+          "recommendationservice",
+          "frontend",
+          "checkoutservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-cpu-chec-006",
+      "fault_type": "cpu",
+      "eval": {
+        "incident_id": "eval-cpu-chec-006",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "checkoutservice"
+        ],
+        "ranked_services": [
+          "checkoutservice",
+          "frontend",
+          "productcatalogservice",
+          "cartservice",
+          "recommendationservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-cpu-prod-008",
+      "fault_type": "cpu",
+      "eval": {
+        "incident_id": "eval-cpu-prod-008",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "productcatalogservice"
+        ],
+        "ranked_services": [
+          "productcatalogservice",
+          "cartservice",
+          "frontend",
+          "checkoutservice",
+          "recommendationservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-cpu-reco-005",
+      "fault_type": "cpu",
+      "eval": {
+        "incident_id": "eval-cpu-reco-005",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "recommendationservice"
+        ],
+        "ranked_services": [
+          "recommendationservice",
+          "frontend",
+          "cartservice",
+          "checkoutservice",
+          "productcatalogservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-error-cart-015",
+      "fault_type": "error",
+      "eval": {
+        "incident_id": "eval-error-cart-015",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "cartservice"
+        ],
+        "ranked_services": [
+          "cartservice",
+          "frontend",
+          "productcatalogservice",
+          "checkoutservice",
+          "recommendationservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-error-chec-014",
+      "fault_type": "error",
+      "eval": {
+        "incident_id": "eval-error-chec-014",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "checkoutservice"
+        ],
+        "ranked_services": [
+          "checkoutservice",
+          "frontend",
+          "cartservice",
+          "recommendationservice",
+          "productcatalogservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-error-prod-016",
+      "fault_type": "error",
+      "eval": {
+        "incident_id": "eval-error-prod-016",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "productcatalogservice"
+        ],
+        "ranked_services": [
+          "productcatalogservice",
+          "cartservice",
+          "frontend",
+          "checkoutservice",
+          "recommendationservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-error-reco-013",
+      "fault_type": "error",
+      "eval": {
+        "incident_id": "eval-error-reco-013",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "recommendationservice"
+        ],
+        "ranked_services": [
+          "recommendationservice",
+          "checkoutservice",
+          "frontend",
+          "productcatalogservice",
+          "cartservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-latency-cart-011",
+      "fault_type": "latency",
+      "eval": {
+        "incident_id": "eval-latency-cart-011",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "cartservice"
+        ],
+        "ranked_services": [
+          "cartservice",
+          "frontend",
+          "productcatalogservice",
+          "checkoutservice",
+          "recommendationservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-latency-chec-010",
+      "fault_type": "latency",
+      "eval": {
+        "incident_id": "eval-latency-chec-010",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "checkoutservice"
+        ],
+        "ranked_services": [
+          "checkoutservice",
+          "frontend",
+          "recommendationservice",
+          "cartservice",
+          "productcatalogservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-latency-prod-012",
+      "fault_type": "latency",
+      "eval": {
+        "incident_id": "eval-latency-prod-012",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "productcatalogservice"
+        ],
+        "ranked_services": [
+          "productcatalogservice",
+          "cartservice",
+          "frontend",
+          "checkoutservice",
+          "recommendationservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-latency-reco-009",
+      "fault_type": "latency",
+      "eval": {
+        "incident_id": "eval-latency-reco-009",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "recommendationservice"
+        ],
+        "ranked_services": [
+          "recommendationservice",
+          "frontend",
+          "checkoutservice",
+          "cartservice",
+          "productcatalogservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-mem-cart-003",
+      "fault_type": "mem",
+      "eval": {
+        "incident_id": "eval-mem-cart-003",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "cartservice"
+        ],
+        "ranked_services": [
+          "cartservice",
+          "frontend",
+          "productcatalogservice",
+          "checkoutservice",
+          "recommendationservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-mem-chec-002",
+      "fault_type": "mem",
+      "eval": {
+        "incident_id": "eval-mem-chec-002",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "checkoutservice"
+        ],
+        "ranked_services": [
+          "checkoutservice",
+          "frontend",
+          "recommendationservice",
+          "cartservice",
+          "productcatalogservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-mem-prod-004",
+      "fault_type": "mem",
+      "eval": {
+        "incident_id": "eval-mem-prod-004",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "productcatalogservice"
+        ],
+        "ranked_services": [
+          "productcatalogservice",
+          "frontend",
+          "cartservice",
+          "checkoutservice",
+          "recommendationservice"
+        ]
+      }
+    },
+    {
+      "incident_id": "eval-mem-reco-001",
+      "fault_type": "mem",
+      "eval": {
+        "incident_id": "eval-mem-reco-001",
+        "top1": true,
+        "top3": true,
+        "reciprocal_rank": 1.0,
+        "best_rank": 1,
+        "labeled_services": [
+          "recommendationservice"
+        ],
+        "ranked_services": [
+          "recommendationservice",
+          "checkoutservice",
+          "frontend",
+          "cartservice",
+          "productcatalogservice"
+        ]
+      }
+    }
+  ],
+  "confusion": [],
+  "dataset": "synthetic-ob/v1 (synthetic; NOT RCAEval)",
+  "incident_count": 16
+}

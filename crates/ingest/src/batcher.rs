@@ -247,6 +247,7 @@ pub fn changes_schema() -> Schema {
         Field::new("service", DataType::Utf8, true),
         Field::new("change_id", DataType::Utf8, false),
         Field::new("change_type", DataType::Utf8, false),
+        Field::new("version_after", DataType::Utf8, true),
     ])
 }
 
@@ -389,6 +390,7 @@ fn build_changes_batch(rows: &[IngestedEvent]) -> Result<RecordBatch, BatcherErr
     let mut service = StringBuilder::new();
     let mut change_id = StringBuilder::new();
     let mut change_type = StringBuilder::new();
+    let mut version_after = StringBuilder::new();
     for r in rows {
         let TelemetryPayload::Change(c) = &r.envelope.payload else {
             return Err(BatcherError::SchemaMismatch {
@@ -405,6 +407,10 @@ fn build_changes_batch(rows: &[IngestedEvent]) -> Result<RecordBatch, BatcherErr
         }
         change_id.append_value(&c.change_id);
         change_type.append_value(format!("{:?}", c.change_type).to_ascii_lowercase());
+        match &c.version_after {
+            Some(v) => version_after.append_value(v),
+            None => version_after.append_null(),
+        }
     }
     RecordBatch::try_new(
         Arc::new(changes_schema()),
@@ -415,6 +421,7 @@ fn build_changes_batch(rows: &[IngestedEvent]) -> Result<RecordBatch, BatcherErr
             Arc::new(service.finish()),
             Arc::new(change_id.finish()),
             Arc::new(change_type.finish()),
+            Arc::new(version_after.finish()),
         ],
     )
     .map_err(|e| BatcherError::Arrow(e.to_string()))

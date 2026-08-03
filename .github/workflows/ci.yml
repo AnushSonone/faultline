@@ -44,3 +44,27 @@ jobs:
         working-directory: web
       - run: npm test
         working-directory: web
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+        working-directory: web
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      - name: Start demo stack
+        run: |
+          export FAULTLINE_FIXTURES="$PWD/datasets/fixtures"
+          cargo run -p faultlined &
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8080/api/v1/health && break
+            sleep 2
+          done
+      - run: npx playwright test
+        working-directory: web

@@ -1,0 +1,8 @@
+{
+  "time_to_first_visual_ms": 118,
+  "ws_live_ms": 334,
+  "ws_frames_per_sec": 36.7,
+  "tab_switch_avg_ms": 23,
+  "seek_latency_ms": 32,
+  "js_heap_after_replay_mb": 20.7
+}

@@ -221,8 +221,9 @@ impl WatermarkTracker {
         };
 
         // Beyond-grace: observable for metrics but not buffered into query state.
+        // Derived metrics refresh lazily (see refresh_metrics); the live
+        // counters above are already up to date.
         if class == EventClass::BeyondGrace {
-            self.refresh_metrics();
             return Ok((class, Vec::new()));
         }
 
@@ -259,7 +260,6 @@ impl WatermarkTracker {
         } else {
             class
         };
-        self.refresh_metrics();
         Ok((class, released))
     }
 
@@ -358,7 +358,11 @@ impl WatermarkTracker {
         }
     }
 
-    fn refresh_metrics(&mut self) {
+    /// Recompute the derived metric aggregates (buffer sizes, idle counts,
+    /// per-partition watermark map). O(partitions) with per-key String
+    /// clones, so it must NOT run per push: on a 150k-event rebuild that is
+    /// tens of millions of BTreeMap inserts. Callers refresh once per read.
+    pub fn refresh_metrics(&mut self) {
         let mut buf = 0usize;
         let mut idle = 0usize;
         let mut active = 0usize;

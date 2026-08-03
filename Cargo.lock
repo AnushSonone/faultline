@@ -603,13 +603,16 @@ dependencies = [
  "faultline-engine",
  "faultline-graph",
  "faultline-ingest",
+ "faultline-planner",
  "faultline-projection",
  "faultline-replay",
+ "faultline-state",
  "futures",
  "http-body-util",
  "parking_lot",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror",
  "tokio",
  "tower",
@@ -631,7 +634,12 @@ dependencies = [
 name = "faultline-cli"
 version = "0.1.0"
 dependencies = [
+ "faultline-catalog",
  "faultline-common",
+ "faultline-engine",
+ "faultline-inference",
+ "faultline-replay",
+ "faultline-state",
  "serde",
  "serde_json",
  "thiserror",
@@ -643,8 +651,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "faultline-catalog",
  "faultline-cli",
  "faultline-common",
+ "serde_json",
 ]
 
 [[package]]
@@ -668,10 +678,12 @@ dependencies = [
  "faultline-common",
  "faultline-ingest",
  "faultline-projection",
+ "hex",
  "indexmap",
  "proptest",
  "serde",
  "serde_json",
+ "sketches-ddsketch",
  "thiserror",
  "tokio",
  "tracing",
@@ -693,8 +705,13 @@ name = "faultline-inference"
 version = "0.1.0"
 dependencies = [
  "faultline-common",
+ "faultline-graph",
+ "faultline-replay",
+ "hex",
+ "indexmap",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror",
 ]
 
@@ -717,8 +734,11 @@ name = "faultline-planner"
 version = "0.1.0"
 dependencies = [
  "faultline-common",
+ "faultline-engine",
+ "faultline-replay",
  "serde",
  "serde_json",
+ "sqlparser",
  "thiserror",
 ]
 
@@ -728,6 +748,7 @@ version = "0.1.0"
 dependencies = [
  "faultline-common",
  "faultline-graph",
+ "faultline-inference",
  "indexmap",
  "serde",
  "serde_json",
@@ -770,8 +791,11 @@ name = "faultline-state"
 version = "0.1.0"
 dependencies = [
  "faultline-common",
+ "hex",
  "serde",
  "serde_json",
+ "sha2",
+ "tempfile",
  "thiserror",
 ]
 
@@ -1018,6 +1042,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-range-header"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9171a2ea8a68358193d15dd5d70c1c10a2afc3e7e4c5bc92bc9f025cebd7359c"
+
+[[package]]
 name = "httparse"
 version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1251,6 +1281,16 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "mime_guess"
+version = "2.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7c44f8e672c00fe5308fa235f821cb4198414e1c77935c1ab6948d3fd78550e"
+dependencies = [
+ "mime",
+ "unicase",
+]
 
 [[package]]
 name = "mio"
@@ -1724,6 +1764,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
 
 [[package]]
+name = "sketches-ddsketch"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c6f73aeb92d671e0cc4dca167e59b2deb6387c375391bc99ee743f326994a2b"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1749,6 +1798,15 @@ checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
  "windows-sys",
+]
+
+[[package]]
+name = "sqlparser"
+version = "0.53.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05a528114c392209b3264855ad491fcce534b94a38771b0a0b97a79379275ce8"
+dependencies = [
+ "log",
 ]
 
 [[package]]
@@ -1888,6 +1946,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-util"
+version = "0.7.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "494815d09bf52b5548659851081238f0ca39ff638363907596da739561c62c52"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "futures-sink",
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
 name = "tower"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1911,9 +1982,19 @@ checksum = "4cfcf7e2740e6fc6d4d688b4ef00650406bb94adf4731e43c096c3a19fe40840"
 dependencies = [
  "bitflags",
  "bytes",
+ "futures-core",
+ "futures-util",
  "http",
  "http-body",
+ "http-body-util",
+ "http-range-header",
+ "httpdate",
+ "mime",
+ "mime_guess",
+ "percent-encoding",
  "pin-project-lite",
+ "tokio",
+ "tokio-util",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -2026,6 +2107,12 @@ name = "unarray"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94"
+
+[[package]]
+name = "unicase"
+version = "2.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbc4bc3a9f746d862c45cb89d705aa10f187bb96c76001afab07a0d35ce60142"
 
 [[package]]
 name = "unicode-ident"

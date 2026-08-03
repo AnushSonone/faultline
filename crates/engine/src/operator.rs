@@ -32,6 +32,16 @@ pub struct OperatorMetrics {
     pub last_activity_ns: i64,
 }
 
+impl OperatorMetrics {
+    /// Fresh metrics for `operator_id`, as emitted after a Reset control.
+    pub fn reset_for(operator_id: &str) -> Self {
+        Self {
+            operator_id: operator_id.to_owned(),
+            ..Default::default()
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum OperatorError {
     #[error("{0}")]

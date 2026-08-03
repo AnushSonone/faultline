@@ -222,10 +222,7 @@ impl Operator for HashAggregateExec {
     fn on_control(&mut self, ctrl: &ControlMessage) -> Result<Vec<RuntimeBatch>, OperatorError> {
         if matches!(ctrl, ControlMessage::Reset | ControlMessage::Seek { .. }) {
             self.groups.clear();
-            self.metrics = OperatorMetrics {
-                operator_id: self.id.clone(),
-                ..Default::default()
-            };
+            self.metrics = OperatorMetrics::reset_for(&self.id);
         }
         Ok(Vec::new())
     }

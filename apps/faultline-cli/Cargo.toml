@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "faultline-cli-bin"
 version.workspace = true
 edition.workspace = true
@@ -11,5 +11,7 @@ path = "src/main.rs"
 [dependencies]
 faultline-cli = { workspace = true }
 faultline-common = { workspace = true }
+faultline-catalog = { workspace = true }
 clap = { workspace = true }
+serde_json = { workspace = true }
 anyhow = { workspace = true }

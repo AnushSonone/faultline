@@ -34,3 +34,19 @@ Output: `datasets/fixtures/synthetic-ob/v1/rec-mem-001/`
 
 - Implement `adapters/rcaeval.py` convert for one RE2-OB directory without downloading full zip
 - Measure parent-span completeness on first real case and update this doc
+
+## 2026-07-28 update: RE2-OB verified against the real archive
+
+- Archive: RCAEval-v2.zip (Figshare file 60960049, 4462854310 bytes,
+  sha256 72006b456...) is actually a gzip TAR with root `data/`.
+- RE2-OB: 90 cases = 5 services (checkout, currency, email, productcatalog,
+  recommendation) x 6 faults (cpu, mem, disk, delay, loss, socket) x 3.
+- Case files verified: `inject_time.txt` (unix sec), `metrics.json`
+  ({"svc_metric": [[sec, value], ...]}), `logs.csv`
+  (timestamp,container_name,message), `traces.csv` (time,traceID,spanID,
+  serviceName,methodName,operationName,startTimeMillis,startTime us,
+  duration us,statusCode,parentSpanID). Trace serviceName sometimes uses
+  `frontendservice` where metrics use `frontend`; the converter normalizes.
+- No deployment/change events exist in RCAEval - change_proximity is
+  structurally zero on this dataset (visible in the ablations).
+- Phase A converted + evaluated; see RESULTS.md.

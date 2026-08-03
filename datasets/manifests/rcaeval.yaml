@@ -5,10 +5,18 @@ license: MIT (datasets + framework code)
 preferred_suite: RE2-OB
 preferred_fault: mem
 download:
-  full_re2_zip_gb: ~4.2
-  recommendation: single-case Figshare fetch or synthetic fixture for M2
-status: go_with_fallback
+  figshare_article: https://figshare.com/articles/dataset/RCAEval_A_Benchmark_for_Root_Cause_Analysis_of_Microservice_Systems/31048672
+  file_url: https://ndownloader.figshare.com/files/60960049
+  file_name: RCAEval-v2.zip
+  file_bytes: 4462854310
+  script: scripts/download-rcaeval.sh
+status: converted_phase_a_evaluated
 fallback: datasets/fixtures/synthetic-ob/v1/rec-mem-001
+archive_sha256: 72006b45601980df5088ae60872f0fe3233fa52748584c97c559df664c41bf0b
+archive_format: gzip tar (despite .zip name), root dir data/
+converted_cases: 15 (5 services x cpu/mem/delay x instance 1) -> datasets/fixtures/rcaeval-re2-ob/v2
+converter: python/faultline_data/adapters/rcaeval.py
+results: benchmarks/rcaeval-eval.json + RESULTS.md
 notes: |
   Sock Shop RE2/RE3 lack traces — do not use for first waterfall.
   Full RE2 download deferred; M2 ships synthetic multi-signal fixture matching

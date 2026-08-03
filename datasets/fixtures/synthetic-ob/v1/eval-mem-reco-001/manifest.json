@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-ob",
+  "dataset_version": "v1",
+  "incident_id": "eval-mem-reco-001",
+  "system": "online-boutique-synthetic",
+  "start_time_ns": 1710279000000000000,
+  "end_time_ns": 1710279019000000000,
+  "signals": [
+    "metrics",
+    "spans",
+    "logs",
+    "changes"
+  ],
+  "event_counts": {
+    "metrics": 400,
+    "spans": 240,
+    "logs": 1,
+    "changes": 1
+  },
+  "files": [
+    {
+      "path": "metrics/part-00000.parquet",
+      "sha256": "6d3de2215ea9798a0355583428ef3b2200a8026aa1c5aa708f76ee1ee4e818cf",
+      "rows": 400
+    },
+    {
+      "path": "spans/part-00000.parquet",
+      "sha256": "ff03bb7dfef6750b7ac623cb48ce798e6a5916742c72d7e74c4a56a72474c242",
+      "rows": 240
+    },
+    {
+      "path": "logs/part-00000.parquet",
+      "sha256": "861ebf43f313e807c3abd7e8b73a5ce74d1ce39f9d8b1d42814e31c0487673d5",
+      "rows": 1
+    },
+    {
+      "path": "changes/part-00000.parquet",
+      "sha256": "dad07aecd2837491a3943f18d3081ef4b4df447a4903d74bf81202545b114ea7",
+      "rows": 1
+    }
+  ]
+}

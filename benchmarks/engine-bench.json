@@ -1,0 +1,151 @@
+{
+  "workloads": [
+    {
+      "workload": "filter_heavy",
+      "row_baseline_rows_per_sec": 23319084.59534276,
+      "batches": [
+        {
+          "batch_size": 64,
+          "rows_per_sec": 293541787.14110845,
+          "p50_batch_us": 0.20800000000000002,
+          "p99_batch_us": 0.20900000000000002
+        },
+        {
+          "batch_size": 256,
+          "rows_per_sec": 327689429.06670773,
+          "p50_batch_us": 0.75,
+          "p99_batch_us": 0.9169999999999999
+        },
+        {
+          "batch_size": 1024,
+          "rows_per_sec": 345348586.2292251,
+          "p50_batch_us": 2.9579999999999997,
+          "p99_batch_us": 3.0829999999999997
+        },
+        {
+          "batch_size": 4096,
+          "rows_per_sec": 352967129.9360247,
+          "p50_batch_us": 11.667,
+          "p99_batch_us": 12.042
+        },
+        {
+          "batch_size": 16384,
+          "rows_per_sec": 357648674.5540121,
+          "p50_batch_us": 46.208999999999996,
+          "p99_batch_us": 56.583
+        }
+      ]
+    },
+    {
+      "workload": "aggregation_heavy",
+      "row_baseline_rows_per_sec": 21418722.6409285,
+      "batches": [
+        {
+          "batch_size": 64,
+          "rows_per_sec": 105464372.8165579,
+          "p50_batch_us": 0.583,
+          "p99_batch_us": 0.9169999999999999
+        },
+        {
+          "batch_size": 256,
+          "rows_per_sec": 122699386.5030675,
+          "p50_batch_us": 2.166,
+          "p99_batch_us": 3.375
+        },
+        {
+          "batch_size": 1024,
+          "rows_per_sec": 122249388.75305623,
+          "p50_batch_us": 8.583,
+          "p99_batch_us": 12.041
+        },
+        {
+          "batch_size": 4096,
+          "rows_per_sec": 123121095.13751704,
+          "p50_batch_us": 34.167,
+          "p99_batch_us": 41.25
+        },
+        {
+          "batch_size": 16384,
+          "rows_per_sec": 122233773.31380038,
+          "p50_batch_us": 136.417,
+          "p99_batch_us": 160.875
+        }
+      ]
+    },
+    {
+      "workload": "percentile",
+      "row_baseline_rows_per_sec": 26790797.361106463,
+      "batches": [
+        {
+          "batch_size": 64,
+          "rows_per_sec": 189259522.11970666,
+          "p50_batch_us": 0.33299999999999996,
+          "p99_batch_us": 0.459
+        },
+        {
+          "batch_size": 256,
+          "rows_per_sec": 188939125.7030897,
+          "p50_batch_us": 1.375,
+          "p99_batch_us": 1.541
+        },
+        {
+          "batch_size": 1024,
+          "rows_per_sec": 189244479.26542863,
+          "p50_batch_us": 5.5,
+          "p99_batch_us": 6.291
+        },
+        {
+          "batch_size": 4096,
+          "rows_per_sec": 188723755.6027365,
+          "p50_batch_us": 22.084,
+          "p99_batch_us": 31.124999999999996
+        },
+        {
+          "batch_size": 16384,
+          "rows_per_sec": 196006370.20703173,
+          "p50_batch_us": 88.334,
+          "p99_batch_us": 100.125
+        }
+      ]
+    },
+    {
+      "workload": "temporal_join",
+      "row_baseline_rows_per_sec": 2741711.8906331128,
+      "batches": [
+        {
+          "batch_size": 64,
+          "rows_per_sec": 2772753.7789930576,
+          "p50_batch_us": 15.917,
+          "p99_batch_us": 29.625
+        },
+        {
+          "batch_size": 256,
+          "rows_per_sec": 2729122.6382428543,
+          "p50_batch_us": 67.58300000000001,
+          "p99_batch_us": 97.209
+        },
+        {
+          "batch_size": 1024,
+          "rows_per_sec": 2731205.0418045074,
+          "p50_batch_us": 278.25,
+          "p99_batch_us": 437.41700000000003
+        },
+        {
+          "batch_size": 4096,
+          "rows_per_sec": 2641869.7949716183,
+          "p50_batch_us": 1134.458,
+          "p99_batch_us": 2542.333
+        },
+        {
+          "batch_size": 16384,
+          "rows_per_sec": 2602868.926379427,
+          "p50_batch_us": 4546.75,
+          "p99_batch_us": 6974.7919999999995
+        }
+      ]
+    }
+  ],
+  "total_rows_per_run": 200000,
+  "runs_per_config": 5,
+  "note": "wall-clock only; CPU time and peak memory not instrumented"
+}

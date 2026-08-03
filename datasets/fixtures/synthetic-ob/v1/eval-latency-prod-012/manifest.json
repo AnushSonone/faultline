@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-ob",
+  "dataset_version": "v1",
+  "incident_id": "eval-latency-prod-012",
+  "system": "online-boutique-synthetic",
+  "start_time_ns": 1710684000000000000,
+  "end_time_ns": 1710684019000000000,
+  "signals": [
+    "metrics",
+    "spans",
+    "logs",
+    "changes"
+  ],
+  "event_counts": {
+    "metrics": 400,
+    "spans": 240,
+    "logs": 1,
+    "changes": 1
+  },
+  "files": [
+    {
+      "path": "metrics/part-00000.parquet",
+      "sha256": "85cb32182353fe471e07d3972b3f6a317ea73eb517648d6996909ac0a31790b8",
+      "rows": 400
+    },
+    {
+      "path": "spans/part-00000.parquet",
+      "sha256": "2b692dc698040faf44d7f7e7d7192bf771352dc24513e7a6539279a50c3bb90a",
+      "rows": 240
+    },
+    {
+      "path": "logs/part-00000.parquet",
+      "sha256": "d997a6484397467e03458a2e3581f11d98e2e040cf4f7dadef11920a06b997ab",
+      "rows": 1
+    },
+    {
+      "path": "changes/part-00000.parquet",
+      "sha256": "57ed3b38de80a61566e576c760595689f6713a3f6573e256d6be8c89159d1b0c",
+      "rows": 1
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "incident_id": "eval-cpu-reco-005",
+  "root_cause_services": [
+    "recommendationservice"
+  ],
+  "root_cause_indicators": [
+    "recommendationservice_cpu"
+  ],
+  "fault_type": "cpu",
+  "fault_start_time_ns": 1710676007000000000,
+  "fault_end_time_ns": 1710676019000000000,
+  "expected_downstream_services": [
+    "frontend",
+    "checkoutservice"
+  ],
+  "notes": "Synthetic cpu fault on recommendationservice (evaluation suite, seed 922121676)."
+}

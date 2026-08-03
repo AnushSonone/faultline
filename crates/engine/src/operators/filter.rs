@@ -61,10 +61,7 @@ impl Operator for FilterExec {
 
     fn on_control(&mut self, ctrl: &ControlMessage) -> Result<Vec<RuntimeBatch>, OperatorError> {
         if matches!(ctrl, ControlMessage::Reset) {
-            self.metrics = OperatorMetrics {
-                operator_id: self.id.clone(),
-                ..Default::default()
-            };
+            self.metrics = OperatorMetrics::reset_for(&self.id);
         }
         Ok(Vec::new())
     }

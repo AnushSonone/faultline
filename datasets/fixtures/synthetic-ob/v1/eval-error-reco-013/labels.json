@@ -1,0 +1,17 @@
+{
+  "incident_id": "eval-error-reco-013",
+  "root_cause_services": [
+    "recommendationservice"
+  ],
+  "root_cause_indicators": [
+    "recommendationservice_error_rate"
+  ],
+  "fault_type": "error",
+  "fault_start_time_ns": 1710216005000000000,
+  "fault_end_time_ns": 1710216019000000000,
+  "expected_downstream_services": [
+    "frontend",
+    "checkoutservice"
+  ],
+  "notes": "Synthetic error fault on recommendationservice (evaluation suite, seed 949539216)."
+}

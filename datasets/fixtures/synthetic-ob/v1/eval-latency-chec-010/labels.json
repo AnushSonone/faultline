@@ -1,0 +1,16 @@
+{
+  "incident_id": "eval-latency-chec-010",
+  "root_cause_services": [
+    "checkoutservice"
+  ],
+  "root_cause_indicators": [
+    "checkoutservice_latency"
+  ],
+  "fault_type": "latency",
+  "fault_start_time_ns": 1710347005000000000,
+  "fault_end_time_ns": 1710347019000000000,
+  "expected_downstream_services": [
+    "frontend"
+  ],
+  "notes": "Synthetic latency fault on checkoutservice (evaluation suite, seed 531725347)."
+}

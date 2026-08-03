@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "faultline-projection"
 version.workspace = true
 edition.workspace = true
@@ -10,4 +10,5 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 faultline-common = { workspace = true }
 faultline-graph = { workspace = true }
+faultline-inference = { workspace = true }
 indexmap = { workspace = true }

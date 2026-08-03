@@ -6,7 +6,8 @@ test.describe("M2 investigation shell", () => {
     await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId("selection-bar")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Faultline" })).toBeVisible();
-    await expect(page.getByTestId("ground-truth")).toContainText("not inferred");
+    // Ground truth is hidden outside evaluation mode (M4 exit criterion).
+    await expect(page.getByTestId("ground-truth")).toHaveCount(0);
     await expect(page.getByTestId("connection")).toContainText("ws live", {
       timeout: 30_000,
     });
@@ -17,9 +18,14 @@ test.describe("M2 investigation shell", () => {
     });
 
     await page.getByRole("button", { name: "Pause" }).click();
-    await expect(page.getByTestId("heatmap")).toBeVisible();
+
+    // Overview tab: service map + timeline.
     await expect(page.getByTestId("service-map")).toBeVisible();
     await expect(page.getByTestId("timeline")).toBeVisible();
+
+    // Signals tab: heatmap + waterfall.
+    await page.getByTestId("tab-signals").click();
+    await expect(page.getByTestId("heatmap")).toBeVisible();
     await expect(page.getByTestId("waterfall")).toBeVisible();
   });
 });

@@ -1,0 +1,17 @@
+{
+  "incident_id": "eval-mem-reco-001",
+  "root_cause_services": [
+    "recommendationservice"
+  ],
+  "root_cause_indicators": [
+    "recommendationservice_mem"
+  ],
+  "fault_type": "mem",
+  "fault_start_time_ns": 1710279006000000000,
+  "fault_end_time_ns": 1710279019000000000,
+  "expected_downstream_services": [
+    "frontend",
+    "checkoutservice"
+  ],
+  "notes": "Synthetic mem fault on recommendationservice (evaluation suite, seed 647892279)."
+}

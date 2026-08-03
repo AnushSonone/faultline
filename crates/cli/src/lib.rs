@@ -1,5 +1,4 @@
-//! Faultline cli crate.
+//! Faultline CLI library: evaluation and benchmark commands (TA-048..050).
 
-pub fn crate_name() -> &'static str {
-    "faultline-cli"
-}
+pub mod bench;
+pub mod evaluate;
