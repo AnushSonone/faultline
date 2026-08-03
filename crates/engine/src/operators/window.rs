@@ -31,12 +31,23 @@ pub struct WindowEmit {
     pub late_contribution: bool,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 struct WinState {
     sum: f64,
     count: u64,
     revision: u64,
     finalized: bool,
+}
+
+/// Full window state for checkpointing (TA-039). Window keys `(start, end)`
+/// serialize as strings because JSON maps need string keys.
+#[derive(Serialize, Deserialize)]
+struct WindowStateBlob {
+    /// group_key -> "start:end" -> state
+    state: BTreeMap<String, BTreeMap<String, WinState>>,
+    active_windows: usize,
+    finalized_windows: usize,
+    projection_version: u64,
 }
 
 pub struct WindowOperator {
@@ -315,12 +326,58 @@ impl Operator for WindowOperator {
     }
 
     fn snapshot(&self) -> OperatorSnapshot {
+        let state: BTreeMap<String, BTreeMap<String, WinState>> = self
+            .state
+            .iter()
+            .map(|(group, windows)| {
+                (
+                    group.clone(),
+                    windows
+                        .iter()
+                        .map(|((start, end), st)| (format!("{start}:{end}"), st.clone()))
+                        .collect(),
+                )
+            })
+            .collect();
+        let blob = serde_json::to_vec(&WindowStateBlob {
+            state,
+            active_windows: self.active_windows,
+            finalized_windows: self.finalized_windows,
+            projection_version: self.projection_version,
+        })
+        .unwrap_or_default();
         OperatorSnapshot {
             operator_id: self.id.clone(),
             watermark_ns: self.metrics.current_watermark_ns,
-            state_bytes: self.active_windows * 64,
-            blob: Vec::new(),
+            state_bytes: blob.len(),
+            blob,
         }
+    }
+
+    fn restore(&mut self, snapshot: OperatorSnapshot) -> Result<(), OperatorError> {
+        let blob: WindowStateBlob = serde_json::from_slice(&snapshot.blob)
+            .map_err(|e| OperatorError::Message(format!("window restore: {e}")))?;
+        let mut state: BTreeMap<String, BTreeMap<(i64, i64), WinState>> = BTreeMap::new();
+        for (group, windows) in blob.state {
+            let mut inner = BTreeMap::new();
+            for (key, st) in windows {
+                let (start, end) = key
+                    .split_once(':')
+                    .and_then(|(a, b)| Some((a.parse().ok()?, b.parse().ok()?)))
+                    .ok_or_else(|| {
+                        OperatorError::Message(format!("window restore: bad key {key}"))
+                    })?;
+                inner.insert((start, end), st);
+            }
+            state.insert(group, inner);
+        }
+        self.state = state;
+        self.active_windows = blob.active_windows;
+        self.finalized_windows = blob.finalized_windows;
+        self.projection_version = blob.projection_version;
+        self.metrics.current_watermark_ns = snapshot.watermark_ns;
+        self.last_emits.clear();
+        Ok(())
     }
 
     fn metrics(&self) -> OperatorMetrics {
@@ -355,5 +412,25 @@ mod tests {
         );
         let covers = w.covers(75);
         assert!(covers.len() >= 2);
+    }
+
+    /// Snapshot -> restore preserves per-window aggregates: a value ingested
+    /// before the snapshot still contributes to the average after restore.
+    #[test]
+    fn snapshot_restore_preserves_window_state() {
+        let mut w = WindowOperator::new("w", "q", WindowKind::Tumbling { size_ns: 100 }, 0);
+        w.ingest_row("svc", 10, 4.0, i64::MIN).unwrap();
+        w.ingest_row("svc", 20, 8.0, i64::MIN).unwrap();
+        let snap = Operator::snapshot(&w);
+
+        let mut restored = WindowOperator::new("w", "q", WindowKind::Tumbling { size_ns: 100 }, 0);
+        Operator::restore(&mut restored, snap).unwrap();
+        assert_eq!(restored.active_window_count(), w.active_window_count());
+
+        // Third value joins the restored aggregate: avg (4+8+6)/3 = 6.
+        let emits = restored.ingest_row("svc", 30, 6.0, i64::MIN).unwrap();
+        let last = emits.last().unwrap();
+        assert_eq!(last.count, 3);
+        assert!((last.value - 6.0).abs() < 1e-9);
     }
 }

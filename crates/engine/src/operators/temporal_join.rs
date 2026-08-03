@@ -33,7 +33,7 @@ pub struct JoinEmit {
     pub unmatched: bool,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct LeftRow {
     telemetry_ref: String,
     service: String,
@@ -43,7 +43,7 @@ struct LeftRow {
     seen_change_ids: BTreeSet<String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct RightRow {
     change_id: String,
     change_type: String,
@@ -51,6 +51,19 @@ struct RightRow {
     service: String,
     event_time_ns: i64,
     event_id: String,
+}
+
+/// Full buffered join state for checkpointing (TA-039). Replaces the old
+/// metadata-only snapshot: left/right buffers and dedupe keys round-trip.
+#[derive(Serialize, Deserialize)]
+struct JoinStateBlob {
+    left: BTreeMap<String, Vec<LeftRow>>,
+    right: BTreeMap<String, Vec<RightRow>>,
+    seen_pair_keys: BTreeSet<String>,
+    matches: u64,
+    unmatched: u64,
+    expired: u64,
+    revision: u64,
 }
 
 pub struct TemporalIntervalJoin {
@@ -510,23 +523,36 @@ impl Operator for TemporalIntervalJoin {
     }
 
     fn snapshot(&self) -> OperatorSnapshot {
-        let blob = serde_json::to_vec(&serde_json::json!({
-            "matches": self.matches,
-            "unmatched": self.unmatched,
-            "left": self.left_state_rows(),
-            "right": self.right_state_rows(),
-        }))
+        let blob = serde_json::to_vec(&JoinStateBlob {
+            left: self.left.clone(),
+            right: self.right.clone(),
+            seen_pair_keys: self.seen_pair_keys.clone(),
+            matches: self.matches,
+            unmatched: self.unmatched,
+            expired: self.expired,
+            revision: self.revision,
+        })
         .unwrap_or_default();
         OperatorSnapshot {
             operator_id: self.id.clone(),
             watermark_ns: self.metrics.current_watermark_ns,
-            state_bytes: self.left_state_rows() * 96 + self.right_state_rows() * 96,
+            state_bytes: blob.len(),
             blob,
         }
     }
 
     fn restore(&mut self, snapshot: OperatorSnapshot) -> Result<(), OperatorError> {
+        let state: JoinStateBlob = serde_json::from_slice(&snapshot.blob)
+            .map_err(|e| OperatorError::Message(format!("join restore: {e}")))?;
+        self.left = state.left;
+        self.right = state.right;
+        self.seen_pair_keys = state.seen_pair_keys;
+        self.matches = state.matches;
+        self.unmatched = state.unmatched;
+        self.expired = state.expired;
+        self.revision = state.revision;
         self.metrics.current_watermark_ns = snapshot.watermark_ns;
+        self.last_emits.clear();
         Ok(())
     }
 
@@ -642,5 +668,40 @@ mod tests {
                 .map(|e| (&e.change_id, e.revision))
                 .collect::<Vec<_>>()
         );
+    }
+
+    /// Snapshot -> restore preserves buffered join state: a deployment seen
+    /// before the snapshot still matches telemetry arriving after restore
+    /// (spec 25.2 property: snapshot then restore produces equivalent state).
+    #[test]
+    fn snapshot_restore_preserves_buffers_and_dedupe() {
+        let mut j = TemporalIntervalJoin::new("j", "q", 5_000, 5_000, 1_000);
+        let _ = j.push_deployment(
+            "e1",
+            "c1",
+            "deployment",
+            "svc",
+            10_000,
+            Some("v2".into()),
+            0,
+        );
+        let _ = j.push_telemetry("t1", "svc", 11_000, 10_000, 15_000, 0);
+        let snap = Operator::snapshot(&j);
+
+        let mut restored = TemporalIntervalJoin::new("j", "q", 5_000, 5_000, 1_000);
+        Operator::restore(&mut restored, snap).unwrap();
+        assert_eq!(restored.left_state_rows(), j.left_state_rows());
+        assert_eq!(restored.right_state_rows(), j.right_state_rows());
+        assert_eq!(restored.match_count(), j.match_count());
+
+        // The restored operator continues matching against restored buffers.
+        let emits = restored.push_telemetry("t2", "svc", 12_000, 10_000, 15_000, 0);
+        assert!(emits.iter().any(|e| !e.unmatched && e.change_id == "c1"));
+
+        // Dedupe state survived: replaying the SAME telemetry row does not
+        // produce a fresh first-time match pair.
+        let before = restored.match_count();
+        let _ = restored.push_telemetry("t2", "svc", 12_000, 10_000, 15_000, 0);
+        assert_eq!(restored.match_count(), before);
     }
 }
