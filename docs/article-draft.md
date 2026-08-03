@@ -56,11 +56,12 @@ evidence move nothing - RCAEval has no deployment events, so a feature I
 weighted at 10% is structurally dead on this dataset. The synthetic suite
 could never have told me that.
 
-For context (different protocols, not directly comparable): RCAEval's best
-academic baseline reports ~42% top-1, and a commercial multi-modal agent
-reports ~89%. An untuned linear scorer landing within range of tuned academic
-baselines - while every number stays explainable - is the honest starting
-point I wanted. The improvement path is written down next to the numbers:
+No published number exists for this exact protocol - the RCAEval paper's
+coarse-grained RE2 table covers Train Ticket, not Online Boutique, and reports
+Avg@5 (CIRCA 0.46, RCD 0.54), not top-1 - so the only honest comparison is one
+I run myself: their harness, locally, on the same cases. An untuned linear
+scorer where every number stays explainable is the starting point, not the
+destination. The improvement path is written down next to the numbers:
 metric-name semantics, trace-latency deltas as anomaly inputs, and weight
 tuning on a train split reported against the untuned figures.
 

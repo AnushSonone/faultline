@@ -47,7 +47,7 @@ Decision records: `docs/adr/` (21 ADRs). Milestone acceptance evidence: `docs/au
 
 ## Numbers (reproducible)
 
-All measured, none invented - see [RESULTS.md](RESULTS.md) for full tables and the integrity block (commit, machine, seeds, raw outputs). Highlights: 100% top-1 on the 16-incident synthetic suite (a smoke test, labeled as such); **26.7% top-1 / 0.41 MRR untuned and train-free on 15 real RCAEval RE2-OB cases**, with ablations showing topology consistency and temporal precedence carry real-data ranking; 5-15x batch-vs-row speedups on filter/aggregate/percentile paths (and an honest ~1x on the join); 13 ms checkpoint writes, sub-millisecond recovery reads, zero duplicate evidence after forced crashes; 98 ms UI time-to-first-visual. Reproduce with `scripts/run-benchmarks.sh`.
+All measured, none invented - see [RESULTS.md](RESULTS.md) for full tables and the integrity block (commit, machine, seeds, raw outputs). Highlights: 100% top-1 on the 16-incident synthetic suite (a smoke test, labeled as such); **26.7% top-1 / 0.41 MRR untuned and train-free on 15 real RCAEval RE2-OB cases**, with ablations showing topology consistency and temporal precedence carry real-data ranking; 13 ms checkpoint writes, sub-millisecond recovery reads, zero duplicate evidence after forced crashes; 98 ms UI time-to-first-visual. Engine throughput numbers are withdrawn pending a benchmark-harness fix (the previous table measured timer overhead - RESULTS.md has the full story). Reproduce with `scripts/run-benchmarks.sh`.
 
 Claim discipline: percentiles are DDSketch approximations; recovery is "checkpoint recovery with idempotent incident projections," never exactly-once; synthetic and real datasets are always labeled as such.
 
