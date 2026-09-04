@@ -462,6 +462,31 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 
 .section-eyebrow { display: block; margin-bottom: var(--s3); }
 
+/* Plain-language section intro for readers new to incident response. */
+.section-intro {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  max-width: 52rem;
+  margin: 0 0 var(--s4);
+}
+
+/* Dismissible first-run strip. In-flow, never an overlay. */
+.first-run-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  justify-content: space-between;
+  padding: var(--s3) var(--s5);
+  border-block-end: 1px solid var(--border);
+  background: var(--panel);
+}
+.first-run-hint p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -966,7 +991,7 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
   .scenario-cols { grid-template-columns: 1fr; }
 }
 
-/* ---------- embed mode (?embed=1) ---------- */
+/* ---------- embed chrome (the app only ships as the blog embed) ---------- */
 
 .embed .brand-block p { display: none; }
 .embed .app-header { padding: var(--s1) 0; }

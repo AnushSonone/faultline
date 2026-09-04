@@ -15,7 +15,7 @@ try {
   Start-Sleep -Seconds 3
   Write-Host "Demo ready:"
   Write-Host "  API  http://$($env:FAULTLINE_ADDR)/api/v1/health"
-  Write-Host "  UI   http://127.0.0.1:5173"
+  Write-Host "  UI   http://127.0.0.1:5173  (dev harness; product page: anush.wiki/blog/faultline)"
   Write-Host "Press Enter to stop."
   Read-Host | Out-Null
   Stop-Process -Id $web.Id -Force -ErrorAction SilentlyContinue

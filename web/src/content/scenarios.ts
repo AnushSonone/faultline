@@ -20,7 +20,7 @@ export const SCENARIOS: Record<string, Scenario> = {
     whatHappened:
       "A synthetic Online Boutique-style memory fault is injected into recommendationservice at t+5s, right after a deployment event lands. This is the only case in the demo with a change event on the timeline.",
     whatWeEvaluate:
-      "Whether the deterministic 10-feature ranker, seeing only telemetry with labels hidden, pins the injected service. Here it ranks recommendationservice first.",
+      "Whether the deterministic nine-feature ranker, seeing only telemetry with labels hidden, pins the injected service. Here it ranks recommendationservice first.",
     whatToWatch:
       "The deploy marker on the timeline, the recommendationservice memory ramp, and its heatmap row brightening as the fault develops. In the score breakdown, change_proximity contributes because a deployment landed just before the fault.",
   },

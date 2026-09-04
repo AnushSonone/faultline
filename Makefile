@@ -1,4 +1,4 @@
-.PHONY: build test demo web-install web-dev fmt clippy python-test
+.PHONY: build test demo web-install web-dev fmt clippy python-test embed
 
 build:
 	cargo build --workspace
@@ -25,3 +25,6 @@ python-test:
 
 demo:
 	@bash scripts/run-demo.sh || pwsh -File scripts/run-demo.ps1
+
+embed:
+	bash scripts/build-embed.sh

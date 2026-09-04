@@ -28,8 +28,14 @@ export function Tabs() {
           setTab(id);
         }
       },
-      // A narrow band near the top of the viewport decides the active section.
-      { rootMargin: "-25% 0px -65% 0px" },
+      // A narrow band near the top of the scroll container decides the active
+      // section. The embed mount is a height-capped overflow-y:auto box, so the
+      // observer root must be that container (null-fallback to viewport is
+      // defensive only; the mount id always exists in embed and harness).
+      {
+        root: document.getElementById("faultline-demo-root"),
+        rootMargin: "-25% 0px -65% 0px",
+      },
     );
     sections.forEach((el) => observer.observe(el));
     return () => observer.disconnect();

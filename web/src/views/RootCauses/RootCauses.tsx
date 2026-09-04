@@ -78,7 +78,17 @@ function CandidateCard({
           <table className="score-table" data-testid={`root-cause-breakdown-${candidate.service}`}>
             <thead>
               <tr>
-                <th>Component</th>
+                <th>
+                  Component{" "}
+                  <InfoTip label="What the components mean">
+                    In plain words: anomaly strength is how far a service strayed from
+                    its own normal; temporal precedence is whether it went wrong before
+                    the services that depend on it; topology is whether the failures sit
+                    on its call paths; change proximity is a deploy landing suspiciously
+                    close in time. Each row shows its value, its fixed weight, and what
+                    it contributed to the score.
+                  </InfoTip>
+                </th>
                 <th style={RIGHT}>Value</th>
                 <th style={RIGHT}>Weight</th>
                 <th style={RIGHT}>Contribution</th>

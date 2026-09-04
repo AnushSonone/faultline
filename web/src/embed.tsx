@@ -24,7 +24,7 @@ if (root) {
   // second demo session, which is unacceptable in the blog embed.
   createRoot(root).render(
     <MotionConfig reducedMotion="user">
-      <App embedded />
+      <App />
     </MotionConfig>,
   );
 }

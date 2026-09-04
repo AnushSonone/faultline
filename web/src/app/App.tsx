@@ -10,9 +10,12 @@ import {
   type StreamHandle,
 } from "../api/client";
 import { SCENARIOS } from "../content/scenarios";
+import { SECTION_INTROS } from "../content/novice";
 import { useInvestigation, type TabId } from "../state/investigation";
 import { shortTraceId } from "../lib/format";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { InfoTip } from "../components/InfoTip";
+import { FirstRunHint } from "../components/FirstRunHint";
 import { CasePanel } from "../components/CasePanel";
 import { AppHeader } from "./AppHeader";
 import { ReplayScrubber } from "./ReplayScrubber";
@@ -41,23 +44,21 @@ function Section({ id, children }: { id: TabId; children: React.ReactNode }) {
   return (
     <section className="view-section" id={`section-${id}`} data-testid={`page-${id}`}>
       <span className="eyebrow section-eyebrow">{SECTION_LABELS[id]}</span>
+      <p className="section-intro" data-testid={`section-intro-${id}`}>
+        {SECTION_INTROS[id]}
+      </p>
       {children}
     </section>
   );
 }
 
-export function App({ embedded = false }: { embedded?: boolean } = {}) {
+export function App() {
   const wsRef = useRef<StreamHandle | null>(null);
   const [booting, setBooting] = useState(true);
   const [adversarial, setAdversarial] = useState(false);
   const [incident, setIncidentChoice] = useState(DEFAULT_INCIDENT);
   const [demoBusy, setDemoBusy] = useState(false);
   const [bootRetry, setBootRetry] = useState(0);
-  // Compact chrome: the `embedded` prop (direct blog embed) or ?embed=1
-  // (standalone server inside an iframe). Read once on mount.
-  const [embed] = useState(
-    () => embedded || new URLSearchParams(window.location.search).get("embed") === "1",
-  );
   const incidentId = useInvestigation((s) => s.incidentId);
   const sessionId = useInvestigation((s) => s.sessionId);
   const rootCauses = useInvestigation((s) => s.rootCauses);
@@ -130,7 +131,7 @@ export function App({ embedded = false }: { embedded?: boolean } = {}) {
 
   if (demoBusy) {
     return (
-      <div className={embed ? "shell embed" : "shell"}>
+      <div className="shell embed">
         <div className="demo-busy" data-testid="demo-busy">
           <div className="demo-busy-card">
             <span className="eyebrow">Faultline</span>
@@ -151,7 +152,7 @@ export function App({ embedded = false }: { embedded?: boolean } = {}) {
   const scenario = SCENARIOS[incidentId ?? incident];
 
   return (
-    <div className={embed ? "shell embed" : "shell"}>
+    <div className="shell embed">
       <div className="app-chrome">
         <AppHeader />
         <ReplayScrubber
@@ -201,6 +202,7 @@ export function App({ embedded = false }: { embedded?: boolean } = {}) {
           )}
         </AnimatePresence>
       </div>
+      {!booting && <FirstRunHint />}
       {booting && (
         <div className="boot-skeleton" aria-hidden="true">
           <span className="skeleton-line" style={{ width: "38%" }} />
@@ -272,7 +274,14 @@ export function App({ embedded = false }: { embedded?: boolean } = {}) {
             <div className="verdict-hero" data-testid="verdict-hero">
               {topCandidate ? (
                 <>
-                  <span className="eyebrow">Likely root cause</span>
+                  <span className="eyebrow">
+                    Likely root cause{" "}
+                    <InfoTip>
+                      The score is a weighted sum of ten evidence features, between 0 and
+                      1. It is a ranking signal, not a probability that this service is
+                      guilty.
+                    </InfoTip>
+                  </span>
                   <div className="verdict-line">
                     <span className="verdict-service">{topCandidate.service}</span>
                     <span className="verdict-score mono">

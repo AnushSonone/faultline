@@ -9,7 +9,7 @@ DIST_DIR="$WEB_DIR/dist-embed"
 DEST_DIR="$REPO_ROOT/../anush-wiki/src/blog/faultline-demo"
 
 cd "$WEB_DIR"
-npx vite build --config vite.embed.config.ts
+npm run build  # tsc -b && vite build --config vite.embed.config.ts (typechecked)
 
 mkdir -p "$DEST_DIR"
 if command -v rsync >/dev/null 2>&1; then

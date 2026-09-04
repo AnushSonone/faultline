@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { listIncidents, pause, play, reset, seek, setProjectionMode, setSpeed } from "../api/client";
 import { SCENARIOS } from "../content/scenarios";
 import { useInvestigation } from "../state/investigation";
+import { InfoTip } from "../components/InfoTip";
 
 const SPEEDS = ["1", "10", "60"] as const;
 
@@ -152,6 +153,11 @@ export function ReplayScrubber({
       <span className="scrubber-time" data-testid="scrubber-time">
         {ready && startNs != null ? fmtOffset(shownNs, startNs) : "t+0.00s"}
       </span>
+      <InfoTip label="Event time, explained">
+        The clock runs on event time: when the telemetry actually happened inside the
+        incident, not when it arrived or when you pressed play. Drag the slider to any
+        moment; everything on the page follows.
+      </InfoTip>
       <select
         className="speed-select"
         data-testid="speed-select"
@@ -193,6 +199,11 @@ export function ReplayScrubber({
         >
           {adversarial ? "Adversarial on" : "Adversarial off"}
         </button>
+        <InfoTip label="About adversarial mode">
+          Adversarial mode replays the same incident with events delivered late and out
+          of order, the way real telemetry arrives. The engine should reach the same
+          answer; this toggle lets you check that it does.
+        </InfoTip>
       </div>
     </div>
   );
