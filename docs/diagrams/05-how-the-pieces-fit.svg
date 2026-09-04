@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="raft-arch" viewBox="0 0 720 700" role="img" aria-labelledby="fl-arch-title fl-arch-desc">
+<style>
+  svg { font-family: Georgia, "Times New Roman", serif; }
+  .raft-arch__box { fill: none; stroke: #cccccc; stroke-width: 1; }
+  .raft-arch__zone { stroke: #cccccc; stroke-width: 1; stroke-dasharray: 5 5; }
+  .raft-arch__edge { fill: none; stroke: #cccccc; stroke-width: 1.25; }
+  .raft-arch__arrow { fill: #cccccc; }
+  .raft-arch__dot { fill: none; stroke: #000000; stroke-width: 1.25; }
+  .raft-arch__dot--leader { fill: #000000; }
+  .raft-arch__dot--dead { stroke: #cccccc; }
+  .raft-arch__x { fill: none; stroke: #444444; stroke-width: 1.25; }
+  .raft-arch__ring { fill: none; stroke: #000000; stroke-width: 1; stroke-dasharray: 3 3; }
+  .raft-arch__title { fill: #000000; font-size: 15px; }
+  .raft-arch__sub, .raft-arch__edge-label { fill: #444444; font-size: 12px; }
+</style>
+<rect x="0" y="0" width="720" height="700" fill="#ffffff"></rect>
+
+<title id="fl-arch-title">how the pieces fit together</title>
+<desc id="fl-arch-desc">the page itself comes from vercel, but the app inside it talks over https and a websocket to a cloudflare tunnel, which is the only way in. behind the tunnel, on one small vm, faultlined holds up to 24 sessions of fifteen minutes each and drives play, pause, and seek. each session runs the engine: watermarks, windows, ddsketch percentiles, a temporal join, and the ranking. the engine reads incidents from parquet files on disk, one guided, sixteen synthetic, fifteen real, and writes checksummed checkpoints back to disk. the lower half shows what three clicks do. pressing play advances the event-time clock at ten times real time and streams projections to the page. pressing crash test destroys the session's memory and recovers it from the newest valid checkpoint, with zero duplicate evidence. pressing reveal fetches the ground truth from behind a gate the ranker never sees.</desc>
+
+<defs>
+<marker id="faultline-arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path class="raft-arch__arrow" d="M 0 0 L 10 5 L 0 10 z"></path>
+</marker>
+</defs>
+
+<rect class="raft-arch__box" x="250" y="8" width="220" height="52"></rect>
+<text class="raft-arch__title" x="360" y="30" text-anchor="middle">you, on this page</text>
+<text class="raft-arch__sub" x="360" y="49" text-anchor="middle">the page itself comes from vercel</text>
+
+<line class="raft-arch__zone" x1="0" y1="88" x2="720" y2="88"></line>
+<text class="raft-arch__sub" x="2" y="80">everything below runs on one small vm</text>
+
+<line class="raft-arch__edge" x1="360" y1="60" x2="360" y2="114" marker-end="url(#faultline-arch-arrow)"></line>
+<text class="raft-arch__edge-label" x="368" y="108">https and a websocket, the only way in</text>
+
+<rect class="raft-arch__box" x="270" y="116" width="180" height="44"></rect>
+<text class="raft-arch__title" x="360" y="143" text-anchor="middle">cloudflare tunnel</text>
+
+<line class="raft-arch__edge" x1="360" y1="160" x2="360" y2="194" marker-end="url(#faultline-arch-arrow)"></line>
+<text class="raft-arch__edge-label" x="368" y="182">play, seek, reveal, crash test</text>
+
+<rect class="raft-arch__box" x="230" y="196" width="260" height="52"></rect>
+<text class="raft-arch__title" x="360" y="219" text-anchor="middle">faultlined</text>
+<text class="raft-arch__sub" x="360" y="238" text-anchor="middle">up to 24 sessions, fifteen minutes each</text>
+
+<line class="raft-arch__edge" x1="360" y1="248" x2="360" y2="290" marker-end="url(#faultline-arch-arrow)"></line>
+<text class="raft-arch__edge-label" x="368" y="274">one engine per session</text>
+
+<rect class="raft-arch__box" x="230" y="292" width="260" height="68"></rect>
+<text class="raft-arch__title" x="360" y="315" text-anchor="middle">the engine</text>
+<text class="raft-arch__sub" x="360" y="334" text-anchor="middle">watermarks, windows, sketches,</text>
+<text class="raft-arch__sub" x="360" y="350" text-anchor="middle">a temporal join, and the ranking</text>
+
+<line class="raft-arch__edge" x1="230" y1="326" x2="132" y2="326" marker-end="url(#faultline-arch-arrow)"></line>
+<text class="raft-arch__edge-label" x="180" y="318" text-anchor="middle">reads</text>
+
+<line class="raft-arch__edge" x1="490" y1="326" x2="588" y2="326" marker-end="url(#faultline-arch-arrow)"></line>
+<text class="raft-arch__edge-label" x="540" y="318" text-anchor="middle">writes, reads back</text>
+
+<rect class="raft-arch__box" x="30" y="292" width="100" height="68"></rect>
+<text class="raft-arch__title" x="80" y="315" text-anchor="middle">incidents</text>
+<text class="raft-arch__sub" x="80" y="334" text-anchor="middle">parquet on disk.</text>
+<text class="raft-arch__sub" x="80" y="350" text-anchor="middle">1 guided, 16 fake, 15 real</text>
+
+<rect class="raft-arch__box" x="590" y="292" width="100" height="68"></rect>
+<text class="raft-arch__title" x="640" y="315" text-anchor="middle">checkpoints</text>
+<text class="raft-arch__sub" x="640" y="334" text-anchor="middle">on disk, sha256</text>
+<text class="raft-arch__sub" x="640" y="350" text-anchor="middle">per file</text>
+
+<line class="raft-arch__edge" x1="360" y1="360" x2="360" y2="402" marker-end="url(#faultline-arch-arrow)"></line>
+<text class="raft-arch__edge-label" x="368" y="386">projections, over the same websocket</text>
+
+<rect class="raft-arch__box" x="30" y="404" width="660" height="60"></rect>
+<text class="raft-arch__title" x="360" y="428" text-anchor="middle">what the page draws</text>
+<text class="raft-arch__sub" x="360" y="450" text-anchor="middle">service map, timeline, heatmap, ranking, evidence graph, trace waterfall, runtime inspector</text>
+
+<line class="raft-arch__zone" x1="0" y1="500" x2="720" y2="500"></line>
+<text class="raft-arch__sub" x="2" y="492">and here's what three of your clicks do inside</text>
+
+<text class="raft-arch__sub" x="360" y="524" text-anchor="middle">the rule underneath all three: the ranker only ever sees telemetry, never the answer</text>
+
+<rect class="raft-arch__box" x="30" y="540" width="200" height="140"></rect>
+<text class="raft-arch__title" x="130" y="564" text-anchor="middle">you press play</text>
+<text class="raft-arch__sub" x="130" y="590" text-anchor="middle">the event-time clock advances</text>
+<text class="raft-arch__sub" x="130" y="606" text-anchor="middle">at ten times real time. events</text>
+<text class="raft-arch__sub" x="130" y="622" text-anchor="middle">run the loop above, and the</text>
+<text class="raft-arch__sub" x="130" y="638" text-anchor="middle">scores change as evidence</text>
+<text class="raft-arch__sub" x="130" y="654" text-anchor="middle">arrives, not all at once.</text>
+
+<rect class="raft-arch__box" x="260" y="540" width="200" height="140"></rect>
+<text class="raft-arch__title" x="360" y="564" text-anchor="middle">you press crash test</text>
+<text class="raft-arch__sub" x="360" y="590" text-anchor="middle">the session's memory is</text>
+<text class="raft-arch__sub" x="360" y="606" text-anchor="middle">destroyed on purpose. it comes</text>
+<text class="raft-arch__sub" x="360" y="622" text-anchor="middle">back from the newest valid</text>
+<text class="raft-arch__sub" x="360" y="638" text-anchor="middle">checkpoint, skipping corrupt</text>
+<text class="raft-arch__sub" x="360" y="654" text-anchor="middle">ones, with no duplicate evidence.</text>
+
+<rect class="raft-arch__box" x="490" y="540" width="200" height="140"></rect>
+<text class="raft-arch__title" x="590" y="564" text-anchor="middle">you press reveal</text>
+<text class="raft-arch__sub" x="590" y="590" text-anchor="middle">the answer lives behind a gate</text>
+<text class="raft-arch__sub" x="590" y="606" text-anchor="middle">on the api that the ranker</text>
+<text class="raft-arch__sub" x="590" y="622" text-anchor="middle">never calls, so the score you</text>
+<text class="raft-arch__sub" x="590" y="638" text-anchor="middle">saw was made blind. same gate</text>
+<text class="raft-arch__sub" x="590" y="654" text-anchor="middle">the benchmark runs behind.</text>
+</svg>
