@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="raft-arch" viewBox="0 63 720 497" role="img" aria-labelledby="verdict-title verdict-desc">
+<style>
+  svg { font-family: Georgia, "Times New Roman", serif; }
+  .raft-arch__box { fill: none; stroke: #cccccc; stroke-width: 1; }
+  .raft-arch__zone { stroke: #cccccc; stroke-width: 1; stroke-dasharray: 5 5; }
+  .raft-arch__edge { fill: none; stroke: #cccccc; stroke-width: 1.25; }
+  .raft-arch__arrow { fill: #cccccc; }
+  .raft-arch__dot { fill: none; stroke: #000000; stroke-width: 1.25; }
+  .raft-arch__dot--leader { fill: #000000; }
+  .raft-arch__dot--dead { stroke: #cccccc; }
+  .raft-arch__x { fill: none; stroke: #444444; stroke-width: 1.25; }
+  .raft-arch__ring { fill: none; stroke: #000000; stroke-width: 1; stroke-dasharray: 3 3; }
+  .raft-arch__title { fill: #000000; font-size: 15px; }
+  .raft-arch__sub, .raft-arch__edge-label { fill: #444444; font-size: 12px; }
+</style>
+<rect x="0" y="63" width="720" height="497" fill="#ffffff"></rect>
+
+<title id="verdict-title">how five services become one ranked answer</title>
+<desc id="verdict-desc">five services, left to right: frontend, checkout, recommendation, cart, catalog. at first every service sits inside its own rolling baseline and nothing is flagged. at five seconds a deployment lands on recommendation, which puts a marker on the timeline but proves nothing by itself. two seconds later recommendation's memory strays past its baseline and it is flagged first, which is what the temporal precedence feature records. checkout calls recommendation and the frontend calls checkout, so their latency and errors follow and they are flagged too, and failed requests all route through recommendation. the fixed weighted sum then ranks recommendation first at 0.86; checkout and the frontend score too, but the contradiction penalty pulls them down because they went wrong after the service they depend on.</desc>
+
+<circle class="raft-arch__dot" cx="40" cy="90" r="8"></circle>
+<circle class="raft-arch__dot" cx="64" cy="90" r="8"></circle>
+<circle class="raft-arch__dot" cx="88" cy="90" r="8"></circle>
+<circle class="raft-arch__dot" cx="112" cy="90" r="8"></circle>
+<circle class="raft-arch__dot" cx="136" cy="90" r="8"></circle>
+<text class="raft-arch__title" x="220" y="82">everything is fine</text>
+<text class="raft-arch__sub" x="220" y="104">each service has a rolling baseline of its own normal, a median and a spread</text>
+<text class="raft-arch__sub" x="220" y="120">over the last few minutes. nothing has strayed, so nothing is flagged.</text>
+
+<line class="raft-arch__zone" x1="40" y1="146" x2="690" y2="146"></line>
+
+<circle class="raft-arch__dot" cx="40" cy="190" r="8"></circle>
+<circle class="raft-arch__dot" cx="64" cy="190" r="8"></circle>
+<circle class="raft-arch__ring" cx="88" cy="190" r="13"></circle>
+<circle class="raft-arch__dot" cx="88" cy="190" r="8"></circle>
+<circle class="raft-arch__dot" cx="112" cy="190" r="8"></circle>
+<circle class="raft-arch__dot" cx="136" cy="190" r="8"></circle>
+<text class="raft-arch__title" x="220" y="182">a deploy lands on recommendation</text>
+<text class="raft-arch__sub" x="220" y="204">five seconds in, the timeline gets a marker. on its own that proves nothing,</text>
+<text class="raft-arch__sub" x="220" y="220">and the score says so: change proximity is one of nine inputs, weighted a tenth.</text>
+
+<line class="raft-arch__zone" x1="40" y1="246" x2="690" y2="246"></line>
+
+<circle class="raft-arch__dot" cx="40" cy="290" r="8"></circle>
+<circle class="raft-arch__dot" cx="64" cy="290" r="8"></circle>
+<circle class="raft-arch__ring" cx="88" cy="290" r="13"></circle>
+<circle class="raft-arch__dot raft-arch__dot--dead" cx="88" cy="290" r="8"></circle>
+<path class="raft-arch__x" d="M 82 284 L 94 296 M 82 296 L 94 284"></path>
+<circle class="raft-arch__dot" cx="112" cy="290" r="8"></circle>
+<circle class="raft-arch__dot" cx="136" cy="290" r="8"></circle>
+<text class="raft-arch__title" x="220" y="282">its memory strays first</text>
+<text class="raft-arch__sub" x="220" y="304">the z-score climbs past the baseline and recommendation is flagged, before</text>
+<text class="raft-arch__sub" x="220" y="320">anything that calls it. that order is what temporal precedence measures.</text>
+
+<line class="raft-arch__zone" x1="40" y1="346" x2="690" y2="346"></line>
+
+<circle class="raft-arch__dot raft-arch__dot--dead" cx="40" cy="390" r="8"></circle>
+<path class="raft-arch__x" d="M 34 384 L 46 396 M 34 396 L 46 384"></path>
+<circle class="raft-arch__dot raft-arch__dot--dead" cx="64" cy="390" r="8"></circle>
+<path class="raft-arch__x" d="M 58 384 L 70 396 M 58 396 L 70 384"></path>
+<circle class="raft-arch__ring" cx="88" cy="390" r="13"></circle>
+<circle class="raft-arch__dot raft-arch__dot--dead" cx="88" cy="390" r="8"></circle>
+<path class="raft-arch__x" d="M 82 384 L 94 396 M 82 396 L 94 384"></path>
+<circle class="raft-arch__dot" cx="112" cy="390" r="8"></circle>
+<circle class="raft-arch__dot" cx="136" cy="390" r="8"></circle>
+<text class="raft-arch__title" x="220" y="382">the symptoms spread</text>
+<text class="raft-arch__sub" x="220" y="404">checkout calls recommendation and the frontend calls checkout, so two seconds</text>
+<text class="raft-arch__sub" x="220" y="420">later their latency and errors follow. every failed request routes through recommendation.</text>
+
+<line class="raft-arch__zone" x1="40" y1="446" x2="690" y2="446"></line>
+
+<circle class="raft-arch__dot raft-arch__dot--dead" cx="40" cy="490" r="8"></circle>
+<path class="raft-arch__x" d="M 34 484 L 46 496 M 34 496 L 46 484"></path>
+<circle class="raft-arch__dot raft-arch__dot--dead" cx="64" cy="490" r="8"></circle>
+<path class="raft-arch__x" d="M 58 484 L 70 496 M 58 496 L 70 484"></path>
+<circle class="raft-arch__dot raft-arch__dot--leader" cx="88" cy="490" r="8"></circle>
+<circle class="raft-arch__dot" cx="112" cy="490" r="8"></circle>
+<circle class="raft-arch__dot" cx="136" cy="490" r="8"></circle>
+<text class="raft-arch__title" x="220" y="482">the verdict: recommendation, at 0.86</text>
+<text class="raft-arch__sub" x="220" y="504">checkout and the frontend score too, and the contradiction penalty pulls them</text>
+<text class="raft-arch__sub" x="220" y="520">down: they went wrong after the service they depend on. click the 0.86 to see all nine parts.</text>
+</svg>

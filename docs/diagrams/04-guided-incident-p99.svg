@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="raft-arch" viewBox="0 0 720 420" role="img" aria-labelledby="lat-title lat-desc">
+<style>
+  svg { font-family: Georgia, "Times New Roman", serif; }
+  .raft-arch__box { fill: none; stroke: #cccccc; stroke-width: 1; }
+  .raft-arch__zone { stroke: #cccccc; stroke-width: 1; stroke-dasharray: 5 5; }
+  .raft-arch__edge { fill: none; stroke: #cccccc; stroke-width: 1.25; }
+  .raft-arch__arrow { fill: #cccccc; }
+  .raft-arch__dot { fill: none; stroke: #000000; stroke-width: 1.25; }
+  .raft-arch__dot--leader { fill: #000000; }
+  .raft-arch__dot--dead { stroke: #cccccc; }
+  .raft-arch__x { fill: none; stroke: #444444; stroke-width: 1.25; }
+  .raft-arch__ring { fill: none; stroke: #000000; stroke-width: 1; stroke-dasharray: 3 3; }
+  .raft-arch__title { fill: #000000; font-size: 15px; }
+  .raft-arch__sub, .raft-arch__edge-label { fill: #444444; font-size: 12px; }
+</style>
+<rect x="0" y="0" width="720" height="420" fill="#ffffff"></rect>
+
+<title id="lat-title">the guided incident, as the engine sees it</title>
+<desc id="lat-desc">p99 latency per service over the fifteen seconds of the guided incident, on the event-time clock. all five services sit at 40 milliseconds. a deployment marker lands at five seconds. recommendation starts climbing in the same second and reaches 314 milliseconds by the end. checkout and the frontend start climbing two seconds later, at seven seconds, and end near 202 milliseconds, following the same curve as each other. cart and the product catalog stay flat at 40 the whole time. the values are the ddsketch p99 from the heatmap, so the chart and the box above agree.</desc>
+<line class="raft-arch__zone" x1="60" y1="330.0" x2="700" y2="330.0"></line>
+<text class="raft-arch__sub" x="52" y="334.0" text-anchor="end">0</text>
+<line class="raft-arch__zone" x1="60" y1="241.8" x2="700" y2="241.8"></line>
+<text class="raft-arch__sub" x="52" y="245.76470588235293" text-anchor="end">100</text>
+<line class="raft-arch__zone" x1="60" y1="153.5" x2="700" y2="153.5"></line>
+<text class="raft-arch__sub" x="52" y="157.52941176470588" text-anchor="end">200</text>
+<line class="raft-arch__zone" x1="60" y1="65.3" x2="700" y2="65.3"></line>
+<text class="raft-arch__sub" x="52" y="69.29411764705884" text-anchor="end">300</text>
+<text class="raft-arch__sub" x="52" y="20" text-anchor="end">p99 ms</text>
+<text class="raft-arch__sub" x="60.0" y="348" text-anchor="middle">0s</text>
+<text class="raft-arch__sub" x="273.33333333333337" y="348" text-anchor="middle">5s</text>
+<text class="raft-arch__sub" x="486.6666666666667" y="348" text-anchor="middle">10s</text>
+<text class="raft-arch__sub" x="700.0" y="348" text-anchor="middle">15s</text>
+<line class="raft-arch__edge" x1="60" y1="330" x2="700" y2="330"></line>
+<text class="raft-arch__sub" x="380" y="368" text-anchor="middle">event time, not wall time: when it happened, not when it arrived</text>
+<line class="raft-arch__zone" x1="273.3" y1="24" x2="273.3" y2="330" style="stroke:#000"></line>
+<text class="raft-arch__sub" x="279.33333333333337" y="36" text-anchor="start">deploy lands on recommendation</text>
+<polyline points="60.0,294.7 102.7,294.7 145.3,294.7 188.0,294.7 230.7,294.7 273.3,294.7 316.0,294.7 358.7,294.7 401.3,294.7 444.0,294.7 486.7,294.7 529.3,294.7 572.0,294.7 614.7,294.7 657.3,294.7 700.0,294.7" style="fill:none;stroke:#cccccc;stroke-width:1.25"></polyline>
+<polyline points="60.0,294.7 102.7,294.7 145.3,294.7 188.0,294.7 230.7,294.7 273.3,294.7 316.0,294.7 358.7,294.7 401.3,294.7 444.0,294.7 486.7,294.7 529.3,294.7 572.0,294.7 614.7,294.7 657.3,294.7 700.0,294.7" style="fill:none;stroke:#cccccc;stroke-width:1.25;stroke-dasharray:4 3"></polyline>
+<polyline points="60.0,294.7 102.7,294.7 145.3,294.7 188.0,294.7 230.7,294.7 273.3,294.7 316.0,294.7 358.7,278.3 401.3,263.0 444.0,246.5 486.7,232.0 529.3,215.0 572.0,200.3 614.7,183.8 657.3,168.4 700.0,151.4" style="fill:none;stroke:#777777;stroke-width:1.5"></polyline>
+<polyline points="60.0,294.7 102.7,294.7 145.3,294.7 188.0,294.7 230.7,294.7 273.3,294.7 316.0,294.7 358.7,278.3 401.3,263.0 444.0,246.5 486.7,232.0 529.3,215.0 572.0,200.3 614.7,183.8 657.3,168.4 700.0,151.4" style="fill:none;stroke:#777777;stroke-width:1.5;stroke-dasharray:6 3"></polyline>
+<polyline points="60.0,294.7 102.7,294.7 145.3,294.7 188.0,294.7 230.7,294.7 273.3,272.9 316.0,251.4 358.7,228.0 401.3,205.4 444.0,183.8 486.7,161.8 529.3,140.4 572.0,116.2 614.7,98.4 657.3,74.1 700.0,52.7" style="fill:none;stroke:#000000;stroke-width:1.75"></polyline>
+<text class="raft-arch__sub" x="696.0" y="44.73366769659822" text-anchor="end">recommendation, 314 ms</text>
+<text class="raft-arch__sub" x="696.0" y="143.4330028154519" text-anchor="end">checkout and frontend, 202 ms</text>
+<text class="raft-arch__sub" x="696.0" y="286.70588235294116" text-anchor="end">cart and catalog, flat at 40 ms</text>
+<text class="raft-arch__sub" x="407.3333333333333" y="252.94117647058823" text-anchor="start">the callers follow two seconds later</text>
+<text class="raft-arch__sub" x="360" y="400" text-anchor="middle">this is the order a dashboard cannot show you, because by the time you open it, all three lines are already high.</text>
+</svg>

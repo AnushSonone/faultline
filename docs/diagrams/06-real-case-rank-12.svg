@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="raft-arch" viewBox="0 0 720 470" role="img" aria-labelledby="real-title real-desc">
+<style>
+  svg { font-family: Georgia, "Times New Roman", serif; }
+  .raft-arch__box { fill: none; stroke: #cccccc; stroke-width: 1; }
+  .raft-arch__zone { stroke: #cccccc; stroke-width: 1; stroke-dasharray: 5 5; }
+  .raft-arch__edge { fill: none; stroke: #cccccc; stroke-width: 1.25; }
+  .raft-arch__arrow { fill: #cccccc; }
+  .raft-arch__dot { fill: none; stroke: #000000; stroke-width: 1.25; }
+  .raft-arch__dot--leader { fill: #000000; }
+  .raft-arch__dot--dead { stroke: #cccccc; }
+  .raft-arch__x { fill: none; stroke: #444444; stroke-width: 1.25; }
+  .raft-arch__ring { fill: none; stroke: #000000; stroke-width: 1; stroke-dasharray: 3 3; }
+  .raft-arch__title { fill: #000000; font-size: 15px; }
+  .raft-arch__sub, .raft-arch__edge-label { fill: #444444; font-size: 12px; }
+</style>
+<rect x="0" y="0" width="720" height="470" fill="#ffffff"></rect>
+
+<title id="real-title">a real cpu fault on the email service, and why it lands at rank 12</title>
+<desc id="real-desc">the call graph the engine actually reconstructed from the sampled traces of a real rcaeval case: the frontend calls checkout, currency, the product catalog, and recommendation; checkout calls currency, email, payment, and the product catalog; recommendation calls the product catalog. every one of the twelve services is drawn crossed, because every one of them strayed from its own baseline during the fault. five services, ad, cart, shipping, redis, and the external frontend, appear only in metrics because the one-in-eight trace sample never caught a call to them. the true cause, email, is filled and ranked twelfth at 0.15; currency is ranked first at 0.39.</desc>
+<defs><marker id="real-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="raft-arch__arrow" d="M 0 0 L 10 5 L 0 10 z"></path></marker></defs>
+<line class="raft-arch__edge" x1="300" y1="196" x2="480" y2="158" marker-end="url(#real-arrow)"></line>
+<line class="raft-arch__edge" x1="300" y1="196" x2="300" y2="258" marker-end="url(#real-arrow)"></line>
+<line class="raft-arch__edge" x1="300" y1="196" x2="480" y2="258" marker-end="url(#real-arrow)"></line>
+<line class="raft-arch__edge" x1="300" y1="196" x2="120" y2="258" marker-end="url(#real-arrow)"></line>
+<line class="raft-arch__edge" x1="300" y1="96" x2="300" y2="158" marker-end="url(#real-arrow)"></line>
+<line class="raft-arch__edge" x1="300" y1="96" x2="480" y2="158" marker-end="url(#real-arrow)"></line>
+<line class="raft-arch__edge" x1="300" y1="96" x2="120" y2="258" marker-end="url(#real-arrow)"></line>
+<line class="raft-arch__edge" x1="300" y1="96" x2="120" y2="158" marker-end="url(#real-arrow)"></line>
+<line class="raft-arch__edge" x1="120" y1="196" x2="120" y2="258" marker-end="url(#real-arrow)"></line>
+<rect class="raft-arch__box" x="248.0" y="60" width="104" height="36"></rect>
+<text class="raft-arch__sub" x="300" y="83" text-anchor="middle">frontend</text>
+<path class="raft-arch__x" d="M 246.0 58 L 258.0 70 M 246.0 70 L 258.0 58"></path>
+<text class="raft-arch__sub" x="300" y="110" text-anchor="middle">rank 8, 0.31</text>
+<rect class="raft-arch__box" x="68.0" y="160" width="104" height="36"></rect>
+<text class="raft-arch__sub" x="120" y="183" text-anchor="middle">recommendation</text>
+<path class="raft-arch__x" d="M 66.0 158 L 78.0 170 M 66.0 170 L 78.0 158"></path>
+<text class="raft-arch__sub" x="120" y="210" text-anchor="middle">rank 2, 0.37</text>
+<rect class="raft-arch__box" x="248.0" y="160" width="104" height="36"></rect>
+<text class="raft-arch__sub" x="300" y="183" text-anchor="middle">checkout</text>
+<path class="raft-arch__x" d="M 246.0 158 L 258.0 170 M 246.0 170 L 258.0 158"></path>
+<text class="raft-arch__sub" x="300" y="210" text-anchor="middle">rank 4, 0.33</text>
+<rect class="raft-arch__box" x="428.0" y="160" width="104" height="36"></rect>
+<text class="raft-arch__sub" x="480" y="183" text-anchor="middle">currency</text>
+<path class="raft-arch__x" d="M 426.0 158 L 438.0 170 M 426.0 170 L 438.0 158"></path>
+<text class="raft-arch__sub" x="480" y="210" text-anchor="middle">rank 1, 0.39</text>
+<rect class="raft-arch__box" x="68.0" y="260" width="104" height="36"></rect>
+<text class="raft-arch__sub" x="120" y="283" text-anchor="middle">productcatalog</text>
+<path class="raft-arch__x" d="M 66.0 258 L 78.0 270 M 66.0 270 L 78.0 258"></path>
+<text class="raft-arch__sub" x="120" y="310" text-anchor="middle">rank 3, 0.33</text>
+<rect class="raft-arch__box" x="248.0" y="260" width="104" height="36" style="fill:#000"></rect>
+<text class="raft-arch__sub" x="300" y="283" text-anchor="middle" style="fill:#fff">email</text>
+<path class="raft-arch__x" d="M 246.0 258 L 258.0 270 M 246.0 270 L 258.0 258"></path>
+<text class="raft-arch__sub" x="300" y="310" text-anchor="middle">rank 12, 0.15</text>
+<rect class="raft-arch__box" x="428.0" y="260" width="104" height="36"></rect>
+<text class="raft-arch__sub" x="480" y="283" text-anchor="middle">payment</text>
+<path class="raft-arch__x" d="M 426.0 258 L 438.0 270 M 426.0 270 L 438.0 258"></path>
+<text class="raft-arch__sub" x="480" y="310" text-anchor="middle">rank 11, 0.16</text>
+<line class="raft-arch__zone" x1="560" y1="40" x2="560" y2="350"></line>
+<text class="raft-arch__sub" x="636" y="58" text-anchor="middle">seen only in metrics:</text>
+<text class="raft-arch__sub" x="636" y="74" text-anchor="middle">the 1-in-8 trace sample</text>
+<text class="raft-arch__sub" x="636" y="90" text-anchor="middle">never caught a call to them</text>
+<rect class="raft-arch__box" x="584" y="108" width="104" height="28"></rect>
+<text class="raft-arch__sub" x="636" y="127" text-anchor="middle">shipping</text>
+<path class="raft-arch__x" d="M 582 106 L 594 118 M 582 118 L 594 106"></path>
+<text class="raft-arch__sub" x="636" y="150" text-anchor="middle">rank 5, 0.32</text>
+<rect class="raft-arch__box" x="584" y="158" width="104" height="28"></rect>
+<text class="raft-arch__sub" x="636" y="177" text-anchor="middle">ad</text>
+<path class="raft-arch__x" d="M 582 156 L 594 168 M 582 168 L 594 156"></path>
+<text class="raft-arch__sub" x="636" y="200" text-anchor="middle">rank 6, 0.31</text>
+<rect class="raft-arch__box" x="584" y="208" width="104" height="28"></rect>
+<text class="raft-arch__sub" x="636" y="227" text-anchor="middle">cart</text>
+<path class="raft-arch__x" d="M 582 206 L 594 218 M 582 218 L 594 206"></path>
+<text class="raft-arch__sub" x="636" y="250" text-anchor="middle">rank 7, 0.31</text>
+<rect class="raft-arch__box" x="584" y="258" width="104" height="28"></rect>
+<text class="raft-arch__sub" x="636" y="277" text-anchor="middle">frontend-external</text>
+<path class="raft-arch__x" d="M 582 256 L 594 268 M 582 268 L 594 256"></path>
+<text class="raft-arch__sub" x="636" y="300" text-anchor="middle">rank 9, 0.31</text>
+<rect class="raft-arch__box" x="584" y="308" width="104" height="28"></rect>
+<text class="raft-arch__sub" x="636" y="327" text-anchor="middle">redis</text>
+<path class="raft-arch__x" d="M 582 306 L 594 318 M 582 318 L 594 306"></path>
+<text class="raft-arch__sub" x="636" y="350" text-anchor="middle">rank 10, 0.20</text>
+<text class="raft-arch__sub" x="360" y="392" text-anchor="middle">every box is crossed: on real telemetry, everything strays at once, so anomaly strength is a tie twelve ways.</text>
+<text class="raft-arch__sub" x="360" y="410" text-anchor="middle">the ranking is then decided by the small features, and by the penalty, which is exactly backwards for a leaf service.</text>
+<text class="raft-arch__sub" x="360" y="428" text-anchor="middle">a plain z-score threshold ignores the graph entirely and, on these fifteen cases, gets the answer 93% of the time.</text>
+</svg>

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="raft-arch" viewBox="0 0 720 470" role="img" aria-labelledby="score-title score-desc">
+<style>
+  svg { font-family: Georgia, "Times New Roman", serif; }
+  .raft-arch__box { fill: none; stroke: #cccccc; stroke-width: 1; }
+  .raft-arch__zone { stroke: #cccccc; stroke-width: 1; stroke-dasharray: 5 5; }
+  .raft-arch__edge { fill: none; stroke: #cccccc; stroke-width: 1.25; }
+  .raft-arch__arrow { fill: #cccccc; }
+  .raft-arch__dot { fill: none; stroke: #000000; stroke-width: 1.25; }
+  .raft-arch__dot--leader { fill: #000000; }
+  .raft-arch__dot--dead { stroke: #cccccc; }
+  .raft-arch__x { fill: none; stroke: #444444; stroke-width: 1.25; }
+  .raft-arch__ring { fill: none; stroke: #000000; stroke-width: 1; stroke-dasharray: 3 3; }
+  .raft-arch__title { fill: #000000; font-size: 15px; }
+  .raft-arch__sub, .raft-arch__edge-label { fill: #444444; font-size: 12px; }
+</style>
+<rect x="0" y="0" width="720" height="470" fill="#ffffff"></rect>
+
+<title id="score-title">two verdicts taken apart</title>
+<desc id="score-desc">stacked bars of the nine score components for the top three candidates in the guided incident, and for three candidates in a real cpu fault on the email service. in the guided case recommendation scores 0.86, with anomaly strength, precedence, failed trace coverage, critical path, topology, and the nearby deploy all contributing, while checkout and the frontend score 0.48 and 0.46 mostly from anomaly strength and failed traces. in the real case every service has the same saturated anomaly strength and nearly the same precedence, so the currency service leads at 0.39 on a hair of topology, and the email service, the true cause, sits at 0.15 because it takes the full contradiction penalty.</desc>
+<text class="raft-arch__title" x="20" y="22" text-anchor="start">the guided incident: recommendation, taken apart</text>
+<text class="raft-arch__sub" x="105" y="57" text-anchor="end">recommendation</text>
+<rect x="180.0" y="40" width="100.0" height="24" style="fill:#000000;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="230.0" y="56" text-anchor="middle" style="fill:#fff">anomaly</text>
+<rect x="280.0" y="40" width="75.0" height="24" style="fill:#2a2a2a;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="317.5" y="56" text-anchor="middle" style="fill:#fff">precedence</text>
+<rect x="355.0" y="40" width="65.6" height="24" style="fill:#4a4a4a;stroke:#fff;stroke-width:1"></rect>
+<rect x="420.6" y="40" width="55.5" height="24" style="fill:#6a6a6a;stroke:#fff;stroke-width:1"></rect>
+<rect x="476.2" y="40" width="25.0" height="24" style="fill:#8a8a8a;stroke:#fff;stroke-width:1"></rect>
+<rect x="501.2" y="40" width="50.0" height="24" style="fill:#a6a6a6;stroke:#fff;stroke-width:1"></rect>
+<rect x="551.2" y="40" width="50.0" height="24" style="fill:#bfbfbf;stroke:#fff;stroke-width:1"></rect>
+<rect x="601.2" y="40" width="8.3" height="24" style="fill:#d9d9d9;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__title" x="617.4939192427511" y="57" text-anchor="start">0.86</text>
+<text class="raft-arch__sub" x="105" y="97" text-anchor="end">checkout</text>
+<rect x="180.0" y="80" width="100.0" height="24" style="fill:#000000;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="230.0" y="96" text-anchor="middle" style="fill:#fff">anomaly</text>
+<rect x="280.0" y="80" width="37.5" height="24" style="fill:#2a2a2a;stroke:#fff;stroke-width:1"></rect>
+<rect x="317.5" y="80" width="65.6" height="24" style="fill:#4a4a4a;stroke:#fff;stroke-width:1"></rect>
+<rect x="383.1" y="80" width="12.5" height="24" style="fill:#8a8a8a;stroke:#fff;stroke-width:1"></rect>
+<rect x="395.6" y="80" width="25.0" height="24" style="fill:#a6a6a6;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__title" x="428.625" y="97" text-anchor="start">0.48</text>
+<text class="raft-arch__sub" x="105" y="137" text-anchor="end">frontend</text>
+<rect x="180.0" y="120" width="100.0" height="24" style="fill:#000000;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="230.0" y="136" text-anchor="middle" style="fill:#fff">anomaly</text>
+<rect x="280.0" y="120" width="37.5" height="24" style="fill:#2a2a2a;stroke:#fff;stroke-width:1"></rect>
+<rect x="317.5" y="120" width="75.0" height="24" style="fill:#4a4a4a;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="355.0" y="136" text-anchor="middle" style="fill:#fff">failed traces</text>
+<rect x="392.5" y="120" width="19.5" height="24" style="fill:#6a6a6a;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__title" x="419.9644140905823" y="137" text-anchor="start">0.46</text>
+<text class="raft-arch__title" x="20" y="190" text-anchor="start">a real cpu fault on email, taken apart. rank 1, rank 2, and the true cause at rank 12</text>
+<text class="raft-arch__sub" x="105" y="225" text-anchor="end">currency</text>
+<rect x="180.0" y="208" width="100.0" height="24" style="fill:#000000;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="230.0" y="224" text-anchor="middle" style="fill:#fff">anomaly</text>
+<rect x="280.0" y="208" width="75.0" height="24" style="fill:#2a2a2a;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="317.5" y="224" text-anchor="middle" style="fill:#fff">precedence</text>
+<rect x="355.0" y="208" width="9.1" height="24" style="fill:#8a8a8a;stroke:#fff;stroke-width:1"></rect>
+<rect x="364.1" y="208" width="9.1" height="24" style="fill:#a6a6a6;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__title" x="381.18181818181813" y="225" text-anchor="start">0.39</text>
+<text class="raft-arch__sub" x="105" y="265" text-anchor="end">recommendation</text>
+<rect x="180.0" y="248" width="100.0" height="24" style="fill:#000000;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="230.0" y="264" text-anchor="middle" style="fill:#fff">anomaly</text>
+<rect x="280.0" y="248" width="75.0" height="24" style="fill:#2a2a2a;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="317.5" y="264" text-anchor="middle" style="fill:#fff">precedence</text>
+<rect x="355.0" y="248" width="4.5" height="24" style="fill:#8a8a8a;stroke:#fff;stroke-width:1"></rect>
+<rect x="359.5" y="248" width="4.5" height="24" style="fill:#a6a6a6;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__title" x="372.0909090909091" y="265" text-anchor="start">0.37</text>
+<text class="raft-arch__sub" x="105" y="305" text-anchor="end">email</text>
+<rect x="180.0" y="288" width="100.0" height="24" style="fill:#000000;stroke:#fff;stroke-width:1"></rect>
+<text class="raft-arch__sub" x="230.0" y="304" text-anchor="middle" style="fill:#fff">anomaly</text>
+<rect x="280.0" y="288" width="6.8" height="24" style="fill:#2a2a2a;stroke:#fff;stroke-width:1"></rect>
+<rect x="286.8" y="288" width="9.1" height="24" style="fill:#8a8a8a;stroke:#fff;stroke-width:1"></rect>
+<rect x="295.9" y="288" width="9.1" height="24" style="fill:#a6a6a6;stroke:#fff;stroke-width:1"></rect>
+<rect x="130.0" y="288" width="50.0" height="24" style="fill:none;stroke:#000;stroke-width:1.25;stroke-dasharray:3 2"></rect>
+<text class="raft-arch__sub" x="155.0" y="304" text-anchor="middle">-0.10</text>
+<text class="raft-arch__title" x="312.99999999999994" y="305" text-anchor="start">0.15</text>
+<text class="raft-arch__sub" x="20" y="340" text-anchor="start">the nine parts, left to right in every bar:</text>
+<rect x="20" y="350" width="14" height="14" style="fill:#000000"></rect>
+<text class="raft-arch__sub" x="40" y="362" text-anchor="start">anomaly</text>
+<rect x="156" y="350" width="14" height="14" style="fill:#2a2a2a"></rect>
+<text class="raft-arch__sub" x="176" y="362" text-anchor="start">precedence</text>
+<rect x="292" y="350" width="14" height="14" style="fill:#4a4a4a"></rect>
+<text class="raft-arch__sub" x="312" y="362" text-anchor="start">failed traces</text>
+<rect x="428" y="350" width="14" height="14" style="fill:#6a6a6a"></rect>
+<text class="raft-arch__sub" x="448" y="362" text-anchor="start">critical path</text>
+<rect x="564" y="350" width="14" height="14" style="fill:#8a8a8a"></rect>
+<text class="raft-arch__sub" x="584" y="362" text-anchor="start">downstream</text>
+<rect x="20" y="376" width="14" height="14" style="fill:#a6a6a6"></rect>
+<text class="raft-arch__sub" x="40" y="388" text-anchor="start">topology</text>
+<rect x="156" y="376" width="14" height="14" style="fill:#bfbfbf"></rect>
+<text class="raft-arch__sub" x="176" y="388" text-anchor="start">deploy nearby</text>
+<rect x="292" y="376" width="14" height="14" style="fill:#d9d9d9"></rect>
+<text class="raft-arch__sub" x="312" y="388" text-anchor="start">logs</text>
+<rect x="428" y="376" width="14" height="14" style="fill:none;stroke:#000;stroke-width:1.25;stroke-dasharray:3 2"></rect>
+<text class="raft-arch__sub" x="448" y="388" text-anchor="start">contradiction</text>
+<text class="raft-arch__sub" x="360" y="430" text-anchor="middle">the dashed box hanging off the left is the contradiction penalty: a service whose callers went wrong before it did loses a tenth.</text>
+<text class="raft-arch__sub" x="360" y="448" text-anchor="middle">in the real case that tenth is the entire gap between rank 1 and rank 12.</text>
+</svg>
