@@ -14,8 +14,8 @@ by the engine as events arrive, out-of-order safe. Downstream, checkout and
 frontend latency follow."
 
 **0:45-1:20 - Root causes (Root causes tab)**
-"The ranking pinned recommendationservice at 0.92. This isn't a guess - it's a
-weighted sum of ten deterministic features. Click the score: anomaly strength,
+"The ranking pinned recommendationservice at 0.86. This isn't a guess - it's a
+weighted sum of nine deterministic features. Click the score: anomaly strength,
 temporal precedence, dependency topology, each with its weight and
 contribution. Click a component and the evidence list filters to the raw
 telemetry behind it. Contradicting evidence stays visible - the system argues

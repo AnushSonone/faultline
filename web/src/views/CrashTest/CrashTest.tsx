@@ -54,7 +54,8 @@ export function CrashTestPanel() {
               : "idle"}
         </span>
         <InfoTip>
-          Crash test discards all in-memory session state, then restores it from the latest
+          A checkpoint is a saved snapshot of the engine's state that it can restart
+          from. Crash test discards all in-memory session state, then restores it from the latest
           on-disk checkpoint. This demonstrates checkpoint recovery with idempotent projections,
           not exactly-once delivery.
         </InfoTip>

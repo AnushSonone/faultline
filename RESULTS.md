@@ -44,11 +44,42 @@ nothing here: RCAEval has no deployment events, and status codes plus sampled tr
 little error signal for these fault types. For external context, the RCAEval paper (WWW'25,
 arXiv 2412.17015) reports coarse-grained RE2 results on Train Ticket, not Online Boutique, as
 Avg@5: CIRCA 0.46, RCD 0.54 - a different system and metric, so not directly comparable to the
-top-1 numbers above. No published AC@1 for RE2-OB exists to compare against; any baseline
-comparison must come from running the RCAEval harness locally under the same protocol.
+top-1 numbers above. No published AC@1 for RE2-OB exists to compare against, so the baselines were run locally
+under the same protocol (next section).
 Improving real-data accuracy (metric-name semantics, trace latency deltas as anomaly input,
 tuned weights on a training split) is future work and must be reported against these same
 untuned numbers.
+
+## Baselines run locally on the same 15 cases (2026-08-03)
+
+RCAEval 1.6.0 (pip) run on the exact 15 Phase A cases from `datasets/raw/data`, same
+`inject_time.txt`, coarse-grained service scoring over the 12 candidate services the metrics
+carry (adservice, cartservice, checkoutservice, currencyservice, emailservice, frontend,
+frontend-external, paymentservice, productcatalogservice, recommendationservice, redis,
+shippingservice):
+
+| method | AC@1 | AC@3 | Avg@5 |
+|---|---|---|---|
+| nsigma (z-score threshold, `RCAEval.e2e.nsigma`) | 0.933 | >= 0.933 | 0.960 |
+| BARO | 0.133 | 0.933 | 0.760 |
+| faultline (untuned, this pipeline) | 0.267 | 0.467 | 0.414 |
+
+nsigma took rank 1 on 14 of 15. BARO sits at rank 2 on 11 of 15, outranked by `redis`, which
+is why its AC@1 is low and its AC@3 is high. Faultline beats BARO at top-1 only.
+
+**Honest read:** a plain median/MAD z-score threshold localizes the broken service 93% of the
+time where the full evidence pipeline gets 27%. `crates/inference/src/baseline.rs` already
+computes that same robust z-score, so the evidence-graph reranking is burying the signal rather
+than sharpening it, which matches the bimodal rank distribution (7 cases at rank 1-3, 8 cases at
+rank 8-12, nothing between). Fix, not yet built: score magnitude first, topology and precedence
+as tie-breakers, re-run the same 15 cases.
+
+Caveats: the benchmark's methods receive `inject_time` and compare before/after, while faultline
+detects onset itself; the baselines are metrics-only on the full `metrics.json` while faultline
+also weighs 1/8-sampled traces and capped logs; the service collapse may differ slightly from
+RCAEval's official scorer. Not run: `e_diagnosis` (needs pyrca), `rcd` (causal-learn API break),
+`mmbaro` (different input schema), `circa` (degenerate, constant rank 4). nsigma is a helper in
+RCAEval's code, not one of the paper's headline baselines. Run artifacts were not committed.
 
 ## Engine benchmarks (TA-049)
 

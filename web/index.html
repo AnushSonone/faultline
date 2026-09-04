@@ -3,10 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Faultline</title>
+    <title>Faultline dev harness (product: anush.wiki/blog/faultline)</title>
+    <style>
+      body { background: #fff; margin: 0; padding: 3rem 0; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Dev harness only. Mirrors the wiki mount in
+         anush-wiki/src/blog/faultline.html. Empty data-api-base keeps the
+         client on same-origin URLs, so the vite dev server proxies /api
+         (HTTP + WS) to faultlined on 127.0.0.1:8080. The wiki page instead
+         sets an absolute origin and relies on faultlined's permissive CORS. -->
+    <section
+      id="faultline-demo-root"
+      class="faultline-demo"
+      aria-label="faultline dev harness"
+      data-api-base=""
+    ></section>
+    <script type="module" src="/src/embed.tsx"></script>
   </body>
 </html>

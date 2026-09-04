@@ -4,7 +4,6 @@ use std::time::Duration;
 
 use anyhow::Result;
 use faultline_api::{router, AppState};
-use tower_http::services::{ServeDir, ServeFile};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
@@ -40,26 +39,12 @@ async fn main() -> Result<()> {
         }
     });
 
-    let mut app = router(state);
+    let app = router(state);
 
-    // Serve the built frontend from the same binary when FAULTLINE_STATIC_DIR
-    // points at a vite build output. API routes keep priority; the fallback
-    // only catches non-API paths. Unset or missing: dev behavior unchanged.
-    match std::env::var("FAULTLINE_STATIC_DIR").map(PathBuf::from) {
-        Ok(dir) if dir.is_dir() => {
-            tracing::info!("serving static frontend from {}", dir.display());
-            let serve = ServeDir::new(&dir).fallback(ServeFile::new(dir.join("index.html")));
-            app = app.fallback_service(serve);
-        }
-        Ok(dir) => {
-            tracing::warn!(
-                "FAULTLINE_STATIC_DIR is not a directory, skipping static serving: {}",
-                dir.display()
-            );
-        }
-        Err(_) => {}
-    }
-
+    // Permissive CORS is load-bearing: the only UI is the embed on
+    // anush.wiki/blog/faultline, which calls this API cross-origin. The
+    // WebSocket stream cannot be proxied by the wiki's host (Vercel), so
+    // same-origin serving is not an option.
     let app = app.layer(tower_http::cors::CorsLayer::permissive());
     let addr = std::env::var("FAULTLINE_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".into());
     let listener = tokio::net::TcpListener::bind(&addr).await?;

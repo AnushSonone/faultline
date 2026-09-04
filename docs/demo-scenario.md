@@ -5,12 +5,12 @@ maps to spec section 5's demo flow. Total runtime ~3 minutes at 10x speed.
 
 | # | Action | What to say / see |
 |---|---|---|
-| 1 | `make demo`, open http://127.0.0.1:5173 | Healthy service graph, all quiet |
+| 1 | `make demo`, open http://127.0.0.1:5173 (dev harness; or the wiki page at http://127.0.0.1:3000/blog/faultline) | Healthy service graph, all quiet |
 | 2 | Press Play | Event-time clock advances; WS projections stream in |
 | 3 | t=5s: deploy marker on timeline | "A deployment lands on recommendationservice" |
 | 4 | Overview: rec memory ramps | Anomaly onset detected by rolling median/MAD baselines |
 | 5 | Signals tab: heatmap | rec row brightens first (streaming DDSketch p99), then checkout/frontend follow |
-| 6 | Root causes tab | Ranking updates as evidence arrives: rec #1 at ~0.92 |
+| 6 | Root causes tab | Ranking updates as evidence arrives: rec #1 at ~0.86 |
 | 7 | Expand #1 card | 9-component score decomposition; click `anomaly_strength` - evidence list filters (spec 20.6) |
 | 8 | Evidence graph | deploy -> precedes -> rec degradation -> propagates_to -> checkout/frontend; dashed red = contradicts |
 | 9 | Signals tab: pick failed trace | Waterfall with critical-path highlight; "Critical path only" filter |

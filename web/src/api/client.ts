@@ -8,7 +8,7 @@ export type StreamHandle = {
 };
 
 // Base origin for API calls. Empty (default) keeps same-origin relative URLs
-// for the standalone app; the blog embed points this at the demo host.
+// for the dev harness; the blog embed points this at the demo host.
 let API_BASE = "";
 
 export function setApiBase(origin: string) {

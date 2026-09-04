@@ -106,6 +106,8 @@ export function AnomalyHeatmap() {
       <p className="panel-caption">
         Cell intensity: approximate p99 via DDSketch (alpha 0.01).
         <InfoTip>
+          Reading it: each row is a service, each column a slice of time. Darker cells
+          mean slower p99 latency, the time the slowest one percent of requests took.{" "}
           {heatmap.streaming_note ? `${heatmap.streaming_note} ` : ""}
           Latency cells show streaming p99 when available. Topology structure remains
           precomputed.

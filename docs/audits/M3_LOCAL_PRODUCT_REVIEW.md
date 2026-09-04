@@ -1,5 +1,9 @@
 # M3 local product review checklist
 
+*(Historical: this checklist reviewed the since-retired standalone UI. The
+product surface is now the embed on anush.wiki/blog/faultline; the :5173 URL
+below is the dev harness.)*
+
 **Branch:** `runtime/m3-event-time-core`  
 **PR:** https://github.com/AnushSonone/faultline/pull/1  
 **Date:** 2026-07-21  

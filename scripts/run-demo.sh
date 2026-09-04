@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# One-command Faultline local demo: faultlined + Vite UI for rec-mem-001.
+# One-command Faultline local demo: faultlined + the Vite dev harness (the
+# product UI is the embed on anush.wiki/blog/faultline).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -141,10 +142,13 @@ cat <<EOF
 
 Faultline demo is running.
 
-  Frontend: ${WEB_URL}
-  API:      ${API_URL}/api/v1/health
-  Fixture:  rec-mem-001 (synthetic Online Boutique MEM fault)
-  Heatmap:  streaming (default)
+  Harness UI: ${WEB_URL}  (dev harness; the product page is anush.wiki/blog/faultline)
+  API:        ${API_URL}/api/v1/health
+  Fixture:    rec-mem-001 (synthetic Online Boutique MEM fault)
+  Heatmap:    streaming (default)
+
+  Full product page locally: run the anush-wiki dev server (npm run dev, port 3000)
+  with this API on :8080, then open http://127.0.0.1:3000/blog/faultline
 
 Press Ctrl+C to stop API + UI cleanly.
 EOF
