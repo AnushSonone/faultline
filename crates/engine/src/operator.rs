@@ -1,6 +1,5 @@
 //! Operator contract for the bounded runtime (TA-023).
 
-use arrow::record_batch::RecordBatch;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -67,13 +66,4 @@ pub trait Operator: Send {
         Ok(())
     }
     fn metrics(&self) -> OperatorMetrics;
-}
-
-/// Helper to wrap a plain RecordBatch as a runtime batch.
-pub fn batch_from_record(signal: faultline_ingest::SignalKind, batch: RecordBatch) -> RuntimeBatch {
-    RuntimeBatch {
-        signal,
-        batch,
-        watermark_ns: None,
-    }
 }

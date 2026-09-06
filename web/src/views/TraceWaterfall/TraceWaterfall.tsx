@@ -20,6 +20,7 @@ type SpanNode = {
 type Filter = "all" | "critical" | "errors";
 
 export function TraceWaterfall() {
+  const sessionId = useInvestigation((s) => s.sessionId);
   const traces = useInvestigation((s) => s.traces);
   const selectedTrace = useInvestigation((s) => s.selectedTrace);
   const selectTrace = useInvestigation((s) => s.selectTrace);
@@ -30,14 +31,14 @@ export function TraceWaterfall() {
   const list = traces?.traces ?? [];
 
   useEffect(() => {
-    if (!selectedTrace) {
+    if (!selectedTrace || !sessionId) {
       setDetail(null);
       return;
     }
-    fetchTrace(selectedTrace)
+    fetchTrace(sessionId, selectedTrace)
       .then((d) => setDetail(d as TraceDetail))
       .catch(() => setDetail(null));
-  }, [selectedTrace]);
+  }, [sessionId, selectedTrace]);
 
   const spans: SpanNode[] = (detail?.dag?.spans ?? []) as SpanNode[];
   const criticalIds = new Set(detail?.critical_path?.span_ids ?? []);

@@ -83,7 +83,7 @@ A tenth feature, `persistence` (anomalous time share of the incident span), is c
 
 ![How the pieces fit together](docs/diagrams/05-how-the-pieces-fit.svg)
 
-The page is served from the wiki; the app inside it talks over HTTPS and a WebSocket to `faultlined` behind a Cloudflare tunnel. `faultlined` holds up to 24 sessions of 15 minutes each (`FAULTLINE_MAX_SESSIONS`, `FAULTLINE_SESSION_TTL_S`), evicts sessions whose page has been gone for 60 s, auto-pauses playback nobody is watching, and serves incidents over 20,000 events precomputed (the streaming heatmap toggle returns 422 above that gate). `FAULTLINE_ALLOWED_INCIDENTS` restricts the catalog. CORS is permissive by design: the wiki host cannot proxy a WebSocket, so the browser must reach the API directly.
+The page is served from the wiki; the app inside it talks over HTTPS and a WebSocket to `faultlined` behind a Cloudflare tunnel. `faultlined` holds up to 24 sessions of 15 minutes each (`FAULTLINE_MAX_SESSIONS`, `FAULTLINE_SESSION_TTL_S`), evicts sessions whose page has been gone for 60 s, auto-pauses playback nobody is watching, and serves incidents over 20,000 events precomputed (the streaming heatmap toggle returns 422 above that gate). `FAULTLINE_ALLOWED_INCIDENTS` restricts the catalog; explicit `incident_path` loads are confined to the fixtures root even without an allowlist. Trace detail and the registered-query list are scoped to the calling session, and a session's checkpoint directory is deleted when it is evicted. CORS is permissive by design: the wiki host cannot proxy a WebSocket, so the browser must reach the API directly.
 
 ```mermaid
 flowchart LR

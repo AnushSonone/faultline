@@ -17,7 +17,6 @@ pub struct IncidentSummary {
     pub incident_id: String,
     pub dataset_id: String,
     pub dataset_version: String,
-    pub path: String,
 }
 
 pub async fn list_incidents(State(state): State<SharedState>) -> Json<Vec<IncidentSummary>> {
@@ -28,7 +27,6 @@ pub async fn list_incidents(State(state): State<SharedState>) -> Json<Vec<Incide
             incident_id: i.incident_id,
             dataset_id: i.dataset_id,
             dataset_version: i.dataset_version,
-            path: i.path.display().to_string(),
         })
         .collect();
     Json(out)
@@ -323,9 +321,21 @@ pub struct QueryRequest {
     pub session_id: Option<String>,
 }
 
-/// Registered queries (TA-047 API surface).
-pub async fn list_queries(State(state): State<SharedState>) -> Json<Value> {
-    Json(json!({ "queries": *state.queries.lock() }))
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct QueryListParams {
+    pub session_id: String,
+}
+
+/// Registered queries for one session (TA-047 API surface).
+pub async fn list_queries(
+    State(state): State<SharedState>,
+    Query(params): Query<QueryListParams>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    with_session(
+        &state,
+        &params.session_id,
+        |s| json!({ "queries": s.queries }),
+    )
 }
 
 /// Validate without executing.
@@ -382,11 +392,7 @@ pub async fn run_query_route(
                     "query.metrics",
                     serde_json::to_value(&result.metrics).unwrap_or(json!({})),
                 );
-                let mut queries = state.queries.lock();
-                if !queries.iter().any(|q| q["sql"] == body.sql) {
-                    let id = queries.len() + 1;
-                    queries.push(json!({ "id": id, "sql": body.sql }));
-                }
+                session.register_query(&body.sql);
                 Ok(Json(json!({ "result": result, "explain": explain })))
             }
             Err(e) => Err((StatusCode::BAD_REQUEST, Json(json!({ "error": e })))),
@@ -459,20 +465,21 @@ pub async fn session_case(
     })
 }
 
+/// Trace detail scoped to the caller's session, so one visitor cannot read
+/// traces out of another visitor's replay.
 pub async fn get_trace(
     State(state): State<SharedState>,
-    Path(trace_id): Path<String>,
+    Path((session_id, trace_id)): Path<(String, String)>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let sessions = state.sessions.lock();
-    for session in sessions.values() {
-        if let Some(dag) = session.get_trace(&trace_id) {
-            return Ok(Json(serde_json::to_value(dag).unwrap_or(json!({}))));
-        }
-    }
-    Err((
-        StatusCode::NOT_FOUND,
-        Json(json!({"error": "trace not found"})),
-    ))
+    with_session_try(&state, &session_id, |session| {
+        session
+            .get_trace(&trace_id)
+            .map(|dag| Json(serde_json::to_value(dag).unwrap_or(json!({}))))
+            .ok_or((
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "trace not found"})),
+            ))
+    })
 }
 
 fn with_session<F>(

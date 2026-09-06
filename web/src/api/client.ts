@@ -40,7 +40,6 @@ export type IncidentSummary = {
   incident_id: string;
   dataset_id: string;
   dataset_version: string;
-  path: string;
 };
 
 export async function listIncidents(): Promise<IncidentSummary[]> {
@@ -165,8 +164,10 @@ export async function runQuery(sessionId: string, sql: string): Promise<unknown>
   return r.json();
 }
 
-export async function fetchTrace(traceId: string) {
-  const r = await fetch(api(`/api/v1/traces/${encodeURIComponent(traceId)}`));
+export async function fetchTrace(sessionId: string, traceId: string) {
+  const r = await fetch(
+    api(`/api/v1/sessions/${sessionId}/traces/${encodeURIComponent(traceId)}`),
+  );
   if (!r.ok) throw new Error("trace not found");
   return r.json();
 }
