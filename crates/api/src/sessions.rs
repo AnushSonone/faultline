@@ -19,15 +19,6 @@ use serde_json::json;
 use tokio::sync::broadcast;
 use uuid::Uuid;
 
-#[derive(Debug, Clone)]
-pub struct SessionId(pub String);
-
-impl SessionId {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateSessionResponse {
     pub session_id: String,
@@ -92,6 +83,9 @@ pub struct Session {
     /// Last time a client touched this session. Idle sessions past the
     /// configured TTL are evicted (demo hygiene).
     pub last_activity: Instant,
+    /// SQL registered against this session (TA-047). Per session so one
+    /// visitor never sees another's queries; bounded by `MAX_QUERIES`.
+    pub queries: Vec<serde_json::Value>,
 }
 
 impl Session {
@@ -116,7 +110,30 @@ impl Session {
             adversarial_seed: 42,
             last_checkpoint: None,
             last_activity: Instant::now(),
+            queries: Vec::new(),
         }
+    }
+
+    /// Cap on registered queries per session. Oldest are dropped first.
+    pub const MAX_QUERIES: usize = 50;
+
+    /// Register a query string once. Returns the entry id.
+    pub fn register_query(&mut self, sql: &str) -> usize {
+        if let Some(existing) = self.queries.iter().find(|q| q["sql"] == sql) {
+            return existing["id"].as_u64().unwrap_or(0) as usize;
+        }
+        let id = self
+            .queries
+            .last()
+            .and_then(|q| q["id"].as_u64())
+            .unwrap_or(0) as usize
+            + 1;
+        self.queries.push(json!({ "id": id, "sql": sql }));
+        if self.queries.len() > Self::MAX_QUERIES {
+            let excess = self.queries.len() - Self::MAX_QUERIES;
+            self.queries.drain(..excess);
+        }
+        id
     }
 
     /// Mark the session as active now. Called on every client interaction so
@@ -490,8 +507,6 @@ pub struct AppState {
     pub fixtures_root: PathBuf,
     /// Root directory for per-session checkpoint stores.
     pub checkpoints_root: PathBuf,
-    /// Registered SQL queries (TA-047).
-    pub queries: Mutex<Vec<serde_json::Value>>,
     /// Maximum concurrent sessions. Creates past this cap return demo_busy.
     pub max_sessions: usize,
     /// Sessions idle longer than this are evicted.
@@ -518,7 +533,6 @@ impl AppState {
             sessions: Mutex::new(HashMap::new()),
             fixtures_root: fixtures_root.into(),
             checkpoints_root: checkpoints_root.into(),
-            queries: Mutex::new(Vec::new()),
             max_sessions: DEFAULT_MAX_SESSIONS,
             session_ttl: DEFAULT_SESSION_TTL,
             allowed_incidents: None,
@@ -583,7 +597,7 @@ impl AppState {
     /// session cap is reached (the route maps this to 503 demo_busy).
     pub fn create_session(&self) -> Option<String> {
         let mut sessions = self.sessions.lock();
-        Self::retain_live(&mut sessions, self.session_ttl);
+        Self::retain_live(&mut sessions, self.session_ttl, &self.checkpoints_root);
         if sessions.len() >= self.max_sessions {
             return None;
         }
@@ -597,15 +611,27 @@ impl AppState {
     /// minute instead of holding it for the full TTL.
     const ORPHAN_GRACE: Duration = Duration::from_secs(60);
 
-    fn retain_live(sessions: &mut HashMap<String, Session>, ttl: Duration) {
-        sessions.retain(|_, s| {
+    /// Drops dead sessions and deletes their checkpoint directories so
+    /// crash-test artifacts do not accumulate on disk.
+    fn retain_live(
+        sessions: &mut HashMap<String, Session>,
+        ttl: Duration,
+        checkpoints_root: &Path,
+    ) {
+        let mut evicted = Vec::new();
+        sessions.retain(|id, s| {
             let idle = s.last_activity.elapsed();
-            if idle > ttl {
-                return false;
-            }
             let orphaned = s.broadcast.receiver_count() == 0;
-            !(orphaned && idle > Self::ORPHAN_GRACE)
+            let keep = idle <= ttl && !(orphaned && idle > Self::ORPHAN_GRACE);
+            if !keep {
+                evicted.push(id.clone());
+            }
+            keep
         });
+        for id in evicted {
+            // Best effort: a missing dir (never checkpointed) is the common case.
+            let _ = std::fs::remove_dir_all(checkpoints_root.join(&id));
+        }
     }
 
     /// Remove sessions idle past the TTL, plus orphaned sessions (no WS
@@ -615,7 +641,7 @@ impl AppState {
     pub fn evict_idle(&self) -> usize {
         let mut sessions = self.sessions.lock();
         let before = sessions.len();
-        Self::retain_live(&mut sessions, self.session_ttl);
+        Self::retain_live(&mut sessions, self.session_ttl, &self.checkpoints_root);
         before - sessions.len()
     }
 
@@ -627,13 +653,21 @@ impl AppState {
             .is_none_or(|allowed| allowed.contains(incident_id))
     }
 
+    /// Explicit `incident_path` loads are confined to the fixtures root:
+    /// both sides are canonicalized so `..` and symlinks cannot escape it.
     pub fn resolve_incident_path(&self, req: &LoadRequest) -> Result<PathBuf, String> {
         if let Some(path) = &req.incident_path {
-            let p = PathBuf::from(path);
-            if p.exists() {
-                return Ok(p);
+            let root = self
+                .fixtures_root
+                .canonicalize()
+                .map_err(|e| format!("fixtures root unavailable: {e}"))?;
+            let p = PathBuf::from(path)
+                .canonicalize()
+                .map_err(|_| format!("incident_path not found: {path}"))?;
+            if !p.starts_with(&root) {
+                return Err("incident_path must be inside the fixtures root".into());
             }
-            return Err(format!("incident_path not found: {path}"));
+            return Ok(p);
         }
         if let Some(id) = &req.incident_id {
             return faultline_catalog::discover_incidents(&self.fixtures_root)

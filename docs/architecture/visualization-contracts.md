@@ -10,7 +10,7 @@
 | Runtime inspector | Versioned runtime projection | Operators, watermarks, queues, sketches, join state |
 | Likely root causes | Precomputed inference rebuild (`root_causes.snapshot`) | Deterministic ranking + evidence; "likely causes", never proven; ground truth hidden unless the load request sets `evaluation_mode`; score-component click filters evidence |
 | Evidence graph | `evidence.updated` | Causal explanation DAG; supports/contradicts edges; strongest-path filter |
-| Trace waterfall + comparison | `GET /api/v1/traces/{id}` (TraceDetail) | Critical-path highlight, error-path filter, median-healthy diff with confidence |
+| Trace waterfall + comparison | `GET /api/v1/sessions/{id}/traces/{trace_id}` (TraceDetail, session-scoped) | Critical-path highlight, error-path filter, median-healthy diff with confidence |
 | Checkpoint & recovery | `checkpoint.*` / `recovery.*` WS + REST | Crash-test button; recovery report proves no duplicate evidence |
 | Query plan inspector | `POST /api/v1/queries` + `query.plan`/`query.metrics` | SQL -> logical/optimized/physical plans; results match product projections |
 

@@ -62,13 +62,8 @@ pub fn router(state: SharedState) -> Router {
         .route("/api/v1/queries/validate", post(validate_query_route))
         .route("/api/v1/queries/explain", post(explain_query_route))
         .route("/api/v1/sessions/{id}/stream", get(stream_handler))
-        .route("/api/v1/traces/{trace_id}", get(get_trace))
+        .route("/api/v1/sessions/{id}/traces/{trace_id}", get(get_trace))
         .with_state(state)
-}
-
-/// Convenience router with default fixtures root (`datasets/fixtures`).
-pub fn router_with_fixtures(fixtures_root: impl Into<std::path::PathBuf>) -> Router {
-    router(std::sync::Arc::new(AppState::new(fixtures_root)))
 }
 
 #[cfg(test)]
@@ -80,7 +75,7 @@ mod tests {
 
     #[tokio::test]
     async fn health_ok() {
-        let app = router_with_fixtures(std::env::temp_dir());
+        let app = router(std::sync::Arc::new(AppState::new(std::env::temp_dir())));
         let response = app
             .oneshot(
                 Request::builder()
@@ -694,5 +689,78 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(ok_load.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn path_load_outside_fixtures_root_rejected_without_allowlist() {
+        use axum::body::to_bytes;
+        use serde_json::Value;
+
+        // No allowlist at all: the only guard is fixtures-root confinement.
+        let fixtures = tempfile::tempdir().unwrap();
+        let outside = tempfile::tempdir().unwrap();
+        let state = std::sync::Arc::new(AppState::with_roots(fixtures.path(), fixtures.path()));
+        let app = router(state);
+
+        let create = app.clone().oneshot(create_session_request()).await.unwrap();
+        let create_body = to_bytes(create.into_body(), usize::MAX).await.unwrap();
+        let create_json: Value = serde_json::from_slice(&create_body).unwrap();
+        let sid = create_json["session_id"].as_str().unwrap().to_owned();
+
+        let body = format!(r#"{{"incident_path":"{}"}}"#, outside.path().display());
+        let load = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(format!("/api/v1/sessions/{sid}/load"))
+                    .header("content-type", "application/json")
+                    .body(Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(load.status(), StatusCode::BAD_REQUEST);
+        let load_body = to_bytes(load.into_body(), usize::MAX).await.unwrap();
+        let load_json: Value = serde_json::from_slice(&load_body).unwrap();
+        assert_eq!(
+            load_json["error"],
+            "incident_path must be inside the fixtures root"
+        );
+    }
+
+    #[tokio::test]
+    async fn evicted_session_checkpoint_dir_is_removed() {
+        use axum::body::to_bytes;
+        use serde_json::Value;
+        use std::time::{Duration, Instant};
+
+        let tmp = tempfile::tempdir().unwrap();
+        let state = std::sync::Arc::new(
+            AppState::with_roots(tmp.path(), tmp.path()).with_limits(4, Duration::from_secs(3600)),
+        );
+        let app = router(state.clone());
+
+        let create = app.clone().oneshot(create_session_request()).await.unwrap();
+        let create_body = to_bytes(create.into_body(), usize::MAX).await.unwrap();
+        let create_json: Value = serde_json::from_slice(&create_body).unwrap();
+        let sid = create_json["session_id"].as_str().unwrap().to_owned();
+
+        // Simulate a checkpoint store left behind by a crash test.
+        let cp_dir = tmp.path().join(&sid).join("cp-000001");
+        std::fs::create_dir_all(&cp_dir).unwrap();
+        assert!(cp_dir.exists());
+
+        // Orphan the session past the grace period, then sweep.
+        {
+            let mut sessions = state.sessions.lock();
+            sessions.get_mut(&sid).unwrap().last_activity =
+                Instant::now() - Duration::from_secs(120);
+        }
+        assert_eq!(state.evict_idle(), 1);
+        assert!(
+            !tmp.path().join(&sid).exists(),
+            "checkpoint dir must be deleted with its session"
+        );
     }
 }
