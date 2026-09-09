@@ -1,4 +1,4 @@
-.PHONY: build test demo web-install web-dev fmt clippy python-test embed
+.PHONY: build test demo web-install web-dev fmt clippy python-test embed layout-check
 
 build:
 	cargo build --workspace
@@ -28,3 +28,8 @@ demo:
 
 embed:
 	bash scripts/build-embed.sh
+
+# Label-overlap + one-screen sweep over the web UI at four viewports.
+# Needs faultlined on 127.0.0.1:8080 (see `make demo`); Vite is started by Playwright.
+layout-check:
+	cd web && npx playwright test --project=layout

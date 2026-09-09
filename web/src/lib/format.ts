@@ -24,6 +24,27 @@ export function fmtOffset(
   return `t+${sec.toFixed(1)}s`;
 }
 
+// Same clock as fmtOffset, in plain words for the transport readout and the
+// narration: "7.5 s in", "312 s in", "23m 54s in".
+export function fmtIn(
+  ns: number | null | undefined,
+  startNs: number | null | undefined,
+): string {
+  if (ns == null || startNs == null) return "-";
+  const sec = Math.max(0, (ns - startNs) / 1e9);
+  if (sec >= 600) {
+    let m = Math.floor(sec / 60);
+    let s = Math.round(sec - m * 60);
+    if (s === 60) {
+      m += 1;
+      s = 0;
+    }
+    return `${m}m ${String(s).padStart(2, "0")}s in`;
+  }
+  if (sec >= 100) return `${Math.round(sec)} s in`;
+  return `${sec.toFixed(1)} s in`;
+}
+
 export function fmtDurationNs(ns: number | null | undefined): string {
   if (ns == null) return "-";
   let v = ns;

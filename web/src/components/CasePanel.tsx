@@ -92,7 +92,7 @@ export function CasePanel({ sessionId }: Props) {
         <div className="case-answer-row">
           {!revealed && (
             <button type="button" data-testid="case-reveal-button" onClick={reveal}>
-              Reveal answer
+              Reveal the true cause (from the test's answer key)
             </button>
           )}
           {revealed && info.answer && (

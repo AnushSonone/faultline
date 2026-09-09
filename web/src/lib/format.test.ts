@@ -3,6 +3,7 @@ import {
   fmtBytes,
   fmtCount,
   fmtDurationNs,
+  fmtIn,
   fmtOffset,
   fmtPct,
   shortTraceId,
@@ -36,6 +37,21 @@ describe("fmtOffset", () => {
     expect(fmtOffset(undefined, 0)).toBe("-");
     expect(fmtOffset(10e9, null)).toBe("-");
     expect(fmtOffset(10e9, undefined)).toBe("-");
+  });
+});
+
+describe("fmtIn", () => {
+  it("mirrors fmtOffset's thresholds in plain words", () => {
+    expect(fmtIn(0, 0)).toBe("0.0 s in");
+    expect(fmtIn(7.5e9, 0)).toBe("7.5 s in");
+    expect(fmtIn(312e9, 0)).toBe("312 s in");
+    expect(fmtIn(600e9, 0)).toBe("10m 00s in");
+    expect(fmtIn(1434e9, 0)).toBe("23m 54s in");
+  });
+  it("clamps below the start and dashes on missing values", () => {
+    expect(fmtIn(5e9, 10e9)).toBe("0.0 s in");
+    expect(fmtIn(null, 0)).toBe("-");
+    expect(fmtIn(10e9, undefined)).toBe("-");
   });
 });
 

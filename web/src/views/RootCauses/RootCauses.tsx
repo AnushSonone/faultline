@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useInvestigation } from "../../state/investigation";
 import type { RootCauseCandidate, RootCauseEvidence } from "../../types/protocol";
 import { titleCase } from "../../lib/format";
+import { evidenceWord, ordinal } from "../../lib/explain";
+import { COMPONENT_COPY } from "../../content/components";
 import { InfoTip } from "../../components/InfoTip";
 import { EmptyState } from "../../components/EmptyState";
 
@@ -66,9 +68,11 @@ function CandidateCard({
     >
       <header>
         <strong>
-          <span className="muted">#{candidate.rank}</span> {candidate.service}
+          <span className="muted">{ordinal(candidate.rank)}</span> {candidate.service}
         </strong>
-        <span className="mono">{candidate.score.toFixed(3)}</span>
+        <span className="mono" title={`score ${candidate.score.toFixed(3)} of 1`}>
+          {evidenceWord(candidate.score)} ({candidate.score.toFixed(2)})
+        </span>
       </header>
       <div className="score-bar">
         <div className="score-bar-fill" style={{ width: pct(width) }} />
@@ -79,19 +83,16 @@ function CandidateCard({
             <thead>
               <tr>
                 <th>
-                  Component{" "}
-                  <InfoTip label="What the components mean">
-                    In plain words: anomaly strength is how far a service strayed from
-                    its own normal; temporal precedence is whether it went wrong before
-                    the services that depend on it; topology is whether the failures sit
-                    on its call paths; change proximity is a deploy landing suspiciously
-                    close in time. Each row shows its value, its fixed weight, and what
-                    it contributed to the score.
+                  Evidence{" "}
+                  <InfoTip label="How to read this table">
+                    Each row is one kind of evidence. How strong is what the data showed,
+                    from 0 to 1. Counts for is how much that kind of evidence matters in
+                    the formula. Adds is the product, which is what the score is made of.
                   </InfoTip>
                 </th>
-                <th style={RIGHT}>Value</th>
+                <th style={RIGHT}>Strength</th>
                 <th style={RIGHT}>Weight</th>
-                <th style={RIGHT}>Contribution</th>
+                <th style={RIGHT}>Adds</th>
               </tr>
             </thead>
             <tbody>
@@ -110,8 +111,20 @@ function CandidateCard({
                     setComponentFilter(componentFilter === c.name ? null : c.name);
                   }}
                 >
-                  <td>{titleCase(c.name)}</td>
-                  <td className="mono" style={RIGHT}>{c.feature_value.toFixed(3)}</td>
+                  <td title={COMPONENT_COPY[c.name]?.detail ?? titleCase(c.name)}>
+                    {COMPONENT_COPY[c.name]?.plain ?? titleCase(c.name)}
+                    <span className="term">{c.name}</span>
+                  </td>
+                  <td className="mono" style={RIGHT}>
+                    <span className="mini-bar" aria-hidden="true">
+                      <span
+                        style={{
+                          width: `${Math.round(Math.max(0, Math.min(1, c.feature_value)) * 100)}%`,
+                        }}
+                      />
+                    </span>
+                    {c.feature_value.toFixed(2)}
+                  </td>
                   <td className="mono" style={RIGHT}>{c.weight.toFixed(2)}</td>
                   <td className="mono" style={RIGHT}>{c.contribution.toFixed(3)}</td>
                 </tr>
@@ -154,7 +167,7 @@ export function RootCausesPanel() {
   return (
     <div className="panel-body correlation-list" data-testid="root-causes">
       <p className="panel-caption">
-        Ranked candidates <InfoTip>{rootCauses.language}.</InfoTip>
+        Suspects, strongest evidence first <InfoTip>{rootCauses.language}.</InfoTip>
       </p>
       {rootCauses.candidates.map((candidate) => (
         <CandidateCard
