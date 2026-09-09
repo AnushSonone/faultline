@@ -64,9 +64,13 @@ export type RuntimeInspector = {
   architecture_status?: string[];
 };
 
-export type TabId = "overview" | "root-causes" | "signals" | "runtime";
+// "overview" is the stage itself; every other tab opens the dock drawer.
+export type TabId = "overview" | "root-causes" | "signals" | "case" | "runtime";
 
 export type WsStatus = "connecting" | "live" | "reconnecting";
+
+// Which panel the guided tour is pointing at; panels add an outline for it.
+export type TourTarget = "map" | "track" | "evidence" | "verdict";
 
 type InvestigationState = {
   sessionId: string | null;
@@ -96,10 +100,12 @@ type InvestigationState = {
   heatmapMode: string;
   selectedEventTime: number | null;
   selectedService: string | null;
+  hoveredService: string | null;
   selectedTrace: string | null;
   selectedOperator: string | null;
   selectedChangeId: string | null;
   selectedHeatmapCell: HeatmapCell | null;
+  tourTarget: TourTarget | null;
   setSession: (id: string) => void;
   setIncident: (id: string | null) => void;
   setTab: (tab: TabId) => void;
@@ -112,11 +118,13 @@ type InvestigationState = {
   clearNeedsResync: () => void;
   clearSelection: () => void;
   selectService: (s: string | null) => void;
+  hoverService: (s: string | null) => void;
   selectTrace: (t: string | null) => void;
   selectTime: (t: number | null) => void;
   selectOperator: (id: string | null) => void;
   selectChange: (id: string | null) => void;
   selectHeatmapCell: (c: HeatmapCell | null) => void;
+  setTourTarget: (t: TourTarget | null) => void;
   applyWs: (msg: WsEnvelope) => void;
 };
 
@@ -148,10 +156,12 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   heatmapMode: "streaming",
   selectedEventTime: null,
   selectedService: null,
+  hoveredService: null,
   selectedTrace: null,
   selectedOperator: null,
   selectedChangeId: null,
   selectedHeatmapCell: null,
+  tourTarget: null,
   setSession: (id) => set({ sessionId: id }),
   setIncident: (id) => set({ incidentId: id }),
   setTab: (tab) => set({ activeTab: tab }),
@@ -166,11 +176,13 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   clearSelection: () =>
     set({
       selectedService: null,
+      hoveredService: null,
       selectedTrace: null,
       selectedEventTime: null,
       selectedOperator: null,
       selectedChangeId: null,
       selectedHeatmapCell: null,
+      tourTarget: null,
       topology: null,
       timeline: null,
       heatmap: null,
@@ -182,11 +194,13 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
       needsResync: false,
     }),
   selectService: (s) => set({ selectedService: s }),
+  hoverService: (s) => set({ hoveredService: s }),
   selectTrace: (t) => set({ selectedTrace: t }),
   selectTime: (t) => set({ selectedEventTime: t }),
   selectOperator: (id) => set({ selectedOperator: id }),
   selectChange: (id) => set({ selectedChangeId: id }),
   selectHeatmapCell: (c) => set({ selectedHeatmapCell: c }),
+  setTourTarget: (t) => set({ tourTarget: t }),
   applyWs: (msg) => {
     const prev = get().lastSequence;
     if (prev && msg.sequence > prev + 1) {

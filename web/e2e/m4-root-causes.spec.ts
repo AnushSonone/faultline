@@ -6,18 +6,19 @@ test.describe("M4 root-cause ranking", () => {
   }) => {
     await page.goto("/");
     await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("ws live", {
+    await expect(page.getByTestId("connection")).toContainText("connected", {
       timeout: 30_000,
     });
 
+    // The session opens seeked to the incident end, so the ranking has full evidence.
+    await expect(page.getByTestId("verdict-hero")).toContainText("Most likely culprit", {
+      timeout: 20_000,
+    });
+
     await page.getByTestId("tab-root-causes").click();
+    await expect(page.getByTestId("page-root-causes")).toBeVisible();
     const panel = page.getByTestId("root-causes");
     await expect(panel).toBeVisible();
-
-    // Seek to the end of the incident so the ranking has full evidence.
-    await page.getByRole("button", { name: "Play" }).click();
-    await page.waitForTimeout(2500);
-    await page.getByRole("button", { name: "Pause" }).click();
 
     const top = page.locator("[data-testid^='root-cause-']").first();
     if (await top.count()) {
@@ -31,6 +32,7 @@ test.describe("M4 root-cause ranking", () => {
         await expect(evidence).toBeVisible();
       }
       // Clicking a candidate drives the shared service selection.
+      await expect(page.getByTestId("selection-bar")).toContainText("service:");
       await expect(page.getByTestId("selection-bar")).not.toContainText("service: -");
     }
   });

@@ -1,25 +1,33 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("UI shell: tabs + scrubber", () => {
+test.describe("UI shell: dock tabs + scrubber", () => {
   test("tab switching, scrubber seek, speed select", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("ws live", {
+    await expect(page.getByTestId("connection")).toContainText("connected", {
       timeout: 30_000,
     });
 
-    // All four tabs render their page.
-    for (const tab of ["root-causes", "signals", "runtime", "overview"] as const) {
+    // The stage is always on screen; every other tab opens its drawer.
+    await expect(page.getByTestId("page-overview")).toBeVisible();
+    for (const tab of ["root-causes", "signals", "case", "runtime"] as const) {
       await page.getByTestId(`tab-${tab}`).click();
       await expect(page.getByTestId(`page-${tab}`)).toBeVisible();
+      await expect(page.getByTestId("page-overview")).toBeVisible();
     }
+    await page.getByTestId("tab-overview").click();
+    await expect(page.getByTestId("verdict-rail")).toBeVisible();
+    await expect(page.getByTestId("page-root-causes")).toHaveCount(0);
 
-    // Service map survives a tab round-trip (cytoscape resize on activate).
+    // Service map survives a drawer round-trip (cytoscape resize).
     await expect(page.getByTestId("service-map")).toBeVisible();
 
     // Scrubber seek: click at 60% and the cursor time updates.
+    await expect(page.getByTestId("scrubber-time")).not.toHaveText("0.0 s in", {
+      timeout: 15_000,
+    });
     const before = await page.getByTestId("scrubber-time").innerText();
-    const scrubber = page.getByTestId("replay-scrubber").locator(".scrubber");
+    const scrubber = page.getByTestId("timeline");
     const box = await scrubber.boundingBox();
     expect(box).not.toBeNull();
     if (box) {
@@ -30,11 +38,15 @@ test.describe("UI shell: tabs + scrubber", () => {
     }
 
     // Speed select round-trips without error.
-    await page.getByTestId("speed-select").selectOption("60");
-    await expect(page.getByTestId("speed-select")).toHaveValue("60");
+    await page.getByTestId("speed-select").selectOption("50");
+    await expect(page.getByTestId("speed-select")).toHaveValue("50");
 
-    // Tab switch does not kill the session.
+    // Drawer switch does not kill the session.
     await page.getByTestId("tab-signals").click();
-    await expect(page.getByTestId("connection")).toContainText("ws live");
+    await expect(page.getByTestId("connection")).toContainText("connected");
+
+    // Escape closes the drawer.
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("page-signals")).toHaveCount(0);
   });
 });

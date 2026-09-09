@@ -13,5 +13,19 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 120_000,
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      testIgnore: /layout-overlap/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      // Label-overlap + one-screen sweep across viewports. Run with
+      // `npx playwright test --project=layout` (or `make layout-check`).
+      name: "layout",
+      testMatch: /layout-overlap/,
+      timeout: 240_000,
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ],
 });

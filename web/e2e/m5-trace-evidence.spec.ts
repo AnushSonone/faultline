@@ -6,20 +6,22 @@ test.describe("M5 trace comparison + evidence graph", () => {
   }) => {
     await page.goto("/");
     await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("ws live", {
+    await expect(page.getByTestId("connection")).toContainText("connected", {
       timeout: 30_000,
     });
+    // Verdict-first open: full evidence without pressing Play.
+    await expect(page.getByTestId("verdict-hero")).toContainText("Most likely culprit", {
+      timeout: 20_000,
+    });
 
-    await page.getByRole("button", { name: "Play" }).click();
-    await page.waitForTimeout(2500);
-    await page.getByRole("button", { name: "Pause" }).click();
-
-    // Evidence graph renders on the root-causes tab.
-    await page.getByTestId("tab-root-causes").click();
+    // Evidence graph lives on the stage, always visible.
     await expect(page.getByTestId("evidence-graph")).toBeVisible();
+    await page.getByTestId("evidence-graph-strongest").click();
     await page.getByTestId("evidence-graph-strongest").click();
 
     // Clicking a score component filters the evidence list (spec 20.6).
+    await page.getByTestId("tab-root-causes").click();
+    await expect(page.getByTestId("page-root-causes")).toBeVisible();
     const top = page.locator("[data-testid^='root-cause-']").first();
     if (await top.count()) {
       await top.click();
@@ -30,6 +32,7 @@ test.describe("M5 trace comparison + evidence graph", () => {
 
     // Trace waterfall: select an error trace, toggle critical path + compare.
     await page.getByTestId("tab-signals").click();
+    await expect(page.getByTestId("page-signals")).toBeVisible();
     await expect(page.getByTestId("waterfall")).toBeVisible();
     const traceButtons = page.locator(".trace-item");
     const count = await traceButtons.count();
