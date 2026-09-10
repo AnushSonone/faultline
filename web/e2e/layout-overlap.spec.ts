@@ -1,5 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
+import { switchRuntimeTab } from "./utils/runtime";
 import { assertEvidenceZoom, assertNoOverlap, assertPlayStability, assertEvidenceCentred } from "./utils/overlap";
+import { bootAtStart, dismissFirstVisit, seekFraction, seekToEnd } from "./utils/boot";
 
 // One-screen, no-overlap sweep. Every state the UI can be in, at six
 // viewport widths: no two labels may intersect, no nowrap label may be
@@ -18,27 +20,6 @@ const VIEWPORTS = [
 
 const LOAD_TIMEOUT = 40_000;
 
-async function boot(page: Page) {
-  await page.goto("/");
-  await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: LOAD_TIMEOUT });
-  await expect(page.getByTestId("connection")).toContainText("connected", { timeout: LOAD_TIMEOUT });
-  await expect(page.getByTestId("verdict-hero")).toContainText("Most likely culprit", {
-    timeout: LOAD_TIMEOUT,
-  });
-  await expect(page.getByTestId("scrubber-time")).not.toHaveText("0.0 s in", { timeout: LOAD_TIMEOUT });
-}
-
-async function seekFraction(page: Page, frac: number) {
-  const track = page.getByTestId("timeline");
-  const box = await track.boundingBox();
-  expect(box, "timeline track has a bounding box").not.toBeNull();
-  if (!box) return;
-  const x = box.x + Math.max(2, Math.min(box.width - 2, box.width * frac));
-  await page.mouse.click(x, box.y + box.height / 2);
-  // let the seek round-trip and the projections repaint
-  await page.waitForTimeout(700);
-}
-
 async function openTab(page: Page, tab: string) {
   await page.getByTestId(`tab-${tab}`).click();
   if (tab !== "overview") {
@@ -54,7 +35,15 @@ for (const vp of VIEWPORTS) {
     test("no overlapping or clipped labels in any state", async ({ page }) => {
       const check = (state: string) => assertNoOverlap(page, state, { viewportWidth: vp.width });
 
-      await boot(page);
+      // Boot at t+0 under the first-visit card, dismiss it, then seek to the
+      // end so the rest of the sweep sees full evidence.
+      // The first-visit card is a modal over the graphs; the sweep cannot
+      // tell a designed cover from a collision, so it only checks presence.
+      await bootAtStart(page, { keepFirstVisit: true });
+      await expect(page.getByTestId("first-visit")).toBeVisible();
+      await dismissFirstVisit(page);
+      await check("boot-start");
+      await seekToEnd(page);
       await check("boot");
       await assertEvidenceZoom(page, `${vp.width}px / boot`, vp.width >= 1440 ? 0.75 : 0.55);
       await assertEvidenceCentred(page, `${vp.width}px / boot`);
@@ -76,7 +65,10 @@ for (const vp of VIEWPORTS) {
         await page.getByTestId("tour-next").click();
         await page.getByTestId("tour-next").click();
         await page.getByTestId("tour-done").click();
-        // The tour closes the briefing; reopen so later states match the other viewports.
+        // The tour closes the briefing (and resets the replay only if it had
+        // to seek); land on the end state and reopen so later states match
+        // the other viewports.
+        await seekToEnd(page);
         await page.getByTestId("briefing-open").click();
       }
       if (vp.width === 1440) {
@@ -140,20 +132,21 @@ for (const vp of VIEWPORTS) {
 
       await openTab(page, "case");
       await expect(page.getByTestId("case-panel")).toBeVisible();
+      // Locked until a full replay; this run paused mid-way, so the locked
+      // state is what gets swept.
       const reveal = page.getByTestId("case-reveal-button");
-      if (await reveal.count()) {
+      if ((await reveal.count()) && (await reveal.isEnabled())) {
         await reveal.click();
         await expect(page.getByTestId("case-answer")).toBeVisible({ timeout: 10_000 });
       }
       await check("tab-case");
 
       await openTab(page, "runtime");
-      await expect(page.getByTestId("crash-test")).toBeVisible();
-      const inspector = page.getByTestId("runtime-inspector");
-      if (await inspector.count()) {
-        await inspector.locator("summary").click();
+      for (const id of ["pipeline", "event-time", "queries", "scoring", "recovery"] as const) {
+        await switchRuntimeTab(page, id);
+        await check(`tab-runtime-${id}`);
       }
-      await check("tab-runtime");
+      await expect(page.getByTestId("crash-test")).toBeVisible();
       await page.getByTestId("crash-test-button").click();
       await expect(page.getByTestId("recovery-report")).toBeVisible({ timeout: 20_000 });
       await check("tab-runtime-recovered");
@@ -168,7 +161,7 @@ for (const vp of VIEWPORTS) {
         const check = (state: string) =>
           assertNoOverlap(page, `re2ob-${state}`, { viewportWidth: vp.width });
 
-        await boot(page);
+        await bootAtStart(page);
         const picker = page.getByTestId("incident-picker");
         const options = await picker.locator("option").allTextContents();
         const values = await picker.locator("option").evaluateAll((els) =>
@@ -179,9 +172,8 @@ for (const vp of VIEWPORTS) {
 
         await picker.selectOption(target, { timeout: 20_000 });
         await expect(page.getByTestId("connection")).toContainText("connected", { timeout: LOAD_TIMEOUT });
-        await expect(page.getByTestId("verdict-hero")).toContainText("Most likely culprit", {
-          timeout: LOAD_TIMEOUT,
-        });
+        await expect(page.getByTestId("scrubber-time")).toHaveText("0.0 s in", { timeout: LOAD_TIMEOUT });
+        await seekToEnd(page);
         await check("boot");
         await assertEvidenceZoom(page, `${vp.width}px / re2ob-boot`, 0.55);
 

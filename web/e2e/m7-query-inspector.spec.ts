@@ -1,20 +1,15 @@
 import { test, expect } from "@playwright/test";
+import { switchRuntimeTab } from "./utils/runtime";
+import { bootAtEnd } from "./utils/boot";
 
 test.describe("M7 query plan inspector", () => {
   test("run canonical query, see plans, metrics, and result rows", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("connected", {
-      timeout: 30_000,
-    });
-
-    // The session opens at the incident end, so the query has data at the cursor.
-    await expect(page.getByTestId("scrubber-time")).not.toHaveText("0.0 s in", {
-      timeout: 15_000,
-    });
+    // Seek to the incident end so the query has data at the cursor.
+    await bootAtEnd(page);
 
     await page.getByTestId("tab-runtime").click();
     await expect(page.getByTestId("page-runtime")).toBeVisible();
+    await switchRuntimeTab(page, "queries");
     await expect(page.getByTestId("query-inspector")).toBeVisible();
     await page.getByTestId("run-query-button").click();
 

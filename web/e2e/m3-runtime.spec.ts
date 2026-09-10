@@ -1,24 +1,19 @@
 import { test, expect } from "@playwright/test";
+import { bootAtEnd } from "./utils/boot";
+import { switchRuntimeTab } from "./utils/runtime";
 
 test.describe("M3 runtime depth", () => {
   test("inspector, percentiles, correlation, mode switch, reset", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("connected", {
-      timeout: 30_000,
-    });
-    // The session opens seeked to the incident end, so evidence is complete.
-    await expect(page.getByTestId("scrubber-time")).not.toHaveText("0.0 s in", {
-      timeout: 15_000,
-    });
+    // Boot at t+0, then seek to the incident end so evidence is complete.
+    await bootAtEnd(page);
 
     // Runtime drawer: inspector + arch status.
     await page.getByTestId("tab-runtime").click();
     await expect(page.getByTestId("page-runtime")).toBeVisible();
     const inspector = page.getByTestId("runtime-inspector");
     await expect(inspector).toBeVisible();
-    await inspector.locator("summary").click();
     await expect(page.getByTestId("inspector-overview")).toBeVisible();
+    await switchRuntimeTab(page, "pipeline");
     await expect(page.getByTestId("inspector-operator-graph")).toBeVisible();
 
     const op = page.getByTestId("op-latency_percentile");
@@ -27,7 +22,9 @@ test.describe("M3 runtime depth", () => {
       await expect(page.getByTestId("operator-detail")).toBeVisible();
     }
 
+    await switchRuntimeTab(page, "event-time");
     await expect(page.getByTestId("wm-timeline")).toBeVisible();
+    await switchRuntimeTab(page, "recovery");
     await expect(page.getByTestId("arch-status")).toContainText("streaming percentile");
     await expect(page.getByTestId("arch-status")).toContainText("evidence ranking");
 
@@ -49,7 +46,7 @@ test.describe("M3 runtime depth", () => {
       await card.click();
       await page.getByTestId("tab-runtime").click();
       await expect(page.getByTestId("runtime-inspector")).toBeVisible();
-      await page.getByTestId("runtime-inspector").locator("summary").click();
+      await switchRuntimeTab(page, "pipeline");
       await expect(page.getByTestId("op-deploy_temporal_join")).toBeVisible();
     }
 

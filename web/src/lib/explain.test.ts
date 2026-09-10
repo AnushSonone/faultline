@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evidenceWord, explainCandidate, ordinal } from "./explain";
+import { scoreBand, explainCandidate, ordinal } from "./explain";
 import type { RootCauseCandidate } from "../types/protocol";
 
 function candidate(
@@ -32,18 +32,18 @@ describe("explainCandidate", () => {
       ["persistence", 0.5],
     ]);
     expect(explainCandidate(c)).toBe(
-      "recommendationservice is the most likely culprit: its own numbers strayed far from normal, it went wrong before the services that depend on it, and it got a new version just before things went wrong. Though some evidence points the other way.",
+      "recommendationservice is the top root-cause candidate: its peak robust z-score is high (anomaly strength), its anomaly onset preceded its callers' (temporal precedence), and a deployment landed just before its onset (change proximity). A contradiction penalty applies: some of its impacted callers degraded first.",
     );
   });
 
   it("handles one and two clauses without a serial comma", () => {
     expect(explainCandidate(candidate("cartservice", [["anomaly_strength", 0.2]]))).toBe(
-      "cartservice is the most likely culprit: its own numbers strayed far from normal.",
+      "cartservice is the top root-cause candidate: its peak robust z-score is high (anomaly strength).",
     );
     expect(
       explainCandidate(candidate("cartservice", [["anomaly_strength", 0.2], ["log_evidence", 0.03]])),
     ).toBe(
-      "cartservice is the most likely culprit: its own numbers strayed far from normal and its logs show errors.",
+      "cartservice is the top root-cause candidate: its peak robust z-score is high (anomaly strength) and correlated error logs (log evidence).",
     );
   });
 
@@ -55,25 +55,25 @@ describe("explainCandidate", () => {
       ["mystery_feature", 0.9],
     ]);
     expect(explainCandidate(c, { maxClauses: 1 })).toBe(
-      "frontend is the most likely culprit: its own numbers strayed far from normal.",
+      "frontend is the top root-cause candidate: its peak robust z-score is high (anomaly strength).",
     );
   });
 
   it("falls back when nothing positive carried the score", () => {
     const c = candidate("cartservice", [["anomaly_strength", 0], ["contradiction_penalty", -0.1]], -0.1);
-    expect(explainCandidate(c)).toBe("cartservice is ranked first, but the evidence for it is weak.");
+    expect(explainCandidate(c)).toBe("cartservice ranks first, but its evidence score is weak.");
   });
 });
 
-describe("evidenceWord", () => {
+describe("scoreBand", () => {
   it("bands the score", () => {
-    expect(evidenceWord(0.86)).toBe("strong");
-    expect(evidenceWord(0.6)).toBe("strong");
-    expect(evidenceWord(0.48)).toBe("some");
-    expect(evidenceWord(0.3)).toBe("some");
-    expect(evidenceWord(0.1)).toBe("weak");
-    expect(evidenceWord(0)).toBe("none");
-    expect(evidenceWord(-0.1)).toBe("none");
+    expect(scoreBand(0.86)).toBe("strong");
+    expect(scoreBand(0.6)).toBe("strong");
+    expect(scoreBand(0.48)).toBe("moderate");
+    expect(scoreBand(0.3)).toBe("moderate");
+    expect(scoreBand(0.1)).toBe("weak");
+    expect(scoreBand(0)).toBe("none");
+    expect(scoreBand(-0.1)).toBe("none");
   });
 });
 

@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useInvestigation } from "../../state/investigation";
 import type { RootCauseCandidate, RootCauseEvidence } from "../../types/protocol";
 import { titleCase } from "../../lib/format";
-import { evidenceWord, ordinal } from "../../lib/explain";
+import { scoreBand, ordinal } from "../../lib/explain";
 import { COMPONENT_COPY } from "../../content/components";
 import { InfoTip } from "../../components/InfoTip";
 import { EmptyState } from "../../components/EmptyState";
 
-const RIGHT: React.CSSProperties = { textAlign: "right" };
+const MAX_EVIDENCE = 6;
 
 function pct(v: number): string {
   return `${(v * 100).toFixed(0)}%`;
@@ -40,6 +40,11 @@ const COMPONENT_EVIDENCE: Record<string, string[]> = {
   contradiction_penalty: ["contradiction"],
 };
 
+// One candidate: rank, service, score, and on expansion the score
+// decomposition (one row per feature, two lines each) and the evidence that
+// carried it. The top candidate opens by default. Clicking anywhere in the
+// card selects that service everywhere; the header and its chip expand and
+// collapse, so a click inside an open card never folds it away.
 function CandidateCard({
   candidate,
   evidence,
@@ -47,7 +52,7 @@ function CandidateCard({
   candidate: RootCauseCandidate;
   evidence: RootCauseEvidence[];
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(candidate.rank === 1);
   const [componentFilter, setComponentFilter] = useState<string | null>(null);
   const selectedService = useInvestigation((s) => s.selectedService);
   const selectService = useInvestigation((s) => s.selectService);
@@ -56,26 +61,48 @@ function CandidateCard({
   const visibleEvidence = componentFilter
     ? evidence.filter((ev) => (COMPONENT_EVIDENCE[componentFilter] ?? []).includes(ev.type))
     : evidence;
+  const shownEvidence = visibleEvidence.slice(0, MAX_EVIDENCE);
+  const hiddenEvidence = visibleEvidence.length - shownEvidence.length;
 
   return (
     <article
       className={selected ? "correlation-card selected" : "correlation-card"}
       data-testid={`root-cause-${candidate.service}`}
-      onClick={() => {
-        setExpanded(!expanded);
-        selectService(selected && expanded ? null : candidate.service);
-      }}
+      aria-expanded={expanded}
+      onClick={() => selectService(candidate.service)}
     >
-      <header>
-        <strong>
-          <span className="muted">{ordinal(candidate.rank)}</span> {candidate.service}
+      <header
+        className="candidate-head"
+        onClick={(e) => {
+          e.stopPropagation();
+          setExpanded(!expanded);
+          selectService(expanded && selected ? null : candidate.service);
+        }}
+      >
+        <span className="rank-n mono">{ordinal(candidate.rank)}</span>
+        <strong className="candidate-name" title={candidate.service}>
+          {candidate.service}
         </strong>
-        <span className="mono" title={`score ${candidate.score.toFixed(3)} of 1`}>
-          {evidenceWord(candidate.score)} ({candidate.score.toFixed(2)})
-        </span>
+        <button
+          type="button"
+          className="chip-toggle candidate-toggle"
+          data-testid={`root-cause-toggle-${candidate.service}`}
+          aria-label={expanded ? "Hide features" : "Show features"}
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded(!expanded);
+          }}
+        >
+          {expanded ? "features ▴" : "features ▾"}
+        </button>
       </header>
-      <div className="score-bar">
-        <div className="score-bar-fill" style={{ width: pct(width) }} />
+      <div className="score-row">
+        <div className="score-bar">
+          <div className="score-bar-fill" style={{ width: pct(width) }} />
+        </div>
+        <span className="mono candidate-score" title={`${scoreBand(candidate.score)} evidence`}>
+          {candidate.score.toFixed(2)}
+        </span>
       </div>
       {expanded && (
         <>
@@ -83,52 +110,61 @@ function CandidateCard({
             <thead>
               <tr>
                 <th>
-                  Evidence{" "}
+                  Feature{" "}
                   <InfoTip label="How to read this table">
-                    Each row is one kind of evidence. How strong is what the data showed,
-                    from 0 to 1. Counts for is how much that kind of evidence matters in
-                    the formula. Adds is the product, which is what the score is made of.
+                    One row per feature. Value is the normalized feature in [0, 1]; Weight is
+                    the fixed coefficient from spec 18.4; Adds is their product. The score is
+                    the sum of contributions, with the contradiction penalty negative.
                   </InfoTip>
                 </th>
-                <th style={RIGHT}>Strength</th>
-                <th style={RIGHT}>Weight</th>
-                <th style={RIGHT}>Adds</th>
+                <th className="num">Value</th>
+                <th className="num">Weight</th>
+                <th className="num">Adds</th>
               </tr>
             </thead>
             <tbody>
-              {candidate.components.map((c) => (
-                <tr
-                  key={c.name}
-                  className={[
-                    c.contribution < 0 ? "negative" : "",
-                    componentFilter === c.name ? "filtered" : "",
-                  ]
-                    .join(" ")
-                    .trim() || undefined}
-                  data-testid={`score-component-${c.name}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setComponentFilter(componentFilter === c.name ? null : c.name);
-                  }}
-                >
-                  <td title={COMPONENT_COPY[c.name]?.detail ?? titleCase(c.name)}>
-                    {COMPONENT_COPY[c.name]?.plain ?? titleCase(c.name)}
-                    <span className="term">{c.name}</span>
-                  </td>
-                  <td className="mono" style={RIGHT}>
-                    <span className="mini-bar" aria-hidden="true">
-                      <span
-                        style={{
-                          width: `${Math.round(Math.max(0, Math.min(1, c.feature_value)) * 100)}%`,
-                        }}
-                      />
-                    </span>
-                    {c.feature_value.toFixed(2)}
-                  </td>
-                  <td className="mono" style={RIGHT}>{c.weight.toFixed(2)}</td>
-                  <td className="mono" style={RIGHT}>{c.contribution.toFixed(3)}</td>
-                </tr>
-              ))}
+              {candidate.components.map((c) => {
+                const copy = COMPONENT_COPY[c.name];
+                const definition = copy?.plain ?? titleCase(c.name);
+                return (
+                  <tr
+                    key={c.name}
+                    className={[
+                      c.contribution < 0 ? "negative" : "",
+                      componentFilter === c.name ? "filtered" : "",
+                    ]
+                      .join(" ")
+                      .trim() || undefined}
+                    data-testid={`score-component-${c.name}`}
+                    onClick={(e) => {
+                      // Filter the evidence to this feature, and link the
+                      // rest of the UI to the candidate the row belongs to.
+                      e.stopPropagation();
+                      setComponentFilter(componentFilter === c.name ? null : c.name);
+                      selectService(candidate.service);
+                    }}
+                  >
+                    <td title={copy ? `${definition}. ${copy.detail}` : definition}>
+                      <span className="feature-key mono">{c.name}</span>
+                      <span className="feature-def">{definition}</span>
+                    </td>
+                    <td className="mono num">
+                      <span className="value-cell">
+                        <span className="mini-bar" aria-hidden="true">
+                          <span
+                            style={{
+                              width: `${Math.round(Math.max(0, Math.min(1, c.feature_value)) * 100)}%`,
+                            }}
+                          />
+                        </span>
+                        {c.feature_value.toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="mono num">{c.weight.toFixed(2)}</td>
+                    <td className="mono num">{c.contribution.toFixed(3)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {componentFilter && (
@@ -137,11 +173,16 @@ function CandidateCard({
               again to clear
             </p>
           )}
-          {visibleEvidence.length > 0 && (
+          {shownEvidence.length > 0 && (
             <ul className="evidence-list" data-testid={`root-cause-evidence-${candidate.service}`}>
-              {visibleEvidence.map((ev) => (
+              {shownEvidence.map((ev) => (
                 <EvidenceItem key={ev.evidence_id} ev={ev} />
               ))}
+              {hiddenEvidence > 0 && (
+                <li className="hint">
+                  {hiddenEvidence} more evidence {hiddenEvidence === 1 ? "item" : "items"} not shown
+                </li>
+              )}
             </ul>
           )}
         </>
@@ -156,7 +197,7 @@ export function RootCausesPanel() {
   if (!rootCauses || rootCauses.incident_onset_ns == null) {
     return (
       <EmptyState
-        title="No verdict yet"
+        title="No ranking yet"
         hint="Play or seek past the incident onset to accumulate evidence."
         glyph="?"
         testId="root-causes"
@@ -167,7 +208,7 @@ export function RootCausesPanel() {
   return (
     <div className="panel-body correlation-list" data-testid="root-causes">
       <p className="panel-caption">
-        Suspects, strongest evidence first <InfoTip>{rootCauses.language}.</InfoTip>
+        Candidates by evidence score <InfoTip>{rootCauses.language}.</InfoTip>
       </p>
       {rootCauses.candidates.map((candidate) => (
         <CandidateCard

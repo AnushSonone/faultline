@@ -28,14 +28,13 @@ function mixHex(a: string, b: string, t: number): string {
   return `#${[c(r1, r2), c(g1, g2), c(b1, b2)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
-// Fit, but never zoom past 1.25: labels are designed at 11px and a three-node
-// graph should not fill a 900px panel with three giant circles.
+// Fit and centre, but never zoom past 1.25: labels are designed at 11px and
+// a three-node graph should not fill a 900px panel with three giant circles.
+const FIT_PAD = 24;
 function fitCapped(cy: Core) {
-  cy.fit(undefined, 32);
-  if (cy.zoom() > 1.25) {
-    cy.zoom(1.25);
-    cy.center();
-  }
+  cy.fit(undefined, FIT_PAD);
+  if (cy.zoom() > 1.25) cy.zoom(1.25);
+  cy.center();
 }
 
 // Position every drawn node for the given direction and refit.
@@ -67,6 +66,13 @@ function nodeSize(observed: boolean): number {
   return observed ? NODE_PX : NODE_UNOBSERVED_PX;
 }
 
+// What widens a node's drawn bbox without changing the graph's identity.
+function fitKey(model: MapModel): string {
+  const top1 = model.nodes.find((n) => n.rank === 1 && (n.score ?? 0) > 0)?.id ?? "";
+  const deployed = model.nodes.filter((n) => n.deployed).map((n) => n.id).join(",");
+  return `${top1}|${deployed}`;
+}
+
 function nodeData(n: MapModel["nodes"][number]) {
   const ranked = n.rank === 1 && (n.score ?? 0) > 0;
   return {
@@ -81,14 +87,18 @@ function nodeData(n: MapModel["nodes"][number]) {
   };
 }
 
-// The dependency map. Arrows point caller → callee, laid out top-down from
-// the entry service. Colour is latency heat at the replay cursor, a double
-// ring is a landed deployment, and metrics-only services sit dimmed in a row
-// underneath so the map shows the whole system, not only the traced part.
+// The dependency map. Arrows point caller to callee, laid out from the entry
+// service. Colour is latency heat at the replay cursor, a double ring is a
+// landed deployment, and metrics-only services sit dimmed one level past the
+// traced graph so the map shows the whole system, not only the traced part.
+// The legend is in flow under the canvas, so the fit never hides a node.
 export function ServiceMap() {
   const ref = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
   const signatureRef = useRef<string>("");
+  // Label widths change with the #1 badge and the deploy ring; refit when
+  // they do, one frame after cytoscape has restyled.
+  const fitKeyRef = useRef<string>("");
   const hotRef = useRef<Set<string>>(new Set());
   const directionRef = useRef<MapDirection>("horizontal");
   const modelRef = useRef<MapModel | null>(null);
@@ -232,6 +242,7 @@ export function ServiceMap() {
         ...model.edges.map((e) => ({ data: { id: e.id, source: e.source, target: e.target } })),
       ]);
       applyLayout(cy, model, directionRef.current);
+      fitKeyRef.current = fitKey(model);
     }
     // Same graph identity: update heat, badges, propagation in place.
     const nextHot = new Set<string>();
@@ -260,6 +271,13 @@ export function ServiceMap() {
       }
     }
     hotRef.current = nextHot;
+    const key = fitKey(model);
+    if (key !== fitKeyRef.current) {
+      fitKeyRef.current = key;
+      requestAnimationFrame(() => {
+        if (cyRef.current === cy && cy.elements().length > 0) fitCapped(cy);
+      });
+    }
     for (const e of model.edges) {
       const el = cy.$id(e.id);
       if (el.empty()) continue;
@@ -305,8 +323,8 @@ export function ServiceMap() {
   // Cytoscape owns the container's children, so React must never render
   // inside it. Overlays are siblings.
   return (
-    <div className="panel-body graph graph-wrap" data-testid="service-map">
-      <div className="graph-canvas" ref={ref} />
+    <div className="panel-body graph map-wrap" data-testid="service-map">
+      <div className="graph-canvas map-canvas" ref={ref} />
       {model.nodes.length === 0 && (
         <div className="graph-overlay">
           <EmptyState title="Waiting for topology" hint="Appears as soon as the session loads" />
@@ -315,17 +333,17 @@ export function ServiceMap() {
       {model.nodes.length > 0 && (
         <div className="map-legend" aria-hidden="true">
           <span className="legend-item">
-            <span className="legend-swatch round" style={{ background: COLORS.accent }} /> healthy
+            <span className="legend-swatch round" style={{ background: COLORS.accent }} /> nominal
           </span>
           <span className="legend-item">
-            <span className="legend-swatch round" style={{ background: COLORS.danger }} /> struggling
+            <span className="legend-swatch round" style={{ background: COLORS.danger }} /> anomalous
           </span>
           <span className="legend-item">
-            <span className="legend-swatch round ring" /> just got a new version
+            <span className="legend-swatch round ring" /> deployed
           </span>
           <span className="legend-item">
             <span className="legend-swatch round" style={{ background: COLORS.faint, opacity: 0.55 }} />{" "}
-            quiet (no calls seen)
+            metrics only (no spans)
           </span>
         </div>
       )}

@@ -72,6 +72,15 @@ export function fmtCount(n: number | null | undefined): string {
   return n.toLocaleString("en-US");
 }
 
+// Compact counts for dense grids: 950, 12.4k, 3.1M.
+export function fmtCompact(n: number | null | undefined): string {
+  if (n == null) return "-";
+  const abs = Math.abs(n);
+  if (abs < 1000) return String(Math.round(n));
+  if (abs < 1e6) return `${(n / 1e3).toFixed(abs < 1e4 ? 1 : 0)}k`;
+  return `${(n / 1e6).toFixed(1)}M`;
+}
+
 export function fmtPct(v: number | null | undefined): string {
   if (v == null) return "-";
   return `${(v * 100).toFixed(1)}%`;

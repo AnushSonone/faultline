@@ -11,6 +11,7 @@ export const COLORS: Record<
   | "faint"
   | "accent"
   | "ok"
+  | "alert"
   | "warn"
   | "danger"
   | "dangerSoft",
@@ -25,6 +26,7 @@ export const COLORS: Record<
   faint: "#5d6b80",
   accent: "#4da3ff",
   ok: "#45c06d",
+  alert: "#ff8a3d",
   warn: "#e8b93e",
   danger: "#e5604f",
   dangerSoft: "#ffb4a8",
@@ -41,6 +43,7 @@ export const COLORS_LIGHT: Record<keyof typeof COLORS, string> = {
   faint: "#8a93a0",
   accent: "#1d63d8",
   ok: "#1e8e4b",
+  alert: "#ea580c",
   warn: "#9a6d00",
   danger: "#c0392b",
   dangerSoft: "#8c2a1e",

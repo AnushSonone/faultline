@@ -36,22 +36,25 @@ export function parseAnomaly(
   return { metric: stripServicePrefix(m[1].trim(), service).replace(/_/g, " "), z: m[2] };
 }
 
-// Plain words for a metric name, shared by the canvas labels and the
-// narration so the two never disagree.
-export function plainMetric(metric: string): string {
+// The literature term for a metric name, shared by the canvas labels and
+// the narration so the two never disagree. A percentile suffix on latency
+// ("latency-99") is spelled out; otherwise the name stands as is.
+export function metricTerm(metric: string): string {
   const m = metric.trim().toLowerCase().replace(/_/g, " ");
-  if (/^latency(-\d+)?$/.test(m)) return "got slower";
-  if (m === "mem" || m === "memory") return "used more memory";
-  if (m === "error rate") return "threw more errors";
-  if (m === "cpu") return "CPU maxed out";
-  if (m === "workload") return "got busier";
-  return `${m} went strange`;
+  const lat = /^latency(?:-(\d+))?$/.exec(m);
+  if (lat) return lat[1] ? `p${lat[1]} latency` : "latency";
+  if (m === "mem" || m === "memory") return "memory";
+  if (m === "error rate") return "error rate";
+  if (m === "cpu") return "CPU";
+  if (m === "workload") return "request rate";
+  return m;
 }
 
 export type LabelOptions = {
-  // Canvas-only mode for the lane layout: plain words, no service (the group
-  // already names it), no z ("new version", "error in logs", "got slower",
-  // "suspect #1"). Narration and tooltips use the full form.
+  // Canvas-only mode for the lane layout: short term, no service (the group
+  // already names it), no z, and no "anomaly" (the lane says it): "deploy",
+  // "error log", "latency", "candidate #1". Narration and tooltips use the
+  // full form.
   compact?: boolean;
 };
 
@@ -68,7 +71,7 @@ function shortEvidenceLabelBase(node: LabelSource, compact: boolean): string {
       const m = ANOMALY_RE.exec(label);
       if (m) {
         const metric = stripServicePrefix(m[1].trim(), node.service).replace(/_/g, " ");
-        return compact ? plainMetric(metric) : `${metric} spike (z ${m[2]})`;
+        return compact ? metricTerm(metric) : `${metric} spike (z ${m[2]})`;
       }
       return stripServicePrefix(label, node.service);
     }
@@ -76,13 +79,13 @@ function shortEvidenceLabelBase(node: LabelSource, compact: boolean): string {
       return node.service ?? label.replace(/\s+degradation$/i, "");
     case "root_cause_candidate": {
       const m = CANDIDATE_RE.exec(label);
-      if (m) return compact ? `suspect #${m[1]}` : `#${m[1]} ${m[2].trim()}`;
+      if (m) return compact ? `candidate #${m[1]}` : `#${m[1]} ${m[2].trim()}`;
       return label;
     }
     case "change":
-      return compact ? "new version" : label.replace(/^change on\s+/i, "deploy: ");
+      return compact ? "deploy" : label.replace(/^change on\s+/i, "deploy: ");
     case "log_pattern":
-      return compact ? "error in logs" : label.replace(/^high-severity log on\s+/i, "error log: ");
+      return compact ? "error log" : label.replace(/^high-severity log on\s+/i, "error log: ");
     default:
       return label;
   }

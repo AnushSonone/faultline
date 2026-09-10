@@ -1,63 +1,115 @@
-import type { TabId, TourTarget } from "../state/investigation";
+import type { RuntimeTabId, TabId, TourTarget } from "../state/investigation";
 
-// One-sentence plain-language intros, shown in the info tips beside each
-// section title. They describe the tool, not any particular incident.
-export const SECTION_INTROS: Record<TabId, string> = {
+// One sentence under each drawer title. They describe the tool, not any
+// particular incident.
+export const SECTION_LEADS: Record<TabId, string> = {
   overview:
-    "An incident is a stretch of time when one service degrades and the symptoms ripple to everything that calls it. The map shows the services, the evidence graph shows how Faultline reasons from what changed to who it ranks first.",
+    "The dependency graph, the evidence graph and the ranking, all following the replay cursor.",
   "root-causes":
-    "Root cause analysis works backwards from symptoms to the service that started it. Every service gets a fixed formula over nine kinds of evidence; click a score row to see exactly why.",
+    "Every service is scored by a fixed linear formula over nine features; each row decomposes its score into value, weight and contribution.",
   signals:
-    "The raw telemetry behind the verdict: which services looked unusual and when, and one slow request followed hop by hop.",
+    "The telemetry behind the ranking: p99 latency per service and window via DDSketch, and one sampled trace with its critical path.",
   case:
-    "What is known about this incident up front, and the answer, which stays hidden until you reveal it. The ranker never sees it.",
+    "What was recorded, which request routes it covers, the injected signal, and the fault-injection label, which unlocks after one full replay.",
   runtime:
-    "Under the hood: the streaming engine computing everything on the stage, live. Watermarks, checkpoints, query plans and counters, exposed rather than hidden.",
+    "The streaming engine that computes the stage: operator DAG, watermarks, ingestion, query planner, scoring formula and checkpoint recovery.",
 };
 
-export const MAP_INTRO =
-  "Each circle is one small program, a service. An arrow means \"calls\". A circle turns red when that service gets slower than it usually is, a double ring means it just got a new version, and the top suspect carries its rank. Grey circles report numbers but no calls were seen.";
+export const MAP_LEAD =
+  "Services and their observed call edges, caller to callee; a node turns red when one of its metrics leaves its own baseline.";
 
-export const EVIDENCE_INTRO =
-  "Follow the arrows left to right: something changed, some numbers went strange, some services got slow, and these are the suspects, ranked. It is an explanation of the evidence, not proof. Dashed red arrows point the other way. Faded boxes are still ahead of the replay.";
+export const EVIDENCE_LEAD =
+  "Change events, metric anomalies, degradations and candidates, left to right, linked by the evidence the ranker used; faded nodes are ahead of the cursor.";
 
-// Three sentences for someone who has never heard of services or incidents.
-export const PRIMER: string[] = [
-  "A modern app is not one program. It is many small programs, called services, calling each other.",
-  "When one of them breaks, the ones that depend on it look broken too, so the alarm usually goes off far from the real problem.",
-  "Faultline replays the incident and works out which service most likely started it.",
-];
+// The walkthrough: one spotlight per step, every section covered, one or two
+// short sentences each. Steps with a `tab` open that dock tab first and
+// spotlight the drawer. Step order is part of the e2e contract
+// (briefing.spec.ts): step 2 is the map, step 5 the verdict.
+export type WalkStep = {
+  target: TourTarget | null;
+  tab?: TabId;
+  runtimeTab?: RuntimeTabId;
+  // The step shows the ranking or its evidence: seek to the end once.
+  needsEvidence?: boolean;
+  title: string;
+  text: string;
+};
 
-// The 30-second tour: one panel per step, plain words.
-export const TOUR_STEPS: Array<{ target: TourTarget | null; title: string; text: string }> = [
+export const WALK_STEPS: WalkStep[] = [
   {
     target: null,
-    title: "What is this?",
-    text: PRIMER.join(" "),
+    title: "Faultline",
+    text: "A streaming root-cause analysis engine. It replays an incident on an event-time clock, builds an evidence graph and ranks candidates. A ranking, never a proof.",
   },
   {
     target: "map",
-    title: "Who calls whom",
-    text: "These circles are the shop's services. An arrow means \"calls\". Watch for circles turning red.",
+    title: "Dependency graph",
+    text: "Services and their observed call edges, caller to callee. A node turns red when a metric leaves its own baseline; the badge is the candidate rank.",
+  },
+  {
+    target: "transport",
+    title: "Replay transport",
+    text: "Pick an incident, then Play streams its events in event-time order. Reset returns to the start; Advanced toggles projection mode and out-of-order arrival.",
   },
   {
     target: "track",
-    title: "The recording",
-    text: "This is the incident recording, about 15 seconds long. Yellow bars are new versions being deployed.",
+    title: "Event-time scrubber",
+    text: "One time axis for every panel. Yellow bars are change events, dots are evidence as it lands. Drag to seek.",
+  },
+  {
+    target: "verdict",
+    needsEvidence: true,
+    title: "Top root-cause candidate",
+    text: "The highest-scoring candidate, its evidence score from 0 to 1, and the features that carried it. A ranking of hypotheses, not a proof.",
+  },
+  {
+    target: "ranking",
+    needsEvidence: true,
+    title: "Candidate ranking",
+    text: "All candidates by evidence score, re-ordered live as evidence lands. Click a row to link every panel to that service.",
+  },
+  {
+    target: "feed",
+    needsEvidence: true,
+    title: "Evidence timeline",
+    text: "Change events, anomalies, degradations and rank changes up to the cursor, newest first. Anomalies carry their peak robust z-score.",
   },
   {
     target: "evidence",
-    title: "How Faultline reasoned",
-    text: "Read it left to right: something changed, numbers went strange, services got slow, and these are the suspects.",
+    needsEvidence: true,
+    title: "Evidence graph",
+    text: "Provenance of the ranking, left to right: change event, anomaly, degradation, candidate. Dashed red edges contradict; faded nodes are ahead of the cursor.",
   },
   {
-    target: "verdict",
-    title: "Most likely culprit",
-    text: "Faultline's answer, with how strong the evidence is. It is a best guess, not proof.",
+    target: "tab-root-causes",
+    tab: "root-causes",
+    needsEvidence: true,
+    title: "Ranking tab",
+    text: "Per-candidate score decomposition: feature value, weight and contribution. Below it, change proximity joins deployments to anomaly onsets.",
   },
   {
-    target: "verdict",
-    title: "Now press Play",
-    text: "Press Play to watch it all happen. Then open Why? for the numbers.",
+    target: "tab-signals",
+    tab: "signals",
+    needsEvidence: true,
+    title: "Telemetry tab",
+    text: "The p99 latency heatmap per service and window, and one sampled trace as a waterfall with its critical path marked.",
+  },
+  {
+    target: "tab-case",
+    tab: "case",
+    title: "Case file tab",
+    text: "What was recorded, the request routes, and the injected signal. The fault-injection label unlocks after one full replay; the ranker never reads it.",
+  },
+  {
+    target: "tab-runtime",
+    tab: "runtime",
+    runtimeTab: "pipeline",
+    title: "Runtime tab",
+    text: "The stream processor underneath: operator DAG, event-time watermarks, ingestion, the SQL planner, the scoring formula and checkpoint recovery.",
+  },
+  {
+    target: "transport",
+    title: "Run the replay",
+    text: "Press Play and watch the deploy marker, the first anomaly, the propagation and the ranking settle. Then open Case file to compare with ground truth.",
   },
 ];

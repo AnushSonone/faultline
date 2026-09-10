@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   fmtBytes,
+  fmtCompact,
   fmtCount,
   fmtDurationNs,
   fmtIn,
@@ -138,5 +139,14 @@ describe("shortTraceId", () => {
   it("passes short ids through unchanged", () => {
     expect(shortTraceId("ab12cd34")).toBe("ab12cd34");
     expect(shortTraceId("abc")).toBe("abc");
+  });
+
+  it("fmtCompact abbreviates thousands and millions", () => {
+    expect(fmtCompact(0)).toBe("0");
+    expect(fmtCompact(950)).toBe("950");
+    expect(fmtCompact(1250)).toBe("1.3k");
+    expect(fmtCompact(12400)).toBe("12k");
+    expect(fmtCompact(3_100_000)).toBe("3.1M");
+    expect(fmtCompact(null)).toBe("-");
   });
 });

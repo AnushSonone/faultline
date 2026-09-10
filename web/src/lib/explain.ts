@@ -1,19 +1,20 @@
-// The verdict in words. A sentence built from the score components that
-// actually carried the ranking, so a reader who has never heard of RCA can
-// see *why* a service is suspected. Claim discipline: "most likely culprit",
-// never "the cause".
+// The verdict in words. One sentence built from the score components that
+// actually carried the ranking, so a reader can see which features put a
+// service on top. Each clause names its feature. Claim discipline: "top
+// root-cause candidate", never "the cause".
 
 import type { RootCauseCandidate } from "../types/protocol";
 
 export const CLAUSES: Record<string, string> = {
-  change_proximity: "it got a new version just before things went wrong",
-  temporal_precedence: "it went wrong before the services that depend on it",
-  anomaly_strength: "its own numbers strayed far from normal",
-  downstream_impact: "the services that depend on it slowed down afterwards",
-  topology_consistency: "the pattern of slow services matches its position in the chain",
-  failed_trace_coverage: "most failed requests passed through it",
-  critical_path_contribution: "it sits on the slowest part of the request path",
-  log_evidence: "its logs show errors",
+  change_proximity: "a deployment landed just before its onset (change proximity)",
+  temporal_precedence: "its anomaly onset preceded its callers' (temporal precedence)",
+  anomaly_strength: "its peak robust z-score is high (anomaly strength)",
+  downstream_impact: "the other anomalous services are reachable from it (downstream impact)",
+  topology_consistency: "its dependency paths explain the anomalous set (topology consistency)",
+  failed_trace_coverage: "most failed traces pass through it (failed-trace coverage)",
+  critical_path_contribution:
+    "it carries the excess latency on the critical path (critical-path contribution)",
+  log_evidence: "correlated error logs (log evidence)",
 };
 
 const EPS = 0.005;
@@ -36,21 +37,23 @@ export function explainCandidate(
     .slice(0, max)
     .map((k) => CLAUSES[k.name]);
   if (positive.length === 0) {
-    return `${c.service} is ranked first, but the evidence for it is weak.`;
+    return `${c.service} ranks first, but its evidence score is weak.`;
   }
   const contradiction = c.components.find((k) => k.name === "contradiction_penalty");
-  let sentence = `${c.service} is the most likely culprit: ${joinClauses(positive)}.`;
+  let sentence = `${c.service} is the top root-cause candidate: ${joinClauses(positive)}.`;
   if (contradiction && contradiction.contribution < -EPS) {
-    sentence += " Though some evidence points the other way.";
+    sentence += " A contradiction penalty applies: some of its impacted callers degraded first.";
   }
   return sentence;
 }
 
-// Score band in words: the number stays alongside, the word is what a
-// newcomer reads.
-export function evidenceWord(score: number): "strong" | "some" | "weak" | "none" {
+export type ScoreBand = "strong" | "moderate" | "weak" | "none";
+
+// Score band in words. The number is the primary label; the band is the
+// tooltip and the colour cue.
+export function scoreBand(score: number): ScoreBand {
   if (score >= 0.6) return "strong";
-  if (score >= 0.3) return "some";
+  if (score >= 0.3) return "moderate";
   if (score > 0) return "weak";
   return "none";
 }

@@ -1,12 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { bootAtEnd } from "./utils/boot";
 
 test.describe("UI shell: dock tabs + scrubber", () => {
   test("tab switching, scrubber seek, speed select", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("connected", {
-      timeout: 30_000,
-    });
+    await bootAtEnd(page);
 
     // The stage is always on screen; every other tab opens its drawer.
     await expect(page.getByTestId("page-overview")).toBeVisible();
@@ -23,9 +20,6 @@ test.describe("UI shell: dock tabs + scrubber", () => {
     await expect(page.getByTestId("service-map")).toBeVisible();
 
     // Scrubber seek: click at 60% and the cursor time updates.
-    await expect(page.getByTestId("scrubber-time")).not.toHaveText("0.0 s in", {
-      timeout: 15_000,
-    });
     const before = await page.getByTestId("scrubber-time").innerText();
     const scrubber = page.getByTestId("timeline");
     const box = await scrubber.boundingBox();

@@ -1,18 +1,12 @@
 import { test, expect } from "@playwright/test";
+import { bootAtEnd } from "./utils/boot";
 
 test.describe("M5 trace comparison + evidence graph", () => {
   test("critical path, healthy comparison, evidence graph, component filter", async ({
     page,
   }) => {
-    await page.goto("/");
-    await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("connected", {
-      timeout: 30_000,
-    });
-    // Verdict-first open: full evidence without pressing Play.
-    await expect(page.getByTestId("verdict-hero")).toContainText("Most likely culprit", {
-      timeout: 20_000,
-    });
+    // Seek to the incident end: full evidence without pressing Play.
+    await bootAtEnd(page);
 
     // Evidence graph lives on the stage, always visible.
     await expect(page.getByTestId("evidence-graph")).toBeVisible();
@@ -34,16 +28,22 @@ test.describe("M5 trace comparison + evidence graph", () => {
     await page.getByTestId("tab-signals").click();
     await expect(page.getByTestId("page-signals")).toBeVisible();
     await expect(page.getByTestId("waterfall")).toBeVisible();
-    const traceButtons = page.locator(".trace-item");
-    const count = await traceButtons.count();
+    const select = page.getByTestId("trace-select");
+    await expect(select).toBeVisible();
+    await expect(page.getByTestId("trace-selected")).toBeVisible({ timeout: 10_000 });
+    const failed = await select
+      .locator("optgroup[label^='Failed'] option")
+      .evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
+    const all = await select
+      .locator("option")
+      .evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value).filter(Boolean));
     let comparisonSeen = false;
-    // Iterate from the end: error traces occur late in the incident.
-    for (let i = count - 1; i >= 0 && !comparisonSeen; i--) {
-      await traceButtons.nth(i).click();
-      // Let the trace-detail fetch settle so the toolbar reflects this trace.
-      await page.waitForTimeout(400);
+    // Failed traces first, then from the end: error traces occur late.
+    for (const id of [...failed, ...all.slice().reverse()]) {
+      if (comparisonSeen) break;
+      await select.selectOption(id);
       const compareToggle = page.getByTestId("waterfall-compare-toggle");
-      if (await compareToggle.count()) {
+      if (await compareToggle.isVisible({ timeout: 1_500 }).catch(() => false)) {
         await page.getByTestId("waterfall-filter-critical").click();
         await compareToggle.click();
         await expect(page.getByTestId("trace-comparison")).toBeVisible();
