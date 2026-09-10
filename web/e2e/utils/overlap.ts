@@ -140,6 +140,7 @@ export async function collectCyBoxes(page: Page): Promise<Box[]> {
       if (!cy) continue;
       const cs = getComputedStyle(c);
       if (cs.display === "none") continue;
+      if (c.closest('[aria-hidden="true"]')) continue;
       const r = c.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) continue;
       const z = cy.zoom();
@@ -388,11 +389,29 @@ export async function assertEvidenceCentred(page: Page, stateName: string, toler
       left = Math.min(left, r.left - sr.left);
       right = Math.max(right, r.right - sr.left);
     }
-    return { leftGap: left, rightGap: scroll.clientWidth - right, width: scroll.clientWidth };
+    const top = bb.y1 * z + p.y;
+    const bottom = bb.y2 * z + p.y;
+    return {
+      leftGap: left,
+      rightGap: scroll.clientWidth - right,
+      width: scroll.clientWidth,
+      topGap: top,
+      bottomGap: scroll.clientHeight - bottom,
+      height: scroll.clientHeight,
+      fits: bottom - top <= scroll.clientHeight,
+    };
   });
   if (!m) return;
   expect(
     Math.abs(m.leftGap - m.rightGap),
     `[${stateName}] evidence graph off-centre: left gap ${Math.round(m.leftGap)}px, right gap ${Math.round(m.rightGap)}px in ${m.width}px`,
   ).toBeLessThanOrEqual(tolerancePx);
+  // Only meaningful when the graph is shorter than the box; a taller graph
+  // pins to the top and scrolls.
+  if (m.fits) {
+    expect(
+      Math.abs(m.topGap - m.bottomGap),
+      `[${stateName}] evidence graph off-centre vertically: top gap ${Math.round(m.topGap)}px, bottom gap ${Math.round(m.bottomGap)}px in ${m.height}px`,
+    ).toBeLessThanOrEqual(16);
+  }
 }

@@ -5,15 +5,17 @@ import {
   createSession,
   DemoBusyError,
   loadIncident,
-  seek,
   setSpeed,
   type StreamHandle,
 } from "../api/client";
 import { useInvestigation } from "../state/investigation";
 import { pickReplaySpeed, type Speed } from "../lib/replaySpeed";
+import { readFirstVisit, safeStorage } from "../lib/firstVisit";
 import { TransportBar } from "./TransportBar";
 import { Stage } from "./Stage";
 import { Dock } from "./Dock";
+import { Walkthrough } from "../components/Walkthrough";
+import { FirstVisit } from "../components/FirstVisit";
 
 const DEFAULT_INCIDENT = "rec-mem-001";
 
@@ -37,6 +39,8 @@ export function App() {
   const setError = useInvestigation((s) => s.setError);
   const setGroundTruth = useInvestigation((s) => s.setGroundTruth);
   const clearSelection = useInvestigation((s) => s.clearSelection);
+  const setFirstVisit = useInvestigation((s) => s.setFirstVisit);
+  const incidentEndNs = useInvestigation((s) => s.incidentEndNs);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +53,9 @@ export function App() {
         setSession(id);
         wsRef.current = connectStream(id);
         clearSelection();
+        // The previous incident's range must not survive into the new load:
+        // anything reading data-end-ns would seek the wrong clock.
+        setIncidentRange(null, null);
         const loaded = await loadIncident(id, incident, { adversarial });
         setIncident(loaded.incident_id ?? incident);
         setIncidentRange(loaded.start_time_ns ?? null, loaded.end_time_ns ?? null);
@@ -62,12 +69,10 @@ export function App() {
         const chosen = pickReplaySpeed(span);
         setSpeedChoice(chosen);
         await setSpeed(id, chosen);
-        // Verdict-first open: land on the fully evidenced end state. Play
-        // rewinds to the start (ReplayClock::play rewinds when stopped).
-        if (loaded.end_time_ns != null) {
-          await seek(id, loaded.end_time_ns);
-        }
+        // Investigation-first open: the cursor stays at the start, nothing is
+        // ranked, and the visitor builds the evidence by pressing Play.
         setBooting(false);
+        setFirstVisit(readFirstVisit(safeStorage()));
       } catch (e) {
         if (e instanceof DemoBusyError) {
           setDemoBusy(true);
@@ -88,6 +93,7 @@ export function App() {
     setError,
     setGroundTruth,
     clearSelection,
+    setFirstVisit,
     adversarial,
     incident,
     bootRetry,
@@ -110,7 +116,11 @@ export function App() {
   }
 
   return (
-    <div className="shell embed">
+    <div
+      className="shell embed"
+      data-session={sessionId ?? undefined}
+      data-end-ns={incidentEndNs != null ? String(incidentEndNs) : undefined}
+    >
       <TransportBar
         adversarial={adversarial}
         onToggleAdversarial={() => setAdversarial((v) => !v)}
@@ -167,6 +177,8 @@ export function App() {
         adversarial={adversarial}
       />
       <Dock />
+      <FirstVisit />
+      <Walkthrough />
     </div>
   );
 }

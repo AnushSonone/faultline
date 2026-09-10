@@ -1,19 +1,12 @@
 import { test, expect } from "@playwright/test";
+import { bootAtEnd } from "./utils/boot";
 
 test.describe("M4 root-cause ranking", () => {
   test("ranked candidates with breakdown, evidence, and linked selection", async ({
     page,
   }) => {
-    await page.goto("/");
-    await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("connected", {
-      timeout: 30_000,
-    });
-
-    // The session opens seeked to the incident end, so the ranking has full evidence.
-    await expect(page.getByTestId("verdict-hero")).toContainText("Most likely culprit", {
-      timeout: 20_000,
-    });
+    // Seek to the incident end so the ranking has full evidence.
+    await bootAtEnd(page);
 
     await page.getByTestId("tab-root-causes").click();
     await expect(page.getByTestId("page-root-causes")).toBeVisible();

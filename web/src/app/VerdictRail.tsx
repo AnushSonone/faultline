@@ -1,33 +1,25 @@
-import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useInvestigation } from "../state/investigation";
 import { Briefing } from "../components/Briefing";
-import { InfoTip } from "../components/InfoTip";
+import { Checklist } from "../components/Checklist";
 import { NowStrip } from "../components/NowStrip";
-import { Tour } from "../components/Tour";
-import { evidenceWord, explainCandidate, ordinal } from "../lib/explain";
+import { scoreBand, explainCandidate, ordinal } from "../lib/explain";
+import { useMediaQuery } from "../lib/useMediaQuery";
+import { useState } from "react";
 
 const MAX_ROWS = 6;
 
 // The verdict column beside the map: who is ranked first, the whole ranking
-// as live bars, and the narration of what the replay cursor just passed.
+// as live bars, the investigation checklist, and either the case brief or
+// the evidence timeline up to the replay cursor.
 export function VerdictRail({ booting, incidentId }: { booting: boolean; incidentId: string }) {
   const rootCauses = useInvestigation((s) => s.rootCauses);
-  const sessionId = useInvestigation((s) => s.sessionId);
-  const replayState = useInvestigation((s) => s.replay.state);
-  // The briefing shows until the first Play of a session (transport or its
-  // own button) and can be brought back with the chip.
-  const [briefingOpen, setBriefingOpen] = useState(true);
-  // The tour replaces the lower block while it runs; null = not running.
-  const [tourStep, setTourStep] = useState<number | null>(null);
+  // The case brief shows until the first Play (the store closes it on
+  // "playing") and can be brought back with the chip.
+  const briefOpen = useInvestigation((s) => s.briefOpen);
+  const setBriefOpen = useInvestigation((s) => s.setBriefOpen);
   const tourTarget = useInvestigation((s) => s.tourTarget);
-  useEffect(() => {
-    setBriefingOpen(true);
-    setTourStep(null);
-  }, [sessionId]);
-  useEffect(() => {
-    if (replayState === "playing") setBriefingOpen(false);
-  }, [replayState]);
+  const setWalkStep = useInvestigation((s) => s.setWalkStep);
   const selectedService = useInvestigation((s) => s.selectedService);
   const hoveredService = useInvestigation((s) => s.hoveredService);
   const selectService = useInvestigation((s) => s.selectService);
@@ -35,49 +27,42 @@ export function VerdictRail({ booting, incidentId }: { booting: boolean; inciden
   const setTab = useInvestigation((s) => s.setTab);
 
   const hasVerdict = rootCauses != null && rootCauses.incident_onset_ns != null;
+  // Short rails fold the checklist to one line; expanding it takes the
+  // timeline's slot so nothing is ever cut in half.
+  const shortRail = useMediaQuery("(max-height: 820px)");
+  const [checkExpanded, setCheckExpanded] = useState(false);
+  const checkCompact = (hasVerdict && !briefOpen) || shortRail;
+  const showChecklistRows = checkCompact && checkExpanded;
   const candidates = hasVerdict ? rootCauses!.candidates.slice(0, MAX_ROWS) : [];
   const top = candidates[0] ?? null;
 
+  const briefChip = !briefOpen && (
+    <button
+      type="button"
+      className="chip-toggle rail-chip"
+      data-testid="briefing-open"
+      onClick={() => setBriefOpen(true)}
+    >
+      Case brief
+    </button>
+  );
+
   return (
     <aside className={tourTarget === "verdict" ? "panel rail tour-target" : "panel rail"} data-testid="verdict-rail">
-      <div className="verdict-hero" data-testid="verdict-hero">
+      <div className="verdict-hero" data-testid="verdict-hero" data-walk="verdict">
         {top ? (
           <>
             <span className="eyebrow rail-eyebrow">
-              Most likely culprit{" "}
-              <InfoTip>
-                The score is a weighted sum of nine evidence features, between 0 and 1. It is a
-                ranking signal, not a probability that this service is guilty.
-              </InfoTip>
-              <span className="term">likely root cause</span>
-              {!briefingOpen && (
-                <>
-                  <button
-                    type="button"
-                    className="chip-toggle rail-chip"
-                    data-testid="briefing-open"
-                    onClick={() => setBriefingOpen(true)}
-                  >
-                    Briefing
-                  </button>
-                  <button
-                    type="button"
-                    className="chip-toggle rail-chip"
-                    data-testid="tour-open"
-                    onClick={() => setTourStep(0)}
-                  >
-                    Tour
-                  </button>
-                </>
-              )}
+              Top root-cause candidate
+              {briefChip}
             </span>
             <div className="verdict-line">
               <span className="verdict-service">{top.service}</span>
               <span className="verdict-score mono">
-                Evidence: {evidenceWord(top.score)} ({top.score.toFixed(2)} of 1)
+                score {top.score.toFixed(2)} · {scoreBand(top.score)} evidence
               </span>
             </div>
-            {!briefingOpen && tourStep == null && (
+            {!briefOpen && (
               <p className="verdict-why" data-testid="verdict-why">
                 {explainCandidate(top)}
               </p>
@@ -86,44 +71,25 @@ export function VerdictRail({ booting, incidentId }: { booting: boolean; inciden
         ) : (
           <>
             <span className="eyebrow rail-eyebrow">
-              Faultline
-              {!briefingOpen && (
-                <>
-                  <button
-                    type="button"
-                    className="chip-toggle rail-chip"
-                    data-testid="briefing-open"
-                    onClick={() => setBriefingOpen(true)}
-                  >
-                    Briefing
-                  </button>
-                  <button
-                    type="button"
-                    className="chip-toggle rail-chip"
-                    data-testid="tour-open"
-                    onClick={() => setTourStep(0)}
-                  >
-                    Tour
-                  </button>
-                </>
-              )}
+              Top root-cause candidate
+              {briefChip}
             </span>
             <p className="verdict-caption">
               {booting
                 ? "Connecting to the replay engine…"
-                : "No verdict yet. Evidence accumulates as the replay passes the incident onset."}
+                : "Nothing is ranked yet; candidates appear when the replay cursor passes the incident onset."}
             </p>
           </>
         )}
       </div>
 
-      {candidates.length > 0 && !briefingOpen && tourStep == null && (
+      {candidates.length > 0 && !briefOpen && (
         <div className="rank-head" aria-hidden="true">
-          <span>suspects, strongest evidence first</span>
+          <span>candidates by evidence score</span>
         </div>
       )}
-      {candidates.length > 0 && !briefingOpen && tourStep == null && (
-        <ol className="rank-list" data-testid="rank-list">
+      {candidates.length > 0 && !briefOpen && (
+        <ol className="rank-list" data-testid="rank-list" data-walk="ranking">
           <AnimatePresence initial={false}>
             {candidates.map((c) => {
               const width = Math.max(0, Math.min(1, c.score)) * 100;
@@ -154,8 +120,8 @@ export function VerdictRail({ booting, incidentId }: { booting: boolean; inciden
                   <span className="rank-bar">
                     <span className="rank-fill" style={{ width: `${width}%` }} />
                   </span>
-                  <span className="rank-score" title={`score ${c.score.toFixed(2)} of 1`}>
-                    {evidenceWord(c.score)}
+                  <span className="rank-score mono" title={`${scoreBand(c.score)} evidence`}>
+                    {c.score.toFixed(2)}
                   </span>
                 </motion.li>
               );
@@ -164,38 +130,36 @@ export function VerdictRail({ booting, incidentId }: { booting: boolean; inciden
         </ol>
       )}
 
-      {tourStep != null ? (
-        <Tour step={tourStep} onStep={setTourStep} onClose={() => setTourStep(null)} />
-      ) : briefingOpen ? (
+      <Checklist compact={checkCompact} expanded={checkExpanded} onExpandedChange={setCheckExpanded} />
+
+      {showChecklistRows ? null : briefOpen ? (
         <Briefing
           incidentId={incidentId}
-          onClose={() => setBriefingOpen(false)}
+          onClose={() => setBriefOpen(false, { read: true })}
           onTour={() => {
-            setBriefingOpen(false);
-            setTourStep(0);
+            setBriefOpen(false);
+            setWalkStep(0);
           }}
         />
       ) : (
-        <div className="now-block">
+        <div className="now-block" data-walk="feed">
           <NowStrip />
         </div>
       )}
 
       <p className="rail-caption">
-        {briefingOpen ? (
-          "Press Play the replay to watch the incident from the start."
+        {briefOpen ? (
+          "Press Run replay to stream the incident from the start."
         ) : hasVerdict ? (
           <>
-            Press Play to watch the incident from the start. Open{" "}
+            Open{" "}
             <button type="button" className="link-button" onClick={() => setTab("root-causes")}>
-              Why?
+              Ranking
             </button>{" "}
-            for the numbers.
+            for the score decomposition.
           </>
         ) : (
-          <>
-            Play advances event time; every panel follows the cursor.
-          </>
+          <>Play advances event time; every panel follows the cursor.</>
         )}
       </p>
     </aside>

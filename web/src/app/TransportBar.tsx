@@ -59,6 +59,8 @@ export function TransportBar({
   const cursor = useInvestigation((s) => s.selectedEventTime);
   const heatmapMode = useInvestigation((s) => s.heatmapMode);
   const tourTarget = useInvestigation((s) => s.tourTarget);
+  const setWalkStep = useInvestigation((s) => s.setWalkStep);
+  const setBriefOpen = useInvestigation((s) => s.setBriefOpen);
   const wsStatus = useInvestigation((s) => s.wsStatus);
   const replay = useInvestigation((s) => s.replay);
   const timeline = useInvestigation((s) => s.timeline);
@@ -158,7 +160,7 @@ export function TransportBar({
   const stateText = replay.state === "stopped" ? "ready" : replay.state;
 
   return (
-    <div className="transport" data-testid="replay-scrubber">
+    <div className="transport" data-testid="replay-scrubber" data-walk="transport">
       <div className="brand-block">
         <span className="brand-mark" aria-hidden="true" />
         <h1>Faultline</h1>
@@ -167,6 +169,7 @@ export function TransportBar({
       <select
         className="speed-select incident-select"
         data-testid="incident-picker"
+        data-walk="incident"
         aria-label="Incident"
         value={incident}
         onChange={(e) => onSelectIncident(e.target.value)}
@@ -194,6 +197,18 @@ export function TransportBar({
         <button type="button" disabled={!sessionId} onClick={() => sessionId && reset(sessionId)}>
           Reset
         </button>
+        <button
+          type="button"
+          className="chip-toggle walk-button"
+          data-testid="tour-open"
+          title="Guided tour of every panel"
+          onClick={() => {
+            setBriefOpen(false);
+            setWalkStep(0);
+          }}
+        >
+          Walkthrough
+        </button>
       </div>
 
       <div
@@ -205,6 +220,7 @@ export function TransportBar({
         aria-valuemax={100}
         aria-valuenow={Math.round(frac * 100)}
         data-testid="timeline"
+        data-walk="track"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -275,9 +291,9 @@ export function TransportBar({
         {ready && startNs != null ? fmtIn(shownNs, startNs) : "0.0 s in"}
       </span>
       <InfoTip label="Event time, explained">
-        The clock runs on event time: when the telemetry actually happened inside the incident,
-        not when it arrived. Drag anywhere on the track to seek; yellow bars are deployments and
-        logs, small dots are pieces of evidence as they land.
+        The clock runs on event time: when each sample happened inside the incident, not when
+        it arrived. Drag anywhere on the track to seek. Yellow bars are change events
+        (deployments); dots are evidence nodes as they land.
       </InfoTip>
 
       <select
@@ -299,7 +315,18 @@ export function TransportBar({
         ))}
       </select>
 
-      <details className="engine-menu">
+      <details
+        className="engine-menu"
+        onToggle={(e) => {
+          // The popover hangs off whichever edge keeps it inside the shell:
+          // on a wrapped bar the menu can sit at the far left.
+          const el = e.currentTarget;
+          const shell = el.closest(".shell")?.getBoundingClientRect();
+          const r = el.getBoundingClientRect();
+          const right = shell ? shell.right - 8 : window.innerWidth;
+          el.dataset.align = r.left + 240 > right ? "right" : "left";
+        }}
+      >
         <summary className="chip-toggle">Advanced</summary>
         <div className="engine-pop">
           <button
@@ -313,7 +340,7 @@ export function TransportBar({
               void setProjectionMode(sessionId, next);
             }}
           >
-            Heatmap: {heatmapMode}
+            Projection: {heatmapMode}
           </button>
           <button
             type="button"
@@ -321,11 +348,11 @@ export function TransportBar({
             data-testid="adversarial-toggle"
             onClick={onToggleAdversarial}
           >
-            {adversarial ? "Adversarial on" : "Adversarial off"}
+            {adversarial ? "Out-of-order arrival: on" : "Out-of-order arrival: off"}
           </button>
           <p className="hint">
-            Adversarial replays the same incident with events delivered late and out of order. The
-            engine should reach the same answer.
+            Adversarial arrival replays the same incident with late and out-of-order delivery.
+            Watermarks and window revisions should converge on the same ranking.
           </p>
         </div>
       </details>

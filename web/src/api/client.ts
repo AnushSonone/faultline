@@ -1,4 +1,10 @@
-import type { WsEnvelope } from "../types/protocol";
+import type {
+  CheckpointMetrics,
+  ExplainOutput,
+  QueryResult,
+  TraceDetail,
+  WsEnvelope,
+} from "../types/protocol";
 import { useInvestigation, type GroundTruth } from "../state/investigation";
 
 export type { GroundTruth };
@@ -155,21 +161,76 @@ export async function crashTest(sessionId: string) {
   return r.json();
 }
 
-export async function runQuery(sessionId: string, sql: string): Promise<unknown> {
+export type RunQueryResponse = {
+  result?: QueryResult;
+  explain?: ExplainOutput;
+  error?: string;
+};
+
+// Register + execute at the replay cursor. The server also emits query.plan
+// and query.metrics on the session stream.
+export async function runQuery(sessionId: string, sql: string): Promise<RunQueryResponse> {
   const r = await fetch(api("/api/v1/queries"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sql, session_id: sessionId }),
   });
-  return r.json();
+  return r.json() as Promise<RunQueryResponse>;
 }
 
-export async function fetchTrace(sessionId: string, traceId: string) {
+// EXPLAIN ANALYZE without registering the query in the session list.
+export async function explainQuery(
+  sessionId: string,
+  sql: string,
+): Promise<{ explain?: ExplainOutput; error?: string }> {
+  const r = await fetch(api("/api/v1/queries/explain"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sql, session_id: sessionId }),
+  });
+  return r.json() as Promise<{ explain?: ExplainOutput; error?: string }>;
+}
+
+export type RegisteredQuery = { id: number; sql: string };
+
+// The per-session registered SQL list (capped server-side, oldest dropped).
+export async function listQueries(sessionId: string): Promise<RegisteredQuery[]> {
+  const r = await fetch(api(`/api/v1/queries?session_id=${encodeURIComponent(sessionId)}`));
+  if (!r.ok) throw new Error("query list unavailable");
+  const j = (await r.json()) as { queries?: RegisteredQuery[] };
+  return j.queries ?? [];
+}
+
+export type SnapshotInfo = {
+  session_id: string;
+  latest_checkpoint: string | null;
+  checkpoints: string[];
+  last_checkpoint: CheckpointMetrics | null;
+};
+
+// Checkpoint history for a session: every id on disk plus the LATEST pointer.
+export async function fetchSnapshot(sessionId: string): Promise<SnapshotInfo> {
+  const r = await fetch(api(`/api/v1/sessions/${sessionId}/snapshot`));
+  if (!r.ok) throw new Error("snapshot unavailable");
+  return r.json() as Promise<SnapshotInfo>;
+}
+
+// The trace is not in the store at the replay cursor (404): it is ahead of
+// the cursor, or the list the caller holds is stale.
+export class TraceNotFoundError extends Error {
+  constructor(traceId: string) {
+    super(`trace ${traceId} not found at the cursor`);
+    this.name = "trace_not_found";
+  }
+}
+
+export async function fetchTrace(sessionId: string, traceId: string): Promise<TraceDetail> {
   const r = await fetch(
     api(`/api/v1/sessions/${sessionId}/traces/${encodeURIComponent(traceId)}`),
   );
-  if (!r.ok) throw new Error("trace not found");
-  return r.json();
+  if (r.status === 404) throw new TraceNotFoundError(traceId);
+  if (!r.ok) throw new Error(`trace detail failed (${r.status})`);
+  return r.json() as Promise<TraceDetail>;
 }
 
 export function connectStream(sessionId: string): StreamHandle {

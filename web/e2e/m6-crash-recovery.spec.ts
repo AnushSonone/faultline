@@ -1,20 +1,15 @@
 import { test, expect } from "@playwright/test";
+import { bootAtEnd } from "./utils/boot";
+import { switchRuntimeTab } from "./utils/runtime";
 
 test.describe("M6 checkpoint + recovery", () => {
   test("checkpoint, forced crash, recovery without duplicates", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByTestId("replay-controls")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("connection")).toContainText("connected", {
-      timeout: 30_000,
-    });
-
-    // State is already past the incident (verdict-first open); checkpoint it.
-    await expect(page.getByTestId("verdict-hero")).toContainText("Most likely culprit", {
-      timeout: 20_000,
-    });
+    // Seek past the incident so there is state worth checkpointing.
+    await bootAtEnd(page);
 
     await page.getByTestId("tab-runtime").click();
     await expect(page.getByTestId("page-runtime")).toBeVisible();
+    await switchRuntimeTab(page, "recovery");
     await expect(page.getByTestId("crash-test")).toBeVisible();
     await page.getByTestId("checkpoint-button").click();
     await expect(page.getByTestId("checkpoint-info")).toBeVisible({ timeout: 10_000 });

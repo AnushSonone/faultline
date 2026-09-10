@@ -1,6 +1,5 @@
 import { useInvestigation } from "../state/investigation";
-import { EVIDENCE_INTRO, MAP_INTRO } from "../content/novice";
-import { InfoTip } from "../components/InfoTip";
+import { EVIDENCE_LEAD, MAP_LEAD } from "../content/novice";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { ServiceMap } from "../views/ServiceMap/ServiceMap";
 import { EvidenceGraphPanel } from "../views/EvidenceGraph/EvidenceGraph";
@@ -22,14 +21,12 @@ export function Stage({ booting, sessionId, incidentId, adversarial }: Props) {
   const tourTarget = useInvestigation((s) => s.tourTarget);
   return (
     <div className="stage" data-testid="page-overview">
-      <section className={tourTarget === "map" ? "panel stage-map tour-target" : "panel stage-map"}>
-        <h2>
-          Who calls whom <span className="term">dependency map</span> <InfoTip>{MAP_INTRO}</InfoTip>
-        </h2>
-        <p className="panel-lead">
-          Each circle is one small program (a “service”). An arrow means “calls”. A circle turns red
-          when that service gets slower than usual.
-        </p>
+      <section
+        className={tourTarget === "map" ? "panel stage-map tour-target" : "panel stage-map"}
+        data-walk="map"
+      >
+        <h2>Dependency graph</h2>
+        <p className="panel-lead">{MAP_LEAD}</p>
         <ErrorBoundary name="Dependency map">
           <ServiceMap />
         </ErrorBoundary>
@@ -44,15 +41,12 @@ export function Stage({ booting, sessionId, incidentId, adversarial }: Props) {
           adversarial={adversarial}
         />
       )}
-      <section className={tourTarget === "evidence" ? "panel stage-evidence tour-target" : "panel stage-evidence"}>
-        <h2>
-          How Faultline reasoned <span className="term">evidence graph</span>{" "}
-          <InfoTip>{EVIDENCE_INTRO}</InfoTip>
-        </h2>
-        <p className="panel-lead">
-          Follow the arrows: something changed → some numbers went strange → some services got slow →
-          the suspects, ranked.
-        </p>
+      <section
+        className={tourTarget === "evidence" ? "panel stage-evidence tour-target" : "panel stage-evidence"}
+        data-walk="evidence"
+      >
+        <h2>Evidence graph</h2>
+        <p className="panel-lead">{EVIDENCE_LEAD}</p>
         <ErrorBoundary name="Evidence graph">
           <EvidenceGraphPanel />
         </ErrorBoundary>

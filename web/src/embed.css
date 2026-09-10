@@ -4,7 +4,9 @@
 
    The product is one screen, framed. The root breaks out of the blog's prose
    column (left 50% + translateX) to a panel that sits 4rem inside the
-   viewport on every side, takes the remaining height, and never scrolls:
+   viewport left, right and bottom (the top margin is small so the host's
+   lead-in sentence reads as its caption), takes the remaining height, and
+   never scrolls:
    everything is on the stage or one dock tab away. The font/color
    re-assertions matter because the blog body is a Times serif and the app's
    scoped body{} rule must win on this root. */
@@ -16,7 +18,7 @@
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  margin: 4rem 0;
+  margin: 0.75rem 0 4rem;
   height: calc(100vh - 8rem);
   min-height: 0;
   overflow: hidden;

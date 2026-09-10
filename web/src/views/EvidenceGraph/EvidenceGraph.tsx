@@ -365,17 +365,37 @@ export function EvidenceGraphPanel() {
       rightExt = Math.max(rightExt, (p.x + NODE / 2 + LABEL_GAP + measure(p.label)) * z);
     }
     const headScale = Math.max(8.5 / 11, z); // must match the lane-head font scaling below
+    const filled = new Set(layout.placed.map((p) => p.lane));
     layout.laneX.forEach((x, i) => {
+      // An empty lane draws no header, so it must not pull the centring
+      // either: at boot only the candidate lane exists.
+      if (!filled.has(i)) return;
       const left = (x - NODE / 2) * z;
       leftExt = Math.min(leftExt, left);
       rightExt = Math.max(rightExt, left + measureHead(LANE_TITLES[i]) * headScale);
     });
     if (!Number.isFinite(leftExt)) leftExt = 0;
     const drawnW = rightExt - leftExt;
-    const drawnH = layout.height * z;
+    // Vertically centre what is drawn (a candidates-only graph at boot is a
+    // few rows, not the layout's reserved height), under the lane-head strip.
+    let topExt = Number.POSITIVE_INFINITY;
+    let bottomExt = 0;
+    for (const p of layout.placed) {
+      topExt = Math.min(topExt, (p.y - NODE / 2) * z);
+      bottomExt = Math.max(bottomExt, (p.y + NODE / 2) * z);
+    }
+    if (!Number.isFinite(topExt)) {
+      topExt = 0;
+      bottomExt = layout.height * z;
+    }
+    const drawnH = bottomExt - topExt;
+    // A graph wider than the box pins to its left edge; a narrower one
+    // centres, which needs a negative pan when the only filled lane is the
+    // right-hand one (candidates before the cursor reaches the onset).
+    const centredX = (w - drawnW) / 2 - leftExt;
     const next = {
-      x: Math.max(0, (w - drawnW) / 2 - leftExt),
-      y: drawnH < h ? (h - drawnH) / 2 : 0,
+      x: drawnW >= w ? Math.max(0, centredX) : centredX,
+      y: drawnH < h ? (h - drawnH) / 2 - topExt : -topExt,
     };
     setZoom(z);
     setPan(next);
@@ -410,6 +430,9 @@ export function EvidenceGraphPanel() {
   }, [applyViewport]);
 
   const canvasHeight = Math.max(viewport.h, Math.ceil(layout.height * zoom));
+  // Lanes with nothing in them yet stay unlabelled; their x positions are
+  // still reserved, so nodes never jump as the other lanes fill.
+  const filledLanes = new Set(layout.placed.map((p) => p.lane));
 
   return (
     <div className="evidence-graph-wrap" data-testid="evidence-graph">
@@ -442,6 +465,7 @@ export function EvidenceGraphPanel() {
       )}
       <div className="lane-heads" aria-hidden="true" style={empty ? { display: "none" } : undefined}>
         {layout.laneX.map((x, i) => {
+          if (!filledLanes.has(i)) return null;
           const headScale = Math.max(8.5 / 11, zoom);
           const headW = measureHead(LANE_TITLES[i]) * headScale;
           const raw = pan.x + (x - NODE / 2) * zoom;

@@ -1,56 +1,113 @@
-import { useEffect, useState } from "react";
-import { fetchTrace } from "../../api/client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { TraceNotFoundError } from "../../api/client";
 import { useInvestigation } from "../../state/investigation";
-import type { TraceDetail } from "../../types/protocol";
-import { fmtDurationNs, shortTraceId } from "../../lib/format";
+import type { TraceDetail, TraceSpan } from "../../types/protocol";
+import { fmtOffset, shortTraceId } from "../../lib/format";
+import { fetchTraceCached } from "../../lib/traceCache";
+import { reconcileSelection } from "../../lib/traceSelect";
 import { EmptyState } from "../../components/EmptyState";
-
-type SpanNode = {
-  span_id: string;
-  parent_span_id?: string | null;
-  service?: string | null;
-  operation: string;
-  start_time_ns: number;
-  end_time_ns: number;
-  duration_ns: number;
-  status: string;
-  missing_parent: boolean;
-};
+import { TracePicker } from "./TracePicker";
+import { TraceHeader } from "./TraceHeader";
+import { Waterfall } from "./Waterfall";
 
 type Filter = "all" | "critical" | "errors";
 
+type DetailState =
+  | { kind: "idle" }
+  | { kind: "loading"; id: string }
+  | { kind: "ready"; id: string; detail: TraceDetail }
+  | { kind: "ahead"; id: string }
+  | { kind: "error"; id: string; message: string };
+
+const REFETCH_MS = 1000;
+
+// One sampled trace at the cursor. Selection is reconciled against the list
+// the server republishes every tick, so something is always selected when
+// anything is listed and a stale selection (after Play rewinds the cursor)
+// is replaced. A 404 means the trace is ahead of the cursor: said so, never
+// swallowed, and refetched as the cursor advances.
 export function TraceWaterfall() {
   const sessionId = useInvestigation((s) => s.sessionId);
   const traces = useInvestigation((s) => s.traces);
   const selectedTrace = useInvestigation((s) => s.selectedTrace);
   const selectTrace = useInvestigation((s) => s.selectTrace);
-  const [detail, setDetail] = useState<TraceDetail | null>(null);
+  const rootCauses = useInvestigation((s) => s.rootCauses);
+  const cursor = useInvestigation((s) => s.selectedEventTime);
+  const startNs = useInvestigation((s) => s.incidentStartNs);
+  const [detail, setDetail] = useState<DetailState>({ kind: "idle" });
   const [filter, setFilter] = useState<Filter>("all");
   const [showComparison, setShowComparison] = useState(false);
+  const [refetchKey, setRefetchKey] = useState(0);
+  const lastRefetch = useRef(0);
 
-  const list = traces?.traces ?? [];
+  const listed = useMemo(() => traces?.traces ?? [], [traces]);
+  const listedIds = useMemo(() => listed.map((t) => t.trace_id), [listed]);
+  const failedIds = useMemo(
+    () => rootCauses?.candidates?.[0]?.features?.failed_trace_ids ?? [],
+    [rootCauses],
+  );
+
+  // Reconcile on every list update.
+  useEffect(() => {
+    const next = reconcileSelection(listedIds, selectedTrace, failedIds);
+    if (next !== selectedTrace) selectTrace(next);
+  }, [listedIds, failedIds, selectedTrace, selectTrace]);
+
+  // While the trace is ahead of the cursor or still incomplete, refetch as
+  // the list republishes (throttled).
+  const wantsRefetch =
+    detail.kind === "ahead" || (detail.kind === "ready" && detail.detail.dag?.incomplete === true);
+  useEffect(() => {
+    if (!wantsRefetch) return;
+    const now = Date.now();
+    if (now - lastRefetch.current < REFETCH_MS) return;
+    lastRefetch.current = now;
+    setRefetchKey((n) => n + 1);
+  }, [wantsRefetch, traces?.projection_version]);
 
   useEffect(() => {
     if (!selectedTrace || !sessionId) {
-      setDetail(null);
+      setDetail({ kind: "idle" });
       return;
     }
-    fetchTrace(sessionId, selectedTrace)
-      .then((d) => setDetail(d as TraceDetail))
-      .catch(() => setDetail(null));
-  }, [sessionId, selectedTrace]);
+    if (!listedIds.includes(selectedTrace)) {
+      setDetail({ kind: "ahead", id: selectedTrace });
+      return;
+    }
+    let cancelled = false;
+    setDetail((prev) =>
+      prev.kind === "ready" && prev.id === selectedTrace ? prev : { kind: "loading", id: selectedTrace },
+    );
+    fetchTraceCached(sessionId, selectedTrace)
+      .then((d) => {
+        if (!cancelled) setDetail({ kind: "ready", id: selectedTrace, detail: d });
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        if (e instanceof TraceNotFoundError) setDetail({ kind: "ahead", id: selectedTrace });
+        else setDetail({ kind: "error", id: selectedTrace, message: e instanceof Error ? e.message : String(e) });
+      });
+    return () => {
+      cancelled = true;
+    };
+    // listedIds is intentionally not a dependency: membership is re-checked
+    // through the reconcile effect, and refetchKey drives retries.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, selectedTrace, refetchKey]);
 
-  const spans: SpanNode[] = (detail?.dag?.spans ?? []) as SpanNode[];
-  const criticalIds = new Set(detail?.critical_path?.span_ids ?? []);
-  const comparison = detail?.comparison ?? null;
-  const baselineBySpan = new Map<string, number>();
-  if (comparison) {
-    for (const d of comparison.aligned) {
-      if (d.failed_span_id && d.delta_ns != null) {
-        baselineBySpan.set(d.failed_span_id, d.delta_ns);
+  const ready = detail.kind === "ready" ? detail.detail : null;
+  const spans: TraceSpan[] = ready?.dag?.spans ?? [];
+  const criticalIds = useMemo(() => new Set(ready?.critical_path?.span_ids ?? []), [ready]);
+  const comparison = ready?.comparison ?? null;
+  const deltaBySpan = useMemo(() => {
+    const m = new Map<string, number>();
+    if (comparison) {
+      for (const d of comparison.aligned) {
+        if (d.failed_span_id && d.delta_ns != null) m.set(d.failed_span_id, d.delta_ns);
       }
     }
-  }
+    return m;
+  }, [comparison]);
 
   const visible = spans.filter((s) => {
     if (filter === "critical") return criticalIds.has(s.span_id);
@@ -58,26 +115,15 @@ export function TraceWaterfall() {
     return true;
   });
 
-  const minStart = spans.reduce((m, s) => Math.min(m, s.start_time_ns), Number.MAX_SAFE_INTEGER);
-  const maxEnd = spans.reduce((m, s) => Math.max(m, s.end_time_ns), 0);
-  const width = Math.max(1, maxEnd - minStart);
+  const firstFailedListed = failedIds.find((id) => listedIds.includes(id)) ?? null;
 
   return (
     <div className="panel-body" data-testid="waterfall">
-      <div className="trace-list">
-        {list.slice(0, 40).map((t) => (
-          <button
-            key={t.trace_id}
-            type="button"
-            className={selectedTrace === t.trace_id ? "trace-item active" : "trace-item"}
-            title={t.trace_id}
-            onClick={() => selectTrace(t.trace_id)}
-          >
-            {shortTraceId(t.trace_id)} · {t.span_count} spans
-            {t.incomplete && <span className="hint"> · incomplete</span>}
-          </button>
-        ))}
-      </div>
+      <TracePicker listed={listed} failedIds={failedIds} selected={selectedTrace} onSelect={selectTrace} />
+
+      {selectedTrace && detail.kind !== "idle" && (
+        <TraceHeader traceId={selectedTrace} detail={ready} state={detail.kind} />
+      )}
 
       {selectedTrace && spans.length > 0 && (
         <div className="waterfall-toolbar">
@@ -156,37 +202,37 @@ export function TraceWaterfall() {
       )}
 
       <div className="waterfall">
-        {visible.map((s) => {
-          const left = ((s.start_time_ns - minStart) / width) * 100;
-          const w = Math.max(1, (s.duration_ns / width) * 100);
-          const hot = String(s.status).toLowerCase() === "error";
-          const critical = criticalIds.has(s.span_id);
-          const delta = baselineBySpan.get(s.span_id);
-          return (
-            <div key={s.span_id} className="span-row">
-              <div className="span-label">
-                {critical && <span className="critical-dot" title="on critical path" />}
-                {s.service ?? "?"} / {s.operation}
-                {s.missing_parent && <span className="hint"> missing parent</span>}
-                {delta != null && delta > 0 && (
-                  <span className="delta-tag">+{(delta / 1e6).toFixed(1)}ms</span>
-                )}
-              </div>
-              <div className="span-track">
-                <div
-                  className={`span-bar${hot ? " error" : ""}${critical ? " critical" : ""}`}
-                  style={{ left: `${left}%`, width: `${w}%` }}
-                  title={`${fmtDurationNs(s.duration_ns)}${critical ? " · critical path" : ""}`}
-                />
-              </div>
+        {detail.kind === "ready" && spans.length > 0 && (
+          <Waterfall spans={spans} visible={visible} criticalIds={criticalIds} deltaBySpan={deltaBySpan} />
+        )}
+        {detail.kind === "ready" && spans.length === 0 && (
+          <EmptyState title="No spans yet" hint="This trace has no spans at the cursor." />
+        )}
+        {detail.kind === "ahead" && (
+          <div className="empty-state trace-ahead" data-testid="trace-ahead">
+            <p className="empty-title">
+              Trace {shortTraceId(detail.id)} has no spans at the cursor ({fmtOffset(cursor, startNs)}).
+            </p>
+            <p className="hint">Seek forward, or pick a trace that is already listed.</p>
+            <div className="trace-ahead-actions">
+              {firstFailedListed && (
+                <button type="button" className="link-button" onClick={() => selectTrace(firstFailedListed)}>
+                  Pick the first failed trace
+                </button>
+              )}
+              {listedIds.length > 0 && (
+                <button type="button" className="link-button" onClick={() => selectTrace(listedIds[0])}>
+                  Pick the first listed trace
+                </button>
+              )}
             </div>
-          );
-        })}
-        {!selectedTrace && (
-          <EmptyState
-            title="No trace selected"
-            hint="Pick a trace above to see its waterfall"
-          />
+          </div>
+        )}
+        {detail.kind === "error" && (
+          <EmptyState title="Trace detail failed" hint={detail.message} />
+        )}
+        {detail.kind === "idle" && (
+          <EmptyState title="No traces at the cursor" hint="Play or seek to stream spans." />
         )}
       </div>
     </div>

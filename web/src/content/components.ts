@@ -1,49 +1,67 @@
-// Plain-words names for the nine score components (plus the unweighted
-// persistence feature). `plain` is the primary label in the score table;
-// `detail` is one sentence for the tooltip. Technical names stay visible as
-// secondary text so engineers can still map rows to spec 18.4.
+// The nine weighted score components plus the unweighted persistence
+// feature, as spec 18.4 and README define them. `plain` is the primary label
+// in the score table (the technical definition); `detail` is the one-line
+// gloss for the tooltip. `weight` mirrors crates/inference/src/ranking.rs
+// RankingWeights::default and is only for display; the wire carries the real
+// weights per candidate.
 
-export type ComponentCopy = { plain: string; detail: string };
+export type ComponentCopy = {
+  plain: string;
+  detail: string;
+  // Fixed coefficient in the linear formula. Negative = applied as a penalty.
+  // null = computed and shown, never scored.
+  weight: number | null;
+};
 
 export const COMPONENT_COPY: Record<string, ComponentCopy> = {
   anomaly_strength: {
-    plain: "Its own numbers strayed from normal",
-    detail: "How far its metrics moved from that service's usual behaviour.",
+    plain: "Peak robust z-score against its own baseline, saturated",
+    detail: "How far its metrics moved from that service's rolling median, in MAD units.",
+    weight: 0.2,
   },
   temporal_precedence: {
-    plain: "Went wrong before the services that depend on it",
-    detail: "Whether it was already misbehaving when its callers started to.",
+    plain: "Anomaly onset preceded its callers' onsets",
+    detail: "Rank of its onset among all anomalous services; first is 1.0.",
+    weight: 0.15,
   },
   failed_trace_coverage: {
-    plain: "Failed requests passed through it",
-    detail: "The share of failed requests whose path included this service.",
+    plain: "Share of failed traces whose span path includes it",
+    detail: "Failed traces are those with an error status or an excess-latency span.",
+    weight: 0.15,
   },
   critical_path_contribution: {
-    plain: "Sits on the slowest part of the request path",
-    detail: "How much of the extra delay in slow requests happened inside it.",
+    plain: "Share of excess critical-path latency attributable to it",
+    detail: "Its critical-path time in failed traces beyond its mean in healthy traces.",
+    weight: 0.15,
   },
   downstream_impact: {
-    plain: "The services that depend on it slowed down",
-    detail: "How many of the other struggling services are downstream of it.",
+    plain: "Share of other anomalous services reachable from it as callers",
+    detail: "Edges run caller to callee, so a fault propagates to transitive callers.",
+    weight: 0.1,
   },
   topology_consistency: {
-    plain: "The pattern of slow services fits its position",
-    detail: "Whether the struggling services are the ones its call paths would explain.",
+    plain: "Share of the anomalous set its dependency paths explain",
+    detail: "Ablation shows this feature carries real data: top-1 drops from 26.7% to 6.7% without it.",
+    weight: 0.1,
   },
   change_proximity: {
-    plain: "Got a new version just before things went wrong",
-    detail: "A deployment landed shortly before its numbers moved.",
+    plain: "Deployment shortly before onset (left temporal interval join)",
+    detail: "1 minus delay over the change window for the nearest deployment at or before onset.",
+    weight: 0.1,
   },
   log_evidence: {
-    plain: "Its logs show errors",
-    detail: "Error-level log lines that line up with the incident.",
+    plain: "Correlated high-severity logs near onset, saturating",
+    detail: "Error-level log lines within the log window, saturating at three.",
+    weight: 0.05,
   },
   contradiction_penalty: {
-    plain: "Evidence against it",
-    detail: "Callers that went wrong before it did.",
+    plain: "Share of impacted callers whose onset preceded its own",
+    detail: "Negative evidence, applied as a penalty and never hidden.",
+    weight: -0.1,
   },
   persistence: {
-    plain: "How long it stayed unwell",
-    detail: "The share of the incident during which it was misbehaving. Shown, but not scored.",
+    plain: "Share of the incident span during which it was anomalous",
+    detail: "Computed and shown, but carries no weight in the score.",
+    weight: null,
   },
 };

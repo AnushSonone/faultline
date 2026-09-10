@@ -5,11 +5,12 @@ import { fmtIn } from "../lib/format";
 import { KIND_COLORS } from "../theme/kinds";
 import { sentenceFor } from "../lib/narrate";
 
-// Row pitch in px: line height + padding + gap. Kept in sync with .now-item.
-const ROW_PX = 40; // two-line rows (see .now-item)
+// Row pitch in px: .now-item min-height 38 + .now-list gap 2. Change both
+// together with styles.css.
+const ROW_PX = 40;
 const HEADER_PX = 20;
 
-// The running commentary during replay: newest event at the top, cut at the
+// The evidence timeline during replay: newest event at the top, cut at the
 // cursor. Every row is derived from the payloads, so it narrates any
 // incident. The row count follows the space the rail actually has, so a row
 // is either whole or absent, never cut in half.
@@ -44,10 +45,10 @@ export function NowStrip({ maxRows = 14 }: { maxRows?: number }) {
 
   return (
     <div className="now-scroll" ref={boxRef}>
-      {limit > 0 && <span className="eyebrow now-head">What just happened</span>}
+      {limit > 0 && <span className="eyebrow now-head">Evidence timeline</span>}
       {limit === 0 ? null : items.length === 0 ? (
         <p className="now-empty" data-testid="now-strip">
-          Nothing yet. Press Play, or drag the track past the first deploy.
+          No evidence at the cursor. Press Play or seek past the first change event.
         </p>
       ) : (
         <ol className="now-list" data-testid="now-strip">

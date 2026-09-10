@@ -113,10 +113,10 @@ describe("compact layout", () => {
     }
     // compact labels are what got placed
     const byId = new Map(l.placed.map((p) => [p.id, p.label]));
-    expect(byId.get("change:c-deploy-rec-1")).toBe("new version");
-    expect(byId.get("log:l-rec-mem-1")).toBe("error in logs");
-    expect(byId.get("cand:recommendationservice")).toBe("suspect #1");
-    expect(byId.get("metric:1")).toBe("got slower");
+    expect(byId.get("change:c-deploy-rec-1")).toBe("deploy");
+    expect(byId.get("log:l-rec-mem-1")).toBe("error log");
+    expect(byId.get("cand:recommendationservice")).toBe("candidate #1");
+    expect(byId.get("metric:1")).toBe("latency");
   });
 
   it("keeps a condensed RE2-OB-shaped graph free of overlaps", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { candidateRank, plainMetric, shortEvidenceLabel, truncateLabel } from "./labels";
+import { candidateRank, metricTerm, shortEvidenceLabel, truncateLabel } from "./labels";
 
 describe("shortEvidenceLabel", () => {
   it("compresses metric anomalies to metric and z", () => {
@@ -52,18 +52,18 @@ describe("shortEvidenceLabel", () => {
   });
 });
 
-describe("plainMetric", () => {
-  it("maps metric names to plain phrases", () => {
-    expect(plainMetric("latency")).toBe("got slower");
-    expect(plainMetric("latency-50")).toBe("got slower");
-    expect(plainMetric("latency-99")).toBe("got slower");
-    expect(plainMetric("mem")).toBe("used more memory");
-    expect(plainMetric("memory")).toBe("used more memory");
-    expect(plainMetric("error rate")).toBe("threw more errors");
-    expect(plainMetric("error_rate")).toBe("threw more errors");
-    expect(plainMetric("cpu")).toBe("CPU maxed out");
-    expect(plainMetric("workload")).toBe("got busier");
-    expect(plainMetric("disk io")).toBe("disk io went strange");
+describe("metricTerm", () => {
+  it("maps metric names to their terms", () => {
+    expect(metricTerm("latency")).toBe("latency");
+    expect(metricTerm("latency-50")).toBe("p50 latency");
+    expect(metricTerm("latency-99")).toBe("p99 latency");
+    expect(metricTerm("mem")).toBe("memory");
+    expect(metricTerm("memory")).toBe("memory");
+    expect(metricTerm("error rate")).toBe("error rate");
+    expect(metricTerm("error_rate")).toBe("error rate");
+    expect(metricTerm("cpu")).toBe("CPU");
+    expect(metricTerm("workload")).toBe("request rate");
+    expect(metricTerm("disk io")).toBe("disk io");
   });
 });
 
@@ -88,28 +88,28 @@ describe("shortEvidenceLabel compact", () => {
         { kind: "change", service: "recommendationservice", label: "change on recommendationservice" },
         { compact: true },
       ),
-    ).toBe("new version");
+    ).toBe("deploy");
     expect(
       shortEvidenceLabel(
         { kind: "log_pattern", service: "recommendationservice", label: "high-severity log on recommendationservice" },
         { compact: true },
       ),
-    ).toBe("error in logs");
+    ).toBe("error log");
     expect(
       shortEvidenceLabel(
         { kind: "root_cause_candidate", service: "frontend", label: "#3 likely cause: frontend" },
         { compact: true },
       ),
-    ).toBe("suspect #3");
+    ).toBe("candidate #3");
   });
   it("falls back to the full form when a candidate label does not parse", () => {
     expect(shortEvidenceLabel({ kind: "root_cause_candidate", label: "odd label" }, { compact: true })).toBe(
       "odd label",
     );
   });
-  it("says anomalies in plain words (the tooltip keeps metric and z) and leaves degradations alone", () => {
+  it("names anomalies by metric term (the tooltip keeps metric and z) and leaves degradations alone", () => {
     const anomaly = { kind: "metric_anomaly", service: "frontend", label: "frontend_latency anomaly (peak |z| 8.0)" };
-    expect(shortEvidenceLabel(anomaly, { compact: true })).toBe("got slower");
+    expect(shortEvidenceLabel(anomaly, { compact: true })).toBe("latency");
     expect(shortEvidenceLabel(anomaly)).toBe("latency spike (z 8.0)");
     const deg = { kind: "service_degradation", service: "frontend", label: "frontend degradation" };
     expect(shortEvidenceLabel(deg, { compact: true })).toBe("frontend");
@@ -120,7 +120,7 @@ describe("shortEvidenceLabel compact", () => {
         { kind: "metric_anomaly", service: "a", label: "a_cpu anomaly (peak |z| 8.0)", count: 47 },
         { compact: true },
       ),
-    ).toBe("CPU maxed out ×47");
+    ).toBe("CPU ×47");
     expect(
       shortEvidenceLabel({ kind: "change", label: "change on a", summary: "as written" }, { compact: true }),
     ).toBe("as written");

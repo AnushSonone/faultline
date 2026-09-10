@@ -15,7 +15,9 @@ export const KIND_COLORS: Record<string, string> = new Proxy(
         case "service_degradation":
           return COLORS.danger;
         case "root_cause_candidate":
-          return COLORS.ok;
+          // A candidate is a hypothesis to check, not a good outcome: the
+          // alert orange keeps it away from the green "resolved" reading.
+          return COLORS.alert;
         default:
           return COLORS.accent;
       }
@@ -24,9 +26,9 @@ export const KIND_COLORS: Record<string, string> = new Proxy(
 );
 
 export const KIND_LABELS: Record<string, string> = {
-  change: "new version",
-  log_pattern: "error in logs",
-  metric_anomaly: "strange number",
-  service_degradation: "service got slow",
-  root_cause_candidate: "suspect",
+  change: "change event",
+  log_pattern: "error-log pattern",
+  metric_anomaly: "metric anomaly",
+  service_degradation: "service degradation",
+  root_cause_candidate: "root-cause candidate",
 };

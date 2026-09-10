@@ -161,16 +161,17 @@ export function mapSignature(model: MapModel): string {
 }
 
 // Layered positions: callers left of callees (longest-path depth from the
-// roots), siblings stacked vertically, metrics-only services in a row under
-// the traced graph. The pitches leave room for a label under each node, which
-// cytoscape's breadthfirst does not guarantee, and the left-to-right flow
-// suits the wide, short map panel.
+// roots), siblings stacked vertically, metrics-only services as one more
+// level past the deepest traced one, on the same pitch and wrapped so they
+// are never wider across than the traced graph. The pitches leave room for a
+// label under each node, which cytoscape's breadthfirst does not guarantee,
+// and the whole thing stays one band so the fit centres on the traced part.
 export type MapDirection = "horizontal" | "vertical";
 
 export type MapLayoutOptions = {
   rowGap?: number; // pitch between siblings at the same depth
   colGap?: number; // pitch between depths
-  orphanGap?: number; // clearance between the deepest level and the metrics-only row
+  orphanGap?: number; // extra clearance before the metrics-only level (a seam, not a gap)
   // horizontal: depth runs left -> right (wide panels);
   // vertical: depth runs top -> bottom (tall, narrow panels).
   direction?: MapDirection;
@@ -183,7 +184,7 @@ export function layoutMap(
 ): Record<string, { x: number; y: number }> {
   const rowGap = opts.rowGap ?? 90;
   const colGap = opts.colGap ?? 190;
-  const orphanGap = opts.orphanGap ?? 70;
+  const orphanGap = opts.orphanGap ?? 24;
   const vertical = opts.direction === "vertical";
   const depthPitch = opts.depthPitch ?? 120;
   const observed = model.nodes.filter((n) => n.observed).map((n) => n.id);
@@ -248,19 +249,32 @@ export function layoutMap(
     maxDepth = Math.max(maxDepth, d);
     maxRows = Math.max(maxRows, ids.length);
   }
+  // Metrics-only services sit underneath the traced graph in both modes,
+  // wrapped so the cluster is never wider than the graph, so the fitted
+  // bbox stays one band and the traced part lands in the centre.
   const orphans = model.nodes.filter((n) => !n.observed).map((n) => n.id).sort();
   if (vertical) {
-    // A row under the deepest level, centred on the depth axis, spread by
-    // the sibling pitch (they are siblings of a kind).
-    const oy = maxDepth >= 0 ? maxDepth * depthPitch + orphanGap + depthPitch / 2 : 0;
+    // Extra depth levels below the deepest one, spread side by side at the
+    // label pitch, at most two per level unless the graph is wider.
+    const perLine = Math.max(2, maxRows);
     orphans.forEach((id, i) => {
-      positions[id] = { x: (i - (orphans.length - 1) / 2) * colGap, y: oy };
+      const line = Math.floor(i / perLine);
+      const inLine = Math.min(perLine, orphans.length - line * perLine);
+      positions[id] = {
+        x: ((i % perLine) - (inLine - 1) / 2) * colGap,
+        y: maxDepth >= 0 ? (maxDepth + 1 + line) * depthPitch + orphanGap : line * depthPitch,
+      };
     });
   } else {
-    const oy = maxRows > 0 ? ((maxRows - 1) / 2) * rowGap + orphanGap : 0;
+    // Extra rows under the sibling band, aligned with the depth columns and
+    // centred on the graph's horizontal extent.
+    const perLine = Math.max(1, maxDepth + 1);
     const cx = maxDepth >= 0 ? (maxDepth * colGap) / 2 : 0;
+    const baseY = maxRows > 0 ? ((maxRows - 1) / 2) * rowGap + orphanGap + rowGap / 2 : 0;
     orphans.forEach((id, i) => {
-      positions[id] = { x: cx + (i - (orphans.length - 1) / 2) * colGap, y: oy };
+      const line = Math.floor(i / perLine);
+      const inLine = Math.min(perLine, orphans.length - line * perLine);
+      positions[id] = { x: cx + ((i % perLine) - (inLine - 1) / 2) * colGap, y: baseY + line * rowGap };
     });
   }
   return positions;

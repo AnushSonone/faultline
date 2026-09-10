@@ -43,7 +43,7 @@ export type EvidenceLayout = {
 
 export const LANES = ["change", "metric_anomaly", "service_degradation", "root_cause_candidate"] as const;
 
-export const LANE_TITLES = ["1 · what changed", "2 · went strange", "3 · got slow", "4 · suspects"];
+export const LANE_TITLES = ["1 · changes", "2 · anomalies", "3 · degradations", "4 · candidates"];
 
 export function laneOf(kind: string): number {
   switch (kind) {

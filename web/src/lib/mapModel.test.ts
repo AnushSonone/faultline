@@ -129,7 +129,7 @@ describe("buildMapModel", () => {
 });
 
 describe("layoutMap", () => {
-  it("stacks callers above callees and parks metrics-only nodes underneath", () => {
+  it("stacks callers above callees and parks metrics-only nodes under the graph", () => {
     const model = {
       roots: ["frontend"],
       nodes: ["cartservice", "checkoutservice", "frontend", "recommendationservice"].map((id) => ({
@@ -156,9 +156,30 @@ describe("layoutMap", () => {
     expect(p.recommendationservice.x).toBe(300);
     // single node per depth is centred on the row axis
     expect(p.frontend.y).toBe(0);
-    // metrics-only service sits under the graph, centred horizontally
-    expect(p.cartservice.y).toBe(50);
+    // metrics-only service sits one row under the sibling band, centred on
+    // the graph's horizontal extent
+    expect(p.cartservice.y).toBe(50 + 50);
     expect(p.cartservice.x).toBe(150);
+  });
+  it("wraps metrics-only nodes so they are never wider than the traced graph", () => {
+    const mk = (id: string, observed = true) => ({ id, observed, requestCount: 1, errorRate: 0, heat: 0, hot: false, rank: null, score: null, deployed: false });
+    const model = {
+      roots: ["a"],
+      nodes: [mk("a"), mk("b"), mk("c"), mk("o1", false), mk("o2", false), mk("o3", false), mk("o4", false), mk("o5", false)],
+      edges: [
+        { id: "1", source: "a", target: "b", propagating: false },
+        { id: "2", source: "a", target: "c", propagating: false },
+      ],
+    };
+    const p = layoutMap(model, { rowGap: 100, colGap: 150, orphanGap: 50 });
+    // two depth columns, so two orphans per row, aligned with the columns
+    expect(p.o1.y).toBe(50 + 50 + 50);
+    expect(p.o2.y).toBe(p.o1.y);
+    expect([p.o1.x, p.o2.x]).toEqual([0, 150]);
+    expect(p.o3.y).toBe(p.o1.y + 100);
+    // a lone orphan on the last row is centred on the graph's extent
+    expect(p.o5.y).toBe(p.o1.y + 200);
+    expect(p.o5.x).toBe(75);
   });
   it("spreads siblings and survives a cycle", () => {
     const mk = (id: string, observed = true) => ({ id, observed, requestCount: 1, errorRate: 0, heat: 0, hot: false, rank: null, score: null, deployed: false });
@@ -215,7 +236,7 @@ describe("evidence-driven heat", () => {
 
 describe("layoutMap vertical", () => {
   const mk = (id: string, observed = true) => ({ id, observed, requestCount: 1, errorRate: 0, heat: 0, hot: false, rank: null, score: null, deployed: false });
-  it("stacks depths top to bottom and parks metrics-only nodes underneath", () => {
+  it("stacks depths top to bottom and parks metrics-only nodes one level below", () => {
     const model = {
       roots: ["frontend"],
       nodes: [mk("cartservice", false), mk("checkoutservice"), mk("frontend"), mk("recommendationservice")],
@@ -230,8 +251,8 @@ describe("layoutMap vertical", () => {
     expect(p.recommendationservice.y).toBe(200);
     // single node per depth is centred on x
     expect(p.frontend.x).toBe(0);
-    // orphan row sits a clear label's worth under the deepest level
-    expect(p.cartservice.y).toBe(200 + 50 + 50);
+    // orphan level sits one depth pitch plus the seam under the deepest level
+    expect(p.cartservice.y).toBe(300 + 50);
     expect(p.cartservice.x).toBe(0);
   });
   it("spreads siblings at the wide pitch and survives a cycle", () => {
