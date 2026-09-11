@@ -44,20 +44,48 @@ def _norm_service(name: str, known: set[str]) -> str:
     return name
 
 
-def _keep_trace(trace_id: str) -> bool:
+def _keep_trace(trace_id: str, buckets: int = TRACE_KEEP_BUCKETS) -> bool:
     digest = hashlib.sha256(trace_id.encode()).digest()
-    return digest[0] % TRACE_KEEP_BUCKETS == 0
+    return digest[0] % buckets == 0
 
 
-def convert_case(case_dir: Path, out_root: Path) -> Path:
+def convert_case(
+    case_dir: Path,
+    out_root: Path,
+    *,
+    window_s: tuple[int, int] | None = None,
+    trace_keep_buckets: int = TRACE_KEEP_BUCKETS,
+    log_cap: int = LOG_CAP,
+    dataset_id: str = DATASET_ID,
+    dataset_version: str = DATASET_VERSION,
+    id_suffix: str | None = None,
+) -> Path:
+    """Convert one RE2-OB case.
+
+    The defaults reproduce the benchmark fixtures exactly. `window_s` keeps
+    only (seconds before, seconds after) the injection, which cuts a short,
+    watchable case out of a 1440 s recording; give it its own `dataset_id` or
+    `dataset_version` so it never lands inside the benchmark sweep.
+    """
     name = case_dir.name  # re2ob_checkoutservice_cpu_1
     parts = name.split("_")
     if len(parts) != 4 or parts[0] != "re2ob":
         raise ValueError(f"unexpected case dir name: {name}")
     _, target, fault, instance = parts
     incident_id = f"re2ob-{target}-{fault}-{instance}"
+    if id_suffix:
+        incident_id = f"{incident_id}-{id_suffix}"
 
     inject_ns = int((case_dir / "inject_time.txt").read_text().strip()) * SEC
+
+    if window_s is not None:
+        pre_s, post_s = window_s
+        lo, hi = inject_ns - pre_s * SEC, inject_ns + post_s * SEC
+    else:
+        lo = hi = None
+
+    def in_window(ns: int) -> bool:
+        return lo is None or lo <= ns <= hi
 
     # Metrics: full fidelity.
     metrics_raw = json.loads((case_dir / "metrics.json").read_text())
@@ -66,7 +94,7 @@ def convert_case(case_dir: Path, out_root: Path) -> Path:
     for series, points in sorted(metrics_raw.items()):
         service, metric = series.split("_", 1)
         for i, (ts, value) in enumerate(points):
-            if value is None:
+            if value is None or not in_window(int(ts) * SEC):
                 continue
             metrics.append(
                 {
@@ -80,13 +108,27 @@ def convert_case(case_dir: Path, out_root: Path) -> Path:
                 }
             )
 
-    # Traces: whole-trace deterministic sampling.
+    # Traces: whole-trace deterministic sampling. With a window, a trace is kept
+    # whole when any of its spans starts inside it, so no trace loses spans or
+    # parent links at either boundary (critical-path analysis needs the DAG).
+    traces_path = case_dir / "traces.csv"
+    window_traces: set[str] | None = None
+    if lo is not None:
+        window_traces = set()
+        with traces_path.open(newline="") as f:
+            for row in csv.DictReader(f):
+                if _keep_trace(row["traceID"], trace_keep_buckets) and in_window(
+                    int(row["startTime"]) * 1000
+                ):
+                    window_traces.add(row["traceID"])
     spans = []
     kept_traces: set[str] = set()
-    with (case_dir / "traces.csv").open(newline="") as f:
+    with traces_path.open(newline="") as f:
         for i, row in enumerate(csv.DictReader(f)):
             trace_id = row["traceID"]
-            if not _keep_trace(trace_id):
+            if not _keep_trace(trace_id, trace_keep_buckets):
+                continue
+            if window_traces is not None and trace_id not in window_traces:
                 continue
             kept_traces.add(trace_id)
             start_ns = int(row["startTime"]) * 1000
@@ -113,13 +155,14 @@ def convert_case(case_dir: Path, out_root: Path) -> Path:
 
     # Logs: keep error-looking lines first, then a deterministic sample.
     logs = []
+    # With a window, the cap applies to the lines inside it.
     with (case_dir / "logs.csv").open(newline="") as f:
-        rows = list(csv.DictReader(f))
+        rows = [r for r in csv.DictReader(f) if in_window(int(r["timestamp"]) * SEC)]
     error_rows = [r for r in rows if any(h in r["message"].lower() for h in ERROR_HINTS)]
-    sampled = error_rows[:LOG_CAP]
-    if len(sampled) < LOG_CAP:
-        step = max(1, len(rows) // (LOG_CAP - len(sampled)))
-        sampled += rows[::step][: LOG_CAP - len(sampled)]
+    sampled = error_rows[:log_cap]
+    if len(sampled) < log_cap:
+        step = max(1, len(rows) // (log_cap - len(sampled)))
+        sampled += rows[::step][: log_cap - len(sampled)]
     for i, row in enumerate(sampled):
         severe = any(h in row["message"].lower() for h in ERROR_HINTS)
         logs.append(
@@ -145,7 +188,7 @@ def convert_case(case_dir: Path, out_root: Path) -> Path:
     all_ts = [r["event_time_ns"] for sig in rows_by_signal.values() for r in sig]
     start_ns, end_ns = min(all_ts), max(all_ts)
 
-    incident_dir = out_root / DATASET_ID / DATASET_VERSION / incident_id
+    incident_dir = out_root / dataset_id / dataset_version / incident_id
     incident_dir.mkdir(parents=True, exist_ok=True)
     files, counts = [], {}
     for signal, data in rows_by_signal.items():
@@ -158,8 +201,8 @@ def convert_case(case_dir: Path, out_root: Path) -> Path:
 
     manifest = {
         "schema_version": 1,
-        "dataset_id": DATASET_ID,
-        "dataset_version": DATASET_VERSION,
+        "dataset_id": dataset_id,
+        "dataset_version": dataset_version,
         "incident_id": incident_id,
         "system": "online-boutique (RCAEval RE2-OB)",
         "start_time_ns": start_ns,
@@ -169,6 +212,11 @@ def convert_case(case_dir: Path, out_root: Path) -> Path:
         "files": files,
     }
     indicator_metric = {"cpu": "cpu", "mem": "mem", "delay": "latency-50"}.get(fault, fault)
+    window_note = (
+        f" Windowed to {window_s[0]} s before and {window_s[1]} s after the injection."
+        if window_s is not None
+        else ""
+    )
     labels = {
         "incident_id": incident_id,
         "root_cause_services": [target],
@@ -178,8 +226,9 @@ def convert_case(case_dir: Path, out_root: Path) -> Path:
         "fault_end_time_ns": end_ns,
         "expected_downstream_services": [],
         "notes": (
-            f"RCAEval RE2-OB case {name}; traces sampled 1/{TRACE_KEEP_BUCKETS} "
-            f"by whole trace ({len(kept_traces)} traces kept), logs capped at {LOG_CAP}."
+            f"RCAEval RE2-OB case {name}; traces sampled 1/{trace_keep_buckets} "
+            f"by whole trace ({len(kept_traces)} traces kept), logs capped at {log_cap}."
+            f"{window_note}"
         ),
     }
     (incident_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
@@ -202,7 +251,26 @@ if __name__ == "__main__":
         type=Path,
         default=Path(__file__).resolve().parents[3] / "datasets" / "fixtures",
     )
+    ap.add_argument("--pre-s", type=int, help="window: seconds kept before the injection")
+    ap.add_argument("--post-s", type=int, help="window: seconds kept after the injection")
+    ap.add_argument("--trace-keep-buckets", type=int, default=TRACE_KEEP_BUCKETS)
+    ap.add_argument("--log-cap", type=int, default=LOG_CAP)
+    ap.add_argument("--dataset-id", default=DATASET_ID)
+    ap.add_argument("--dataset-version", default=DATASET_VERSION)
+    ap.add_argument("--id-suffix", help="appended to the incident id, e.g. w120")
     args = ap.parse_args()
+    if (args.pre_s is None) != (args.post_s is None):
+        ap.error("--pre-s and --post-s go together")
+    window = (args.pre_s, args.post_s) if args.pre_s is not None else None
     for case in args.cases:
-        path = convert_case(case, args.out)
+        path = convert_case(
+            case,
+            args.out,
+            window_s=window,
+            trace_keep_buckets=args.trace_keep_buckets,
+            log_cap=args.log_cap,
+            dataset_id=args.dataset_id,
+            dataset_version=args.dataset_version,
+            id_suffix=args.id_suffix,
+        )
         print(f"converted {case.name} -> {path}")

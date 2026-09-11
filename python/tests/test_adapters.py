@@ -106,3 +106,46 @@ def test_otel_demo_rejects_incomplete_scenario(tmp_path: Path) -> None:
         raise AssertionError("should have rejected incomplete scenario")
     except ValueError as e:
         assert "missing required fields" in str(e)
+
+
+def test_rcaeval_window_keeps_whole_traces_and_clamps(tmp_path: Path) -> None:
+    case = tmp_path / "re2ob_checkoutservice_cpu_9"
+    case.mkdir()
+    (case / "inject_time.txt").write_text("1705353856")
+    (case / "metrics.json").write_text(json.dumps(_metrics_json()))
+    _write_traces(case / "traces.csv", "checkoutservice")
+    _write_logs(case / "logs.csv", "checkoutservice")
+
+    out = convert_case(
+        case,
+        tmp_path / "fixtures",
+        window_s=(5, 5),
+        trace_keep_buckets=1,
+        log_cap=10,
+        dataset_id="rcaeval-re2-ob-window",
+        dataset_version="v1",
+        id_suffix="w10",
+    )
+    assert out.parts[-3:] == ("rcaeval-re2-ob-window", "v1", "re2ob-checkoutservice-cpu-9-w10")
+    manifest = json.loads((out / "manifest.json").read_text())
+    labels = json.loads((out / "labels.json").read_text())
+    # Metrics are 1 s apart from 1705353846; the window is 1705353851..1705353861
+    # inclusive, so 11 samples for each of the two series.
+    assert manifest["event_counts"]["metrics"] == 22
+    # Every trace in the fixture starts inside the first second, before the
+    # window opens, so none survive.
+    assert manifest["event_counts"]["spans"] == 0
+    # Only the 1705353860 line lies inside the window. It can appear twice: the
+    # sampler adds error lines first and then a stride over all lines, which
+    # can pick the same row again. That predates windowing and is left alone
+    # so the benchmark fixtures stay byte-identical; assert on times instead.
+    assert manifest["event_counts"]["logs"] >= 1
+    import pyarrow.parquet as pq
+
+    log_times = pq.read_table(out / "logs" / "part-00000.parquet").column("event_time_ns").to_pylist()
+    assert all((1705353856 - 5) * 10**9 <= t <= (1705353856 + 5) * 10**9 for t in log_times)
+    assert manifest["start_time_ns"] >= (1705353856 - 5) * 10**9
+    assert manifest["end_time_ns"] <= (1705353856 + 5) * 10**9
+    assert labels["fault_start_time_ns"] == 1705353856 * 10**9
+    assert labels["fault_end_time_ns"] == manifest["end_time_ns"]
+    assert "Windowed to 5 s before and 5 s after" in labels["notes"]
