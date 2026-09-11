@@ -1,4 +1,8 @@
-.PHONY: build test demo web-install web-dev fmt clippy python-test embed layout-check
+.PHONY: build test demo web-install web-dev fmt clippy python-test embed layout-check rcaeval-eval
+
+# RCAEval RE2-OB harness (docs/references/rcaeval-heldout-protocol.md).
+# SPLIT=heldout is refused until the freeze preflight passes. DATA defaults to datasets/.
+SPLIT ?= tuning
 
 build:
 	cargo build --workspace
@@ -22,6 +26,9 @@ web-dev:
 
 python-test:
 	cd python && python -m pytest -q
+
+rcaeval-eval:
+	bash scripts/run-rcaeval.sh --split $(SPLIT) $(if $(DATA),--data $(DATA),)
 
 demo:
 	@bash scripts/run-demo.sh || pwsh -File scripts/run-demo.ps1

@@ -638,10 +638,13 @@ dependencies = [
  "faultline-common",
  "faultline-engine",
  "faultline-inference",
+ "faultline-projection",
  "faultline-replay",
  "faultline-state",
+ "hex",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror",
 ]
 

@@ -14,4 +14,7 @@ faultline-state = { workspace = true }
 faultline-engine = { workspace = true }
 faultline-replay = { workspace = true }
 faultline-inference = { workspace = true }
+faultline-projection = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
 
