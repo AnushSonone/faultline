@@ -25,6 +25,14 @@ cargo run -q --release -p faultline-cli-bin -- evaluate \
   --fixtures datasets/fixtures --prefix eval- \
   --json benchmarks/rca-eval.json --markdown benchmarks/rca-eval.md > /dev/null
 
+echo "== RCAEval RE2-OB tuning split (scripts/run-rcaeval.sh) =="
+RCAEVAL_DATA="${FAULTLINE_DATA:-$ROOT/datasets}"
+if [ -d "$RCAEVAL_DATA/fixtures/rcaeval-re2-ob/v2" ]; then
+  bash scripts/run-rcaeval.sh --split tuning --data "$RCAEVAL_DATA"
+else
+  echo "skipped (RCAEval fixtures not present)"
+fi
+
 echo "== engine benchmarks (TA-049) =="
 cargo run -q --release -p faultline-cli-bin -- bench-engine \
   --rows 200000 --runs 5 --json benchmarks/engine-bench.json > /dev/null
