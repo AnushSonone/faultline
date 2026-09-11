@@ -1,0 +1,2262 @@
+{
+  "title": "RCAEval RE2-OB held-out split H (75 cases)",
+  "systems": [
+    {
+      "system": "faultline-legacy",
+      "kind": "faultline",
+      "source": "heldout-legacy.json",
+      "overall": {
+        "n": 75,
+        "top1_k": 12,
+        "top1": 0.16,
+        "top1_wilson95": [
+          0.09396513603576143,
+          0.2591670768525466
+        ],
+        "top3_k": 27,
+        "top3": 0.36,
+        "top3_wilson95": [
+          0.26064928908616347,
+          0.47299338680902214
+        ],
+        "top5_k": 39,
+        "top5": 0.52,
+        "top5_wilson95": [
+          0.4087421577281785,
+          0.6293088885725093
+        ],
+        "mrr": 0.33596488696488697,
+        "avg5": 0.3519999999999999
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 10,
+          "top1_k": 2,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.05668215145437519,
+            0.5098375284633583
+          ],
+          "top3_k": 4,
+          "top3": 0.4,
+          "top3_wilson95": [
+            0.16818032970623614,
+            0.6873262302663417
+          ],
+          "top5_k": 5,
+          "top5": 0.5,
+          "top5_wilson95": [
+            0.236593090512564,
+            0.7634069094874361
+          ],
+          "mrr": 0.3611111111111111,
+          "avg5": 0.38
+        },
+        "delay": {
+          "n": 10,
+          "top1_k": 2,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.05668215145437519,
+            0.5098375284633583
+          ],
+          "top3_k": 3,
+          "top3": 0.3,
+          "top3_wilson95": [
+            0.10779126740630099,
+            0.6032218525388546
+          ],
+          "top5_k": 3,
+          "top5": 0.3,
+          "top5_wilson95": [
+            0.10779126740630099,
+            0.6032218525388546
+          ],
+          "mrr": 0.30734848484848487,
+          "avg5": 0.26
+        },
+        "disk": {
+          "n": 15,
+          "top1_k": 4,
+          "top1": 0.26666666666666666,
+          "top1_wilson95": [
+            0.10897453325692374,
+            0.5195043405598057
+          ],
+          "top3_k": 6,
+          "top3": 0.4,
+          "top3_wilson95": [
+            0.1982449614134158,
+            0.6425316987937539
+          ],
+          "top5_k": 7,
+          "top5": 0.4666666666666667,
+          "top5_wilson95": [
+            0.24809535365737387,
+            0.698830199745016
+          ],
+          "mrr": 0.3821717171717172,
+          "avg5": 0.3733333333333333
+        },
+        "loss": {
+          "n": 15,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.20388330103584862
+          ],
+          "top3_k": 5,
+          "top3": 0.3333333333333333,
+          "top3_wilson95": [
+            0.1517632443971473,
+            0.5828645226148023
+          ],
+          "top5_k": 10,
+          "top5": 0.6666666666666666,
+          "top5_wilson95": [
+            0.41713547738519774,
+            0.8482367556028526
+          ],
+          "mrr": 0.26912698412698416,
+          "avg5": 0.34666666666666673
+        },
+        "mem": {
+          "n": 10,
+          "top1_k": 2,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.05668215145437519,
+            0.5098375284633583
+          ],
+          "top3_k": 5,
+          "top3": 0.5,
+          "top3_wilson95": [
+            0.236593090512564,
+            0.7634069094874361
+          ],
+          "top5_k": 6,
+          "top5": 0.6,
+          "top5_wilson95": [
+            0.31267376973365824,
+            0.8318196702937638
+          ],
+          "mrr": 0.428452380952381,
+          "avg5": 0.48
+        },
+        "socket": {
+          "n": 15,
+          "top1_k": 2,
+          "top1": 0.13333333333333333,
+          "top1_wilson95": [
+            0.03736125910306537,
+            0.37881982832322364
+          ],
+          "top3_k": 4,
+          "top3": 0.26666666666666666,
+          "top3_wilson95": [
+            0.10897453325692374,
+            0.5195043405598057
+          ],
+          "top5_k": 8,
+          "top5": 0.5333333333333333,
+          "top5_wilson95": [
+            0.30116980025498397,
+            0.7519046463426261
+          ],
+          "mrr": 0.29725108225108227,
+          "avg5": 0.29333333333333333
+        }
+      },
+      "per_subgroup": {
+        "heldout": {
+          "n": 75,
+          "top1_k": 12,
+          "top1": 0.16,
+          "top1_wilson95": [
+            0.09396513603576143,
+            0.2591670768525466
+          ],
+          "top3_k": 27,
+          "top3": 0.36,
+          "top3_wilson95": [
+            0.26064928908616347,
+            0.47299338680902214
+          ],
+          "top5_k": 39,
+          "top5": 0.52,
+          "top5_wilson95": [
+            0.4087421577281785,
+            0.6293088885725093
+          ],
+          "mrr": 0.33596488696488697,
+          "avg5": 0.3519999999999999
+        },
+        "heldout_h1": {
+          "n": 30,
+          "top1_k": 6,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.0950510717728987,
+            0.3730569641314825
+          ],
+          "top3_k": 12,
+          "top3": 0.4,
+          "top3_wilson95": [
+            0.24590628116801852,
+            0.5767963974667752
+          ],
+          "top5_k": 14,
+          "top5": 0.4666666666666667,
+          "top5_wilson95": [
+            0.30232388907699753,
+            0.638577003801267
+          ],
+          "mrr": 0.36563732563732565,
+          "avg5": 0.37333333333333335
+        },
+        "heldout_h2": {
+          "n": 45,
+          "top1_k": 6,
+          "top1": 0.13333333333333333,
+          "top1_wilson95": [
+            0.06257148747568075,
+            0.2617730182617707
+          ],
+          "top3_k": 15,
+          "top3": 0.3333333333333333,
+          "top3_wilson95": [
+            0.21358874934330035,
+            0.47929511690099585
+          ],
+          "top5_k": 25,
+          "top5": 0.5555555555555556,
+          "top5_wilson95": [
+            0.4117613449352105,
+            0.6906106996500243
+          ],
+          "mrr": 0.3161832611832611,
+          "avg5": 0.33777777777777773
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-2": 8,
+        "re2ob-checkoutservice-cpu-3": 3,
+        "re2ob-checkoutservice-delay-2": 11,
+        "re2ob-checkoutservice-delay-3": 6,
+        "re2ob-checkoutservice-disk-1": 3,
+        "re2ob-checkoutservice-disk-2": 3,
+        "re2ob-checkoutservice-disk-3": 4,
+        "re2ob-checkoutservice-loss-1": 7,
+        "re2ob-checkoutservice-loss-2": 2,
+        "re2ob-checkoutservice-loss-3": 2,
+        "re2ob-checkoutservice-mem-2": 4,
+        "re2ob-checkoutservice-mem-3": 10,
+        "re2ob-checkoutservice-socket-1": 11,
+        "re2ob-checkoutservice-socket-2": 12,
+        "re2ob-checkoutservice-socket-3": 7,
+        "re2ob-currencyservice-cpu-2": 1,
+        "re2ob-currencyservice-cpu-3": 1,
+        "re2ob-currencyservice-delay-2": 12,
+        "re2ob-currencyservice-delay-3": 10,
+        "re2ob-currencyservice-disk-1": 12,
+        "re2ob-currencyservice-disk-2": 1,
+        "re2ob-currencyservice-disk-3": 12,
+        "re2ob-currencyservice-loss-1": 3,
+        "re2ob-currencyservice-loss-2": 3,
+        "re2ob-currencyservice-loss-3": 4,
+        "re2ob-currencyservice-mem-2": 1,
+        "re2ob-currencyservice-mem-3": 6,
+        "re2ob-currencyservice-socket-1": 2,
+        "re2ob-currencyservice-socket-2": 3,
+        "re2ob-currencyservice-socket-3": 1,
+        "re2ob-emailservice-cpu-2": 8,
+        "re2ob-emailservice-cpu-3": 12,
+        "re2ob-emailservice-delay-2": 12,
+        "re2ob-emailservice-delay-3": 11,
+        "re2ob-emailservice-disk-1": 12,
+        "re2ob-emailservice-disk-2": 12,
+        "re2ob-emailservice-disk-3": 11,
+        "re2ob-emailservice-loss-1": 8,
+        "re2ob-emailservice-loss-2": 7,
+        "re2ob-emailservice-loss-3": 7,
+        "re2ob-emailservice-mem-2": 8,
+        "re2ob-emailservice-mem-3": 2,
+        "re2ob-emailservice-socket-1": 12,
+        "re2ob-emailservice-socket-2": 5,
+        "re2ob-emailservice-socket-3": 6,
+        "re2ob-productcatalogservice-cpu-2": 12,
+        "re2ob-productcatalogservice-cpu-3": 2,
+        "re2ob-productcatalogservice-delay-2": 1,
+        "re2ob-productcatalogservice-delay-3": 1,
+        "re2ob-productcatalogservice-disk-1": 1,
+        "re2ob-productcatalogservice-disk-2": 1,
+        "re2ob-productcatalogservice-disk-3": 1,
+        "re2ob-productcatalogservice-loss-1": 4,
+        "re2ob-productcatalogservice-loss-2": 5,
+        "re2ob-productcatalogservice-loss-3": 2,
+        "re2ob-productcatalogservice-mem-2": 1,
+        "re2ob-productcatalogservice-mem-3": 2,
+        "re2ob-productcatalogservice-socket-1": 8,
+        "re2ob-productcatalogservice-socket-2": 5,
+        "re2ob-productcatalogservice-socket-3": 1,
+        "re2ob-recommendationservice-cpu-2": 4,
+        "re2ob-recommendationservice-cpu-3": 9,
+        "re2ob-recommendationservice-delay-2": 8,
+        "re2ob-recommendationservice-delay-3": 3,
+        "re2ob-recommendationservice-disk-1": 8,
+        "re2ob-recommendationservice-disk-2": 10,
+        "re2ob-recommendationservice-disk-3": 6,
+        "re2ob-recommendationservice-loss-1": 4,
+        "re2ob-recommendationservice-loss-2": 5,
+        "re2ob-recommendationservice-loss-3": 6,
+        "re2ob-recommendationservice-mem-2": 7,
+        "re2ob-recommendationservice-mem-3": 2,
+        "re2ob-recommendationservice-socket-1": 4,
+        "re2ob-recommendationservice-socket-2": 12,
+        "re2ob-recommendationservice-socket-3": 5
+      },
+      "rust_summary_check": {
+        "all_equal": true,
+        "top1": true,
+        "top3": true,
+        "mrr": true,
+        "n": true,
+        "avg5": true,
+        "best_rank": true
+      }
+    },
+    {
+      "system": "faultline-v2",
+      "kind": "faultline",
+      "source": "heldout-v2.json",
+      "overall": {
+        "n": 75,
+        "top1_k": 58,
+        "top1": 0.7733333333333333,
+        "top1_wilson95": [
+          0.6666446452773059,
+          0.8533863208320934
+        ],
+        "top3_k": 73,
+        "top3": 0.9733333333333334,
+        "top3_wilson95": [
+          0.9078851181224086,
+          0.9926563109938686
+        ],
+        "top5_k": 75,
+        "top5": 1.0,
+        "top5_wilson95": [
+          0.9512761575171942,
+          1.0
+        ],
+        "mrr": 0.8666666666666667,
+        "avg5": 0.9279999999999999
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 10,
+          "top1_k": 10,
+          "top1": 1.0,
+          "top1_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top3_k": 10,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top5_k": 10,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "mrr": 1.0,
+          "avg5": 1.0
+        },
+        "delay": {
+          "n": 10,
+          "top1_k": 10,
+          "top1": 1.0,
+          "top1_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top3_k": 10,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top5_k": 10,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "mrr": 1.0,
+          "avg5": 1.0
+        },
+        "disk": {
+          "n": 15,
+          "top1_k": 12,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.5481455128483065,
+            0.9295245065301844
+          ],
+          "top3_k": 15,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.8777777777777778,
+          "avg5": 0.9333333333333333
+        },
+        "loss": {
+          "n": 15,
+          "top1_k": 3,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.07047549346981563,
+            0.45185448715169363
+          ],
+          "top3_k": 13,
+          "top3": 0.8666666666666667,
+          "top3_wilson95": [
+            0.6211801716767764,
+            0.9626387408969346
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.5222222222222223,
+          "avg5": 0.7333333333333335
+        },
+        "mem": {
+          "n": 10,
+          "top1_k": 8,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.49016247153664183,
+            0.9433178485456247
+          ],
+          "top3_k": 10,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top5_k": 10,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "mrr": 0.9,
+          "avg5": 0.96
+        },
+        "socket": {
+          "n": 15,
+          "top1_k": 15,
+          "top1": 1.0,
+          "top1_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "top3_k": 15,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 1.0,
+          "avg5": 1.0
+        }
+      },
+      "per_subgroup": {
+        "heldout": {
+          "n": 75,
+          "top1_k": 58,
+          "top1": 0.7733333333333333,
+          "top1_wilson95": [
+            0.6666446452773059,
+            0.8533863208320934
+          ],
+          "top3_k": 73,
+          "top3": 0.9733333333333334,
+          "top3_wilson95": [
+            0.9078851181224086,
+            0.9926563109938686
+          ],
+          "top5_k": 75,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.9512761575171942,
+            1.0
+          ],
+          "mrr": 0.8666666666666667,
+          "avg5": 0.9279999999999999
+        },
+        "heldout_h1": {
+          "n": 30,
+          "top1_k": 28,
+          "top1": 0.9333333333333333,
+          "top1_wilson95": [
+            0.7867654163738308,
+            0.9815229762087295
+          ],
+          "top3_k": 30,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.8864866068260312,
+            0.9999999999999999
+          ],
+          "top5_k": 30,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.8864866068260312,
+            0.9999999999999999
+          ],
+          "mrr": 0.9666666666666667,
+          "avg5": 0.9866666666666667
+        },
+        "heldout_h2": {
+          "n": 45,
+          "top1_k": 30,
+          "top1": 0.6666666666666666,
+          "top1_wilson95": [
+            0.5207048830990042,
+            0.7864112506566996
+          ],
+          "top3_k": 43,
+          "top3": 0.9555555555555556,
+          "top3_wilson95": [
+            0.8517248923056439,
+            0.9877258732932802
+          ],
+          "top5_k": 45,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.9213484012671117,
+            1.0
+          ],
+          "mrr": 0.8,
+          "avg5": 0.8888888888888887
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-2": 1,
+        "re2ob-checkoutservice-cpu-3": 1,
+        "re2ob-checkoutservice-delay-2": 1,
+        "re2ob-checkoutservice-delay-3": 1,
+        "re2ob-checkoutservice-disk-1": 1,
+        "re2ob-checkoutservice-disk-2": 1,
+        "re2ob-checkoutservice-disk-3": 1,
+        "re2ob-checkoutservice-loss-1": 1,
+        "re2ob-checkoutservice-loss-2": 1,
+        "re2ob-checkoutservice-loss-3": 3,
+        "re2ob-checkoutservice-mem-2": 1,
+        "re2ob-checkoutservice-mem-3": 1,
+        "re2ob-checkoutservice-socket-1": 1,
+        "re2ob-checkoutservice-socket-2": 1,
+        "re2ob-checkoutservice-socket-3": 1,
+        "re2ob-currencyservice-cpu-2": 1,
+        "re2ob-currencyservice-cpu-3": 1,
+        "re2ob-currencyservice-delay-2": 1,
+        "re2ob-currencyservice-delay-3": 1,
+        "re2ob-currencyservice-disk-1": 1,
+        "re2ob-currencyservice-disk-2": 3,
+        "re2ob-currencyservice-disk-3": 1,
+        "re2ob-currencyservice-loss-1": 2,
+        "re2ob-currencyservice-loss-2": 3,
+        "re2ob-currencyservice-loss-3": 3,
+        "re2ob-currencyservice-mem-2": 1,
+        "re2ob-currencyservice-mem-3": 2,
+        "re2ob-currencyservice-socket-1": 1,
+        "re2ob-currencyservice-socket-2": 1,
+        "re2ob-currencyservice-socket-3": 1,
+        "re2ob-emailservice-cpu-2": 1,
+        "re2ob-emailservice-cpu-3": 1,
+        "re2ob-emailservice-delay-2": 1,
+        "re2ob-emailservice-delay-3": 1,
+        "re2ob-emailservice-disk-1": 1,
+        "re2ob-emailservice-disk-2": 1,
+        "re2ob-emailservice-disk-3": 2,
+        "re2ob-emailservice-loss-1": 1,
+        "re2ob-emailservice-loss-2": 4,
+        "re2ob-emailservice-loss-3": 2,
+        "re2ob-emailservice-mem-2": 1,
+        "re2ob-emailservice-mem-3": 1,
+        "re2ob-emailservice-socket-1": 1,
+        "re2ob-emailservice-socket-2": 1,
+        "re2ob-emailservice-socket-3": 1,
+        "re2ob-productcatalogservice-cpu-2": 1,
+        "re2ob-productcatalogservice-cpu-3": 1,
+        "re2ob-productcatalogservice-delay-2": 1,
+        "re2ob-productcatalogservice-delay-3": 1,
+        "re2ob-productcatalogservice-disk-1": 1,
+        "re2ob-productcatalogservice-disk-2": 1,
+        "re2ob-productcatalogservice-disk-3": 3,
+        "re2ob-productcatalogservice-loss-1": 2,
+        "re2ob-productcatalogservice-loss-2": 3,
+        "re2ob-productcatalogservice-loss-3": 4,
+        "re2ob-productcatalogservice-mem-2": 1,
+        "re2ob-productcatalogservice-mem-3": 2,
+        "re2ob-productcatalogservice-socket-1": 1,
+        "re2ob-productcatalogservice-socket-2": 1,
+        "re2ob-productcatalogservice-socket-3": 1,
+        "re2ob-recommendationservice-cpu-2": 1,
+        "re2ob-recommendationservice-cpu-3": 1,
+        "re2ob-recommendationservice-delay-2": 1,
+        "re2ob-recommendationservice-delay-3": 1,
+        "re2ob-recommendationservice-disk-1": 1,
+        "re2ob-recommendationservice-disk-2": 1,
+        "re2ob-recommendationservice-disk-3": 1,
+        "re2ob-recommendationservice-loss-1": 2,
+        "re2ob-recommendationservice-loss-2": 2,
+        "re2ob-recommendationservice-loss-3": 2,
+        "re2ob-recommendationservice-mem-2": 1,
+        "re2ob-recommendationservice-mem-3": 1,
+        "re2ob-recommendationservice-socket-1": 1,
+        "re2ob-recommendationservice-socket-2": 1,
+        "re2ob-recommendationservice-socket-3": 1
+      },
+      "rust_summary_check": {
+        "all_equal": true,
+        "top1": true,
+        "top3": true,
+        "mrr": true,
+        "n": true,
+        "avg5": true,
+        "best_rank": true
+      }
+    },
+    {
+      "system": "faultline-v2-no-floor",
+      "kind": "faultline",
+      "source": "heldout-v2-no-floor.json",
+      "overall": {
+        "n": 75,
+        "top1_k": 9,
+        "top1": 0.12,
+        "top1_wilson95": [
+          0.06443371823944515,
+          0.2125964020474873
+        ],
+        "top3_k": 24,
+        "top3": 0.32,
+        "top3_wilson95": [
+          0.22542995034772845,
+          0.4321106329460818
+        ],
+        "top5_k": 38,
+        "top5": 0.5066666666666667,
+        "top5_wilson95": [
+          0.3959837845781367,
+          0.6166998975220928
+        ],
+        "mrr": 0.30825541125541117,
+        "avg5": 0.3253333333333333
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 10,
+          "top1_k": 3,
+          "top1": 0.3,
+          "top1_wilson95": [
+            0.10779126740630099,
+            0.6032218525388546
+          ],
+          "top3_k": 5,
+          "top3": 0.5,
+          "top3_wilson95": [
+            0.236593090512564,
+            0.7634069094874361
+          ],
+          "top5_k": 5,
+          "top5": 0.5,
+          "top5_wilson95": [
+            0.236593090512564,
+            0.7634069094874361
+          ],
+          "mrr": 0.4374242424242424,
+          "avg5": 0.44000000000000006
+        },
+        "delay": {
+          "n": 10,
+          "top1_k": 1,
+          "top1": 0.1,
+          "top1_wilson95": [
+            0.017876213095072896,
+            0.4041500267952385
+          ],
+          "top3_k": 1,
+          "top3": 0.1,
+          "top3_wilson95": [
+            0.017876213095072896,
+            0.4041500267952385
+          ],
+          "top5_k": 4,
+          "top5": 0.4,
+          "top5_wilson95": [
+            0.16818032970623614,
+            0.6873262302663417
+          ],
+          "mrr": 0.24150793650793653,
+          "avg5": 0.19999999999999998
+        },
+        "disk": {
+          "n": 15,
+          "top1_k": 3,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.07047549346981563,
+            0.45185448715169363
+          ],
+          "top3_k": 6,
+          "top3": 0.4,
+          "top3_wilson95": [
+            0.1982449614134158,
+            0.6425316987937539
+          ],
+          "top5_k": 6,
+          "top5": 0.4,
+          "top5_wilson95": [
+            0.1982449614134158,
+            0.6425316987937539
+          ],
+          "mrr": 0.3513756613756614,
+          "avg5": 0.3333333333333333
+        },
+        "loss": {
+          "n": 15,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.20388330103584862
+          ],
+          "top3_k": 5,
+          "top3": 0.3333333333333333,
+          "top3_wilson95": [
+            0.1517632443971473,
+            0.5828645226148023
+          ],
+          "top5_k": 11,
+          "top5": 0.7333333333333333,
+          "top5_wilson95": [
+            0.4804956594401943,
+            0.8910254667430761
+          ],
+          "mrr": 0.26462962962962966,
+          "avg5": 0.3466666666666667
+        },
+        "mem": {
+          "n": 10,
+          "top1_k": 2,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.05668215145437519,
+            0.5098375284633583
+          ],
+          "top3_k": 4,
+          "top3": 0.4,
+          "top3_wilson95": [
+            0.16818032970623614,
+            0.6873262302663417
+          ],
+          "top5_k": 7,
+          "top5": 0.7,
+          "top5_wilson95": [
+            0.39677814746114537,
+            0.8922087325936989
+          ],
+          "mrr": 0.4117857142857143,
+          "avg5": 0.48
+        },
+        "socket": {
+          "n": 15,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.20388330103584862
+          ],
+          "top3_k": 3,
+          "top3": 0.2,
+          "top3_wilson95": [
+            0.07047549346981563,
+            0.45185448715169363
+          ],
+          "top5_k": 5,
+          "top5": 0.3333333333333333,
+          "top5_wilson95": [
+            0.1517632443971473,
+            0.5828645226148023
+          ],
+          "mrr": 0.19812650312650312,
+          "avg5": 0.2
+        }
+      },
+      "per_subgroup": {
+        "heldout": {
+          "n": 75,
+          "top1_k": 9,
+          "top1": 0.12,
+          "top1_wilson95": [
+            0.06443371823944515,
+            0.2125964020474873
+          ],
+          "top3_k": 24,
+          "top3": 0.32,
+          "top3_wilson95": [
+            0.22542995034772845,
+            0.4321106329460818
+          ],
+          "top5_k": 38,
+          "top5": 0.5066666666666667,
+          "top5_wilson95": [
+            0.3959837845781367,
+            0.6166998975220928
+          ],
+          "mrr": 0.30825541125541117,
+          "avg5": 0.3253333333333333
+        },
+        "heldout_h1": {
+          "n": 30,
+          "top1_k": 6,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.0950510717728987,
+            0.3730569641314825
+          ],
+          "top3_k": 10,
+          "top3": 0.3333333333333333,
+          "top3_wilson95": [
+            0.19230498083676134,
+            0.5121994835545616
+          ],
+          "top5_k": 16,
+          "top5": 0.5333333333333333,
+          "top5_wilson95": [
+            0.36142299619873297,
+            0.6976761109230025
+          ],
+          "mrr": 0.36357263107263105,
+          "avg5": 0.3733333333333334
+        },
+        "heldout_h2": {
+          "n": 45,
+          "top1_k": 3,
+          "top1": 0.06666666666666667,
+          "top1_wilson95": [
+            0.022932032599250987,
+            0.17856601963591895
+          ],
+          "top3_k": 14,
+          "top3": 0.3111111111111111,
+          "top3_wilson95": [
+            0.1952869926365341,
+            0.45664805577366824
+          ],
+          "top5_k": 22,
+          "top5": 0.4888888888888889,
+          "top5_wilson95": [
+            0.349570237528785,
+            0.6299553535541681
+          ],
+          "mrr": 0.27137726471059803,
+          "avg5": 0.29333333333333333
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-2": 12,
+        "re2ob-checkoutservice-cpu-3": 3,
+        "re2ob-checkoutservice-delay-2": 10,
+        "re2ob-checkoutservice-delay-3": 4,
+        "re2ob-checkoutservice-disk-1": 9,
+        "re2ob-checkoutservice-disk-2": 2,
+        "re2ob-checkoutservice-disk-3": 6,
+        "re2ob-checkoutservice-loss-1": 3,
+        "re2ob-checkoutservice-loss-2": 2,
+        "re2ob-checkoutservice-loss-3": 10,
+        "re2ob-checkoutservice-mem-2": 10,
+        "re2ob-checkoutservice-mem-3": 7,
+        "re2ob-checkoutservice-socket-1": 9,
+        "re2ob-checkoutservice-socket-2": 11,
+        "re2ob-checkoutservice-socket-3": 4,
+        "re2ob-currencyservice-cpu-2": 1,
+        "re2ob-currencyservice-cpu-3": 6,
+        "re2ob-currencyservice-delay-2": 8,
+        "re2ob-currencyservice-delay-3": 8,
+        "re2ob-currencyservice-disk-1": 9,
+        "re2ob-currencyservice-disk-2": 9,
+        "re2ob-currencyservice-disk-3": 10,
+        "re2ob-currencyservice-loss-1": 9,
+        "re2ob-currencyservice-loss-2": 2,
+        "re2ob-currencyservice-loss-3": 4,
+        "re2ob-currencyservice-mem-2": 1,
+        "re2ob-currencyservice-mem-3": 4,
+        "re2ob-currencyservice-socket-1": 9,
+        "re2ob-currencyservice-socket-2": 2,
+        "re2ob-currencyservice-socket-3": 11,
+        "re2ob-emailservice-cpu-2": 10,
+        "re2ob-emailservice-cpu-3": 11,
+        "re2ob-emailservice-delay-2": 1,
+        "re2ob-emailservice-delay-3": 4,
+        "re2ob-emailservice-disk-1": 8,
+        "re2ob-emailservice-disk-2": 9,
+        "re2ob-emailservice-disk-3": 7,
+        "re2ob-emailservice-loss-1": 6,
+        "re2ob-emailservice-loss-2": 5,
+        "re2ob-emailservice-loss-3": 5,
+        "re2ob-emailservice-mem-2": 8,
+        "re2ob-emailservice-mem-3": 2,
+        "re2ob-emailservice-socket-1": 8,
+        "re2ob-emailservice-socket-2": 2,
+        "re2ob-emailservice-socket-3": 10,
+        "re2ob-productcatalogservice-cpu-2": 1,
+        "re2ob-productcatalogservice-cpu-3": 2,
+        "re2ob-productcatalogservice-delay-2": 7,
+        "re2ob-productcatalogservice-delay-3": 5,
+        "re2ob-productcatalogservice-disk-1": 3,
+        "re2ob-productcatalogservice-disk-2": 1,
+        "re2ob-productcatalogservice-disk-3": 1,
+        "re2ob-productcatalogservice-loss-1": 4,
+        "re2ob-productcatalogservice-loss-2": 5,
+        "re2ob-productcatalogservice-loss-3": 2,
+        "re2ob-productcatalogservice-mem-2": 1,
+        "re2ob-productcatalogservice-mem-3": 4,
+        "re2ob-productcatalogservice-socket-1": 6,
+        "re2ob-productcatalogservice-socket-2": 10,
+        "re2ob-productcatalogservice-socket-3": 10,
+        "re2ob-recommendationservice-cpu-2": 1,
+        "re2ob-recommendationservice-cpu-3": 10,
+        "re2ob-recommendationservice-delay-2": 9,
+        "re2ob-recommendationservice-delay-3": 9,
+        "re2ob-recommendationservice-disk-1": 1,
+        "re2ob-recommendationservice-disk-2": 3,
+        "re2ob-recommendationservice-disk-3": 8,
+        "re2ob-recommendationservice-loss-1": 3,
+        "re2ob-recommendationservice-loss-2": 5,
+        "re2ob-recommendationservice-loss-3": 8,
+        "re2ob-recommendationservice-mem-2": 4,
+        "re2ob-recommendationservice-mem-3": 2,
+        "re2ob-recommendationservice-socket-1": 3,
+        "re2ob-recommendationservice-socket-2": 7,
+        "re2ob-recommendationservice-socket-3": 4
+      },
+      "rust_summary_check": {
+        "all_equal": true,
+        "top1": true,
+        "top3": true,
+        "mrr": true,
+        "n": true,
+        "avg5": true,
+        "best_rank": true
+      }
+    },
+    {
+      "system": "faultline-v2-no-persistence",
+      "kind": "faultline",
+      "source": "heldout-v2-no-persistence.json",
+      "overall": {
+        "n": 75,
+        "top1_k": 7,
+        "top1": 0.09333333333333334,
+        "top1_wilson95": [
+          0.04594852339060043,
+          0.18034686849541504
+        ],
+        "top3_k": 45,
+        "top3": 0.6,
+        "top3_wilson95": [
+          0.48688038796210664,
+          0.7033748435413321
+        ],
+        "top5_k": 56,
+        "top5": 0.7466666666666667,
+        "top5_wilson95": [
+          0.6378967313440042,
+          0.8313995063644785
+        ],
+        "mrr": 0.3784338624338624,
+        "avg5": 0.49333333333333335
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 10,
+          "top1_k": 1,
+          "top1": 0.1,
+          "top1_wilson95": [
+            0.017876213095072896,
+            0.4041500267952385
+          ],
+          "top3_k": 5,
+          "top3": 0.5,
+          "top3_wilson95": [
+            0.236593090512564,
+            0.7634069094874361
+          ],
+          "top5_k": 6,
+          "top5": 0.6,
+          "top5_wilson95": [
+            0.31267376973365824,
+            0.8318196702937638
+          ],
+          "mrr": 0.37083333333333335,
+          "avg5": 0.44000000000000006
+        },
+        "delay": {
+          "n": 10,
+          "top1_k": 1,
+          "top1": 0.1,
+          "top1_wilson95": [
+            0.017876213095072896,
+            0.4041500267952385
+          ],
+          "top3_k": 7,
+          "top3": 0.7,
+          "top3_wilson95": [
+            0.39677814746114537,
+            0.8922087325936989
+          ],
+          "top5_k": 8,
+          "top5": 0.8,
+          "top5_wilson95": [
+            0.49016247153664183,
+            0.9433178485456247
+          ],
+          "mrr": 0.38666666666666666,
+          "avg5": 0.52
+        },
+        "disk": {
+          "n": 15,
+          "top1_k": 2,
+          "top1": 0.13333333333333333,
+          "top1_wilson95": [
+            0.03736125910306537,
+            0.37881982832322364
+          ],
+          "top3_k": 8,
+          "top3": 0.5333333333333333,
+          "top3_wilson95": [
+            0.30116980025498397,
+            0.7519046463426261
+          ],
+          "top5_k": 11,
+          "top5": 0.7333333333333333,
+          "top5_wilson95": [
+            0.4804956594401943,
+            0.8910254667430761
+          ],
+          "mrr": 0.374047619047619,
+          "avg5": 0.4666666666666667
+        },
+        "loss": {
+          "n": 15,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.20388330103584862
+          ],
+          "top3_k": 7,
+          "top3": 0.4666666666666667,
+          "top3_wilson95": [
+            0.24809535365737387,
+            0.698830199745016
+          ],
+          "top5_k": 9,
+          "top5": 0.6,
+          "top5_wilson95": [
+            0.357468301206246,
+            0.8017550385865841
+          ],
+          "mrr": 0.3008994708994709,
+          "avg5": 0.38666666666666666
+        },
+        "mem": {
+          "n": 10,
+          "top1_k": 2,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.05668215145437519,
+            0.5098375284633583
+          ],
+          "top3_k": 9,
+          "top3": 0.9,
+          "top3_wilson95": [
+            0.5958499732047615,
+            0.9821237869049271
+          ],
+          "top5_k": 9,
+          "top5": 0.9,
+          "top5_wilson95": [
+            0.5958499732047615,
+            0.9821237869049271
+          ],
+          "mrr": 0.55,
+          "avg5": 0.74
+        },
+        "socket": {
+          "n": 15,
+          "top1_k": 1,
+          "top1": 0.06666666666666667,
+          "top1_wilson95": [
+            0.011866895493268553,
+            0.2981652987378003
+          ],
+          "top3_k": 9,
+          "top3": 0.6,
+          "top3_wilson95": [
+            0.357468301206246,
+            0.8017550385865841
+          ],
+          "top5_k": 13,
+          "top5": 0.8666666666666667,
+          "top5_wilson95": [
+            0.6211801716767764,
+            0.9626387408969346
+          ],
+          "mrr": 0.34555555555555556,
+          "avg5": 0.4799999999999999
+        }
+      },
+      "per_subgroup": {
+        "heldout": {
+          "n": 75,
+          "top1_k": 7,
+          "top1": 0.09333333333333334,
+          "top1_wilson95": [
+            0.04594852339060043,
+            0.18034686849541504
+          ],
+          "top3_k": 45,
+          "top3": 0.6,
+          "top3_wilson95": [
+            0.48688038796210664,
+            0.7033748435413321
+          ],
+          "top5_k": 56,
+          "top5": 0.7466666666666667,
+          "top5_wilson95": [
+            0.6378967313440042,
+            0.8313995063644785
+          ],
+          "mrr": 0.3784338624338624,
+          "avg5": 0.49333333333333335
+        },
+        "heldout_h1": {
+          "n": 30,
+          "top1_k": 4,
+          "top1": 0.13333333333333333,
+          "top1_wilson95": [
+            0.053096554840547455,
+            0.296813266820363
+          ],
+          "top3_k": 21,
+          "top3": 0.7,
+          "top3_wilson95": [
+            0.5212421254128504,
+            0.8333525173175619
+          ],
+          "top5_k": 23,
+          "top5": 0.7666666666666667,
+          "top5_wilson95": [
+            0.5907167384187784,
+            0.8820761185551049
+          ],
+          "mrr": 0.4358333333333333,
+          "avg5": 0.5666666666666668
+        },
+        "heldout_h2": {
+          "n": 45,
+          "top1_k": 3,
+          "top1": 0.06666666666666667,
+          "top1_wilson95": [
+            0.022932032599250987,
+            0.17856601963591895
+          ],
+          "top3_k": 24,
+          "top3": 0.5333333333333333,
+          "top3_wilson95": [
+            0.3907745474012537,
+            0.670648679349887
+          ],
+          "top5_k": 33,
+          "top5": 0.7333333333333333,
+          "top5_wilson95": [
+            0.5896116224686505,
+            0.8403509647893348
+          ],
+          "mrr": 0.3401675485008819,
+          "avg5": 0.44444444444444453
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-2": 1,
+        "re2ob-checkoutservice-cpu-3": 3,
+        "re2ob-checkoutservice-delay-2": 6,
+        "re2ob-checkoutservice-delay-3": 3,
+        "re2ob-checkoutservice-disk-1": 3,
+        "re2ob-checkoutservice-disk-2": 2,
+        "re2ob-checkoutservice-disk-3": 2,
+        "re2ob-checkoutservice-loss-1": 3,
+        "re2ob-checkoutservice-loss-2": 2,
+        "re2ob-checkoutservice-loss-3": 2,
+        "re2ob-checkoutservice-mem-2": 3,
+        "re2ob-checkoutservice-mem-3": 2,
+        "re2ob-checkoutservice-socket-1": 6,
+        "re2ob-checkoutservice-socket-2": 3,
+        "re2ob-checkoutservice-socket-3": 3,
+        "re2ob-currencyservice-cpu-2": 6,
+        "re2ob-currencyservice-cpu-3": 8,
+        "re2ob-currencyservice-delay-2": 5,
+        "re2ob-currencyservice-delay-3": 2,
+        "re2ob-currencyservice-disk-1": 7,
+        "re2ob-currencyservice-disk-2": 7,
+        "re2ob-currencyservice-disk-3": 6,
+        "re2ob-currencyservice-loss-1": 6,
+        "re2ob-currencyservice-loss-2": 7,
+        "re2ob-currencyservice-loss-3": 7,
+        "re2ob-currencyservice-mem-2": 2,
+        "re2ob-currencyservice-mem-3": 2,
+        "re2ob-currencyservice-socket-1": 6,
+        "re2ob-currencyservice-socket-2": 1,
+        "re2ob-currencyservice-socket-3": 5,
+        "re2ob-emailservice-cpu-2": 6,
+        "re2ob-emailservice-cpu-3": 2,
+        "re2ob-emailservice-delay-2": 3,
+        "re2ob-emailservice-delay-3": 3,
+        "re2ob-emailservice-disk-1": 5,
+        "re2ob-emailservice-disk-2": 3,
+        "re2ob-emailservice-disk-3": 4,
+        "re2ob-emailservice-loss-1": 2,
+        "re2ob-emailservice-loss-2": 5,
+        "re2ob-emailservice-loss-3": 3,
+        "re2ob-emailservice-mem-2": 1,
+        "re2ob-emailservice-mem-3": 2,
+        "re2ob-emailservice-socket-1": 4,
+        "re2ob-emailservice-socket-2": 5,
+        "re2ob-emailservice-socket-3": 5,
+        "re2ob-productcatalogservice-cpu-2": 4,
+        "re2ob-productcatalogservice-cpu-3": 6,
+        "re2ob-productcatalogservice-delay-2": 6,
+        "re2ob-productcatalogservice-delay-3": 1,
+        "re2ob-productcatalogservice-disk-1": 1,
+        "re2ob-productcatalogservice-disk-2": 3,
+        "re2ob-productcatalogservice-disk-3": 1,
+        "re2ob-productcatalogservice-loss-1": 6,
+        "re2ob-productcatalogservice-loss-2": 4,
+        "re2ob-productcatalogservice-loss-3": 2,
+        "re2ob-productcatalogservice-mem-2": 1,
+        "re2ob-productcatalogservice-mem-3": 2,
+        "re2ob-productcatalogservice-socket-1": 3,
+        "re2ob-productcatalogservice-socket-2": 2,
+        "re2ob-productcatalogservice-socket-3": 3,
+        "re2ob-recommendationservice-cpu-2": 2,
+        "re2ob-recommendationservice-cpu-3": 2,
+        "re2ob-recommendationservice-delay-2": 3,
+        "re2ob-recommendationservice-delay-3": 2,
+        "re2ob-recommendationservice-disk-1": 8,
+        "re2ob-recommendationservice-disk-2": 4,
+        "re2ob-recommendationservice-disk-3": 3,
+        "re2ob-recommendationservice-loss-1": 2,
+        "re2ob-recommendationservice-loss-2": 6,
+        "re2ob-recommendationservice-loss-3": 9,
+        "re2ob-recommendationservice-mem-2": 6,
+        "re2ob-recommendationservice-mem-3": 2,
+        "re2ob-recommendationservice-socket-1": 3,
+        "re2ob-recommendationservice-socket-2": 2,
+        "re2ob-recommendationservice-socket-3": 3
+      },
+      "rust_summary_check": {
+        "all_equal": true,
+        "top1": true,
+        "top3": true,
+        "mrr": true,
+        "n": true,
+        "avg5": true,
+        "best_rank": true
+      }
+    },
+    {
+      "system": "faultline-v2-window32",
+      "kind": "faultline",
+      "source": "heldout-v2-window32.json",
+      "overall": {
+        "n": 75,
+        "top1_k": 13,
+        "top1": 0.17333333333333334,
+        "top1_wilson95": [
+          0.1041914626835726,
+          0.2743081144051939
+        ],
+        "top3_k": 29,
+        "top3": 0.38666666666666666,
+        "top3_wilson95": [
+          0.284552171134325,
+          0.4998252331617777
+        ],
+        "top5_k": 51,
+        "top5": 0.68,
+        "top5_wilson95": [
+          0.5678893670539183,
+          0.7745700496522717
+        ],
+        "mrr": 0.35392159692159697,
+        "avg5": 0.4026666666666667
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 10,
+          "top1_k": 1,
+          "top1": 0.1,
+          "top1_wilson95": [
+            0.017876213095072896,
+            0.4041500267952385
+          ],
+          "top3_k": 2,
+          "top3": 0.2,
+          "top3_wilson95": [
+            0.05668215145437519,
+            0.5098375284633583
+          ],
+          "top5_k": 7,
+          "top5": 0.7,
+          "top5_wilson95": [
+            0.39677814746114537,
+            0.8922087325936989
+          ],
+          "mrr": 0.2794444444444445,
+          "avg5": 0.32
+        },
+        "delay": {
+          "n": 10,
+          "top1_k": 2,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.05668215145437519,
+            0.5098375284633583
+          ],
+          "top3_k": 3,
+          "top3": 0.3,
+          "top3_wilson95": [
+            0.10779126740630099,
+            0.6032218525388546
+          ],
+          "top5_k": 7,
+          "top5": 0.7,
+          "top5_wilson95": [
+            0.39677814746114537,
+            0.8922087325936989
+          ],
+          "mrr": 0.3761111111111112,
+          "avg5": 0.42000000000000004
+        },
+        "disk": {
+          "n": 15,
+          "top1_k": 5,
+          "top1": 0.3333333333333333,
+          "top1_wilson95": [
+            0.1517632443971473,
+            0.5828645226148023
+          ],
+          "top3_k": 9,
+          "top3": 0.6,
+          "top3_wilson95": [
+            0.357468301206246,
+            0.8017550385865841
+          ],
+          "top5_k": 10,
+          "top5": 0.6666666666666666,
+          "top5_wilson95": [
+            0.41713547738519774,
+            0.8482367556028526
+          ],
+          "mrr": 0.48925925925925917,
+          "avg5": 0.5333333333333333
+        },
+        "loss": {
+          "n": 15,
+          "top1_k": 2,
+          "top1": 0.13333333333333333,
+          "top1_wilson95": [
+            0.03736125910306537,
+            0.37881982832322364
+          ],
+          "top3_k": 5,
+          "top3": 0.3333333333333333,
+          "top3_wilson95": [
+            0.1517632443971473,
+            0.5828645226148023
+          ],
+          "top5_k": 9,
+          "top5": 0.6,
+          "top5_wilson95": [
+            0.357468301206246,
+            0.8017550385865841
+          ],
+          "mrr": 0.3091029341029341,
+          "avg5": 0.3333333333333333
+        },
+        "mem": {
+          "n": 10,
+          "top1_k": 2,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.05668215145437519,
+            0.5098375284633583
+          ],
+          "top3_k": 7,
+          "top3": 0.7,
+          "top3_wilson95": [
+            0.39677814746114537,
+            0.8922087325936989
+          ],
+          "top5_k": 9,
+          "top5": 0.9,
+          "top5_wilson95": [
+            0.5958499732047615,
+            0.9821237869049271
+          ],
+          "mrr": 0.4374242424242425,
+          "avg5": 0.58
+        },
+        "socket": {
+          "n": 15,
+          "top1_k": 1,
+          "top1": 0.06666666666666667,
+          "top1_wilson95": [
+            0.011866895493268553,
+            0.2981652987378003
+          ],
+          "top3_k": 3,
+          "top3": 0.2,
+          "top3_wilson95": [
+            0.07047549346981563,
+            0.45185448715169363
+          ],
+          "top5_k": 9,
+          "top5": 0.6,
+          "top5_wilson95": [
+            0.357468301206246,
+            0.8017550385865841
+          ],
+          "mrr": 0.24259259259259264,
+          "avg5": 0.26666666666666666
+        }
+      },
+      "per_subgroup": {
+        "heldout": {
+          "n": 75,
+          "top1_k": 13,
+          "top1": 0.17333333333333334,
+          "top1_wilson95": [
+            0.1041914626835726,
+            0.2743081144051939
+          ],
+          "top3_k": 29,
+          "top3": 0.38666666666666666,
+          "top3_wilson95": [
+            0.284552171134325,
+            0.4998252331617777
+          ],
+          "top5_k": 51,
+          "top5": 0.68,
+          "top5_wilson95": [
+            0.5678893670539183,
+            0.7745700496522717
+          ],
+          "mrr": 0.35392159692159697,
+          "avg5": 0.4026666666666667
+        },
+        "heldout_h1": {
+          "n": 30,
+          "top1_k": 5,
+          "top1": 0.16666666666666666,
+          "top1_wilson95": [
+            0.0733654237184855,
+            0.3356435050641603
+          ],
+          "top3_k": 12,
+          "top3": 0.4,
+          "top3_wilson95": [
+            0.24590628116801852,
+            0.5767963974667752
+          ],
+          "top5_k": 23,
+          "top5": 0.7666666666666667,
+          "top5_wilson95": [
+            0.5907167384187784,
+            0.8820761185551049
+          ],
+          "mrr": 0.36432659932659933,
+          "avg5": 0.44
+        },
+        "heldout_h2": {
+          "n": 45,
+          "top1_k": 8,
+          "top1": 0.17777777777777778,
+          "top1_wilson95": [
+            0.09294389514104148,
+            0.3132982462645977
+          ],
+          "top3_k": 17,
+          "top3": 0.37777777777777777,
+          "top3_wilson95": [
+            0.25108084672137915,
+            0.5237006551911048
+          ],
+          "top5_k": 28,
+          "top5": 0.6222222222222222,
+          "top5_wilson95": [
+            0.47629934480889535,
+            0.7489191532786209
+          ],
+          "mrr": 0.3469849286515952,
+          "avg5": 0.37777777777777777
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-2": 4,
+        "re2ob-checkoutservice-cpu-3": 3,
+        "re2ob-checkoutservice-delay-2": 4,
+        "re2ob-checkoutservice-delay-3": 4,
+        "re2ob-checkoutservice-disk-1": 3,
+        "re2ob-checkoutservice-disk-2": 3,
+        "re2ob-checkoutservice-disk-3": 3,
+        "re2ob-checkoutservice-loss-1": 5,
+        "re2ob-checkoutservice-loss-2": 3,
+        "re2ob-checkoutservice-loss-3": 3,
+        "re2ob-checkoutservice-mem-2": 3,
+        "re2ob-checkoutservice-mem-3": 3,
+        "re2ob-checkoutservice-socket-1": 1,
+        "re2ob-checkoutservice-socket-2": 3,
+        "re2ob-checkoutservice-socket-3": 3,
+        "re2ob-currencyservice-cpu-2": 4,
+        "re2ob-currencyservice-cpu-3": 4,
+        "re2ob-currencyservice-delay-2": 4,
+        "re2ob-currencyservice-delay-3": 5,
+        "re2ob-currencyservice-disk-1": 4,
+        "re2ob-currencyservice-disk-2": 6,
+        "re2ob-currencyservice-disk-3": 1,
+        "re2ob-currencyservice-loss-1": 6,
+        "re2ob-currencyservice-loss-2": 5,
+        "re2ob-currencyservice-loss-3": 4,
+        "re2ob-currencyservice-mem-2": 4,
+        "re2ob-currencyservice-mem-3": 2,
+        "re2ob-currencyservice-socket-1": 4,
+        "re2ob-currencyservice-socket-2": 4,
+        "re2ob-currencyservice-socket-3": 4,
+        "re2ob-emailservice-cpu-2": 5,
+        "re2ob-emailservice-cpu-3": 1,
+        "re2ob-emailservice-delay-2": 1,
+        "re2ob-emailservice-delay-3": 1,
+        "re2ob-emailservice-disk-1": 1,
+        "re2ob-emailservice-disk-2": 1,
+        "re2ob-emailservice-disk-3": 2,
+        "re2ob-emailservice-loss-1": 1,
+        "re2ob-emailservice-loss-2": 9,
+        "re2ob-emailservice-loss-3": 8,
+        "re2ob-emailservice-mem-2": 1,
+        "re2ob-emailservice-mem-3": 5,
+        "re2ob-emailservice-socket-1": 5,
+        "re2ob-emailservice-socket-2": 5,
+        "re2ob-emailservice-socket-3": 5,
+        "re2ob-productcatalogservice-cpu-2": 5,
+        "re2ob-productcatalogservice-cpu-3": 9,
+        "re2ob-productcatalogservice-delay-2": 2,
+        "re2ob-productcatalogservice-delay-3": 9,
+        "re2ob-productcatalogservice-disk-1": 9,
+        "re2ob-productcatalogservice-disk-2": 9,
+        "re2ob-productcatalogservice-disk-3": 1,
+        "re2ob-productcatalogservice-loss-1": 3,
+        "re2ob-productcatalogservice-loss-2": 1,
+        "re2ob-productcatalogservice-loss-3": 4,
+        "re2ob-productcatalogservice-mem-2": 3,
+        "re2ob-productcatalogservice-mem-3": 3,
+        "re2ob-productcatalogservice-socket-1": 9,
+        "re2ob-productcatalogservice-socket-2": 10,
+        "re2ob-productcatalogservice-socket-3": 9,
+        "re2ob-recommendationservice-cpu-2": 10,
+        "re2ob-recommendationservice-cpu-3": 10,
+        "re2ob-recommendationservice-delay-2": 10,
+        "re2ob-recommendationservice-delay-3": 10,
+        "re2ob-recommendationservice-disk-1": 1,
+        "re2ob-recommendationservice-disk-2": 10,
+        "re2ob-recommendationservice-disk-3": 10,
+        "re2ob-recommendationservice-loss-1": 7,
+        "re2ob-recommendationservice-loss-2": 11,
+        "re2ob-recommendationservice-loss-3": 10,
+        "re2ob-recommendationservice-mem-2": 11,
+        "re2ob-recommendationservice-mem-3": 1,
+        "re2ob-recommendationservice-socket-1": 10,
+        "re2ob-recommendationservice-socket-2": 10,
+        "re2ob-recommendationservice-socket-3": 10
+      },
+      "rust_summary_check": {
+        "all_equal": true,
+        "top1": true,
+        "top3": true,
+        "mrr": true,
+        "n": true,
+        "avg5": true,
+        "best_rank": true
+      }
+    },
+    {
+      "system": "rcaeval-nsigma",
+      "kind": "baseline",
+      "source": "heldout-baselines.json",
+      "overall": {
+        "n": 75,
+        "top1_k": 60,
+        "top1": 0.8,
+        "top1_wilson95": [
+          0.6958871716522836,
+          0.8748785228580329
+        ],
+        "top3_k": 71,
+        "top3": 0.9466666666666667,
+        "top3_wilson95": [
+          0.8707401284620144,
+          0.9790665722533456
+        ],
+        "top5_k": 74,
+        "top5": 0.9866666666666667,
+        "top5_wilson95": [
+          0.9282663444557845,
+          0.9976424488609515
+        ],
+        "mrr": 0.8768888888888888,
+        "avg5": 0.9173333333333333
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 10,
+          "top1_k": 7,
+          "top1": 0.7,
+          "top1_wilson95": [
+            0.39677814746114537,
+            0.8922087325936989
+          ],
+          "top3_k": 8,
+          "top3": 0.8,
+          "top3_wilson95": [
+            0.49016247153664183,
+            0.9433178485456247
+          ],
+          "top5_k": 10,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "mrr": 0.79,
+          "avg5": 0.82
+        },
+        "delay": {
+          "n": 10,
+          "top1_k": 7,
+          "top1": 0.7,
+          "top1_wilson95": [
+            0.39677814746114537,
+            0.8922087325936989
+          ],
+          "top3_k": 10,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top5_k": 10,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "mrr": 0.8333333333333333,
+          "avg5": 0.9199999999999999
+        },
+        "disk": {
+          "n": 15,
+          "top1_k": 14,
+          "top1": 0.9333333333333333,
+          "top1_wilson95": [
+            0.7018347012621998,
+            0.9881331045067315
+          ],
+          "top3_k": 15,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.9666666666666667,
+          "avg5": 0.9866666666666667
+        },
+        "loss": {
+          "n": 15,
+          "top1_k": 10,
+          "top1": 0.6666666666666666,
+          "top1_wilson95": [
+            0.41713547738519774,
+            0.8482367556028526
+          ],
+          "top3_k": 15,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.8111111111111112,
+          "avg5": 0.9066666666666667
+        },
+        "mem": {
+          "n": 10,
+          "top1_k": 10,
+          "top1": 1.0,
+          "top1_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top3_k": 10,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top5_k": 10,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "mrr": 1.0,
+          "avg5": 1.0
+        },
+        "socket": {
+          "n": 15,
+          "top1_k": 12,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.5481455128483065,
+            0.9295245065301844
+          ],
+          "top3_k": 13,
+          "top3": 0.8666666666666667,
+          "top3_wilson95": [
+            0.6211801716767764,
+            0.9626387408969346
+          ],
+          "top5_k": 14,
+          "top5": 0.9333333333333333,
+          "top5_wilson95": [
+            0.7018347012621998,
+            0.9881331045067315
+          ],
+          "mrr": 0.8577777777777779,
+          "avg5": 0.8666666666666667
+        }
+      },
+      "per_subgroup": {
+        "heldout": {
+          "n": 75,
+          "top1_k": 60,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.6958871716522836,
+            0.8748785228580329
+          ],
+          "top3_k": 71,
+          "top3": 0.9466666666666667,
+          "top3_wilson95": [
+            0.8707401284620144,
+            0.9790665722533456
+          ],
+          "top5_k": 74,
+          "top5": 0.9866666666666667,
+          "top5_wilson95": [
+            0.9282663444557845,
+            0.9976424488609515
+          ],
+          "mrr": 0.8768888888888888,
+          "avg5": 0.9173333333333333
+        },
+        "heldout_h1": {
+          "n": 30,
+          "top1_k": 24,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.6269430358685175,
+            0.9049489282271013
+          ],
+          "top3_k": 28,
+          "top3": 0.9333333333333333,
+          "top3_wilson95": [
+            0.7867654163738308,
+            0.9815229762087295
+          ],
+          "top5_k": 30,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.8864866068260312,
+            0.9999999999999999
+          ],
+          "mrr": 0.8744444444444445,
+          "avg5": 0.9133333333333333
+        },
+        "heldout_h2": {
+          "n": 45,
+          "top1_k": 36,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.6617703088385799,
+            0.8910387319216871
+          ],
+          "top3_k": 43,
+          "top3": 0.9555555555555556,
+          "top3_wilson95": [
+            0.8517248923056439,
+            0.9877258732932802
+          ],
+          "top5_k": 44,
+          "top5": 0.9777777777777777,
+          "top5_wilson95": [
+            0.8843331823158513,
+            0.9960664011171667
+          ],
+          "mrr": 0.8785185185185185,
+          "avg5": 0.9200000000000002
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-2": 1,
+        "re2ob-checkoutservice-cpu-3": 2,
+        "re2ob-checkoutservice-delay-2": 3,
+        "re2ob-checkoutservice-delay-3": 2,
+        "re2ob-checkoutservice-disk-1": 1,
+        "re2ob-checkoutservice-disk-2": 1,
+        "re2ob-checkoutservice-disk-3": 1,
+        "re2ob-checkoutservice-loss-1": 1,
+        "re2ob-checkoutservice-loss-2": 2,
+        "re2ob-checkoutservice-loss-3": 2,
+        "re2ob-checkoutservice-mem-2": 1,
+        "re2ob-checkoutservice-mem-3": 1,
+        "re2ob-checkoutservice-socket-1": 1,
+        "re2ob-checkoutservice-socket-2": 1,
+        "re2ob-checkoutservice-socket-3": 1,
+        "re2ob-currencyservice-cpu-2": 5,
+        "re2ob-currencyservice-cpu-3": 5,
+        "re2ob-currencyservice-delay-2": 1,
+        "re2ob-currencyservice-delay-3": 2,
+        "re2ob-currencyservice-disk-1": 1,
+        "re2ob-currencyservice-disk-2": 2,
+        "re2ob-currencyservice-disk-3": 1,
+        "re2ob-currencyservice-loss-1": 1,
+        "re2ob-currencyservice-loss-2": 3,
+        "re2ob-currencyservice-loss-3": 3,
+        "re2ob-currencyservice-mem-2": 1,
+        "re2ob-currencyservice-mem-3": 1,
+        "re2ob-currencyservice-socket-1": 2,
+        "re2ob-currencyservice-socket-2": 6,
+        "re2ob-currencyservice-socket-3": 5,
+        "re2ob-emailservice-cpu-2": 1,
+        "re2ob-emailservice-cpu-3": 1,
+        "re2ob-emailservice-delay-2": 1,
+        "re2ob-emailservice-delay-3": 1,
+        "re2ob-emailservice-disk-1": 1,
+        "re2ob-emailservice-disk-2": 1,
+        "re2ob-emailservice-disk-3": 1,
+        "re2ob-emailservice-loss-1": 1,
+        "re2ob-emailservice-loss-2": 1,
+        "re2ob-emailservice-loss-3": 1,
+        "re2ob-emailservice-mem-2": 1,
+        "re2ob-emailservice-mem-3": 1,
+        "re2ob-emailservice-socket-1": 1,
+        "re2ob-emailservice-socket-2": 1,
+        "re2ob-emailservice-socket-3": 1,
+        "re2ob-productcatalogservice-cpu-2": 1,
+        "re2ob-productcatalogservice-cpu-3": 1,
+        "re2ob-productcatalogservice-delay-2": 1,
+        "re2ob-productcatalogservice-delay-3": 1,
+        "re2ob-productcatalogservice-disk-1": 1,
+        "re2ob-productcatalogservice-disk-2": 1,
+        "re2ob-productcatalogservice-disk-3": 1,
+        "re2ob-productcatalogservice-loss-1": 1,
+        "re2ob-productcatalogservice-loss-2": 1,
+        "re2ob-productcatalogservice-loss-3": 2,
+        "re2ob-productcatalogservice-mem-2": 1,
+        "re2ob-productcatalogservice-mem-3": 1,
+        "re2ob-productcatalogservice-socket-1": 1,
+        "re2ob-productcatalogservice-socket-2": 1,
+        "re2ob-productcatalogservice-socket-3": 1,
+        "re2ob-recommendationservice-cpu-2": 1,
+        "re2ob-recommendationservice-cpu-3": 1,
+        "re2ob-recommendationservice-delay-2": 1,
+        "re2ob-recommendationservice-delay-3": 1,
+        "re2ob-recommendationservice-disk-1": 1,
+        "re2ob-recommendationservice-disk-2": 1,
+        "re2ob-recommendationservice-disk-3": 1,
+        "re2ob-recommendationservice-loss-1": 1,
+        "re2ob-recommendationservice-loss-2": 1,
+        "re2ob-recommendationservice-loss-3": 1,
+        "re2ob-recommendationservice-mem-2": 1,
+        "re2ob-recommendationservice-mem-3": 1,
+        "re2ob-recommendationservice-socket-1": 1,
+        "re2ob-recommendationservice-socket-2": 1,
+        "re2ob-recommendationservice-socket-3": 1
+      }
+    },
+    {
+      "system": "rcaeval-baro",
+      "kind": "baseline",
+      "source": "heldout-baselines.json",
+      "overall": {
+        "n": 75,
+        "top1_k": 11,
+        "top1": 0.14666666666666667,
+        "top1_wilson95": [
+          0.08391717009472589,
+          0.24384767859312362
+        ],
+        "top3_k": 67,
+        "top3": 0.8933333333333333,
+        "top3_wilson95": [
+          0.8033863715352693,
+          0.9449508723782568
+        ],
+        "top5_k": 71,
+        "top5": 0.9466666666666667,
+        "top5_wilson95": [
+          0.8707401284620144,
+          0.9790665722533456
+        ],
+        "mrr": 0.5291428571428571,
+        "avg5": 0.746666666666666
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 10,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.2775327998628892
+          ],
+          "top3_k": 8,
+          "top3": 0.8,
+          "top3_wilson95": [
+            0.49016247153664183,
+            0.9433178485456247
+          ],
+          "top5_k": 9,
+          "top5": 0.9,
+          "top5_wilson95": [
+            0.5958499732047615,
+            0.9821237869049271
+          ],
+          "mrr": 0.42000000000000004,
+          "avg5": 0.6399999999999999
+        },
+        "delay": {
+          "n": 10,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.2775327998628892
+          ],
+          "top3_k": 9,
+          "top3": 0.9,
+          "top3_wilson95": [
+            0.5958499732047615,
+            0.9821237869049271
+          ],
+          "top5_k": 9,
+          "top5": 0.9,
+          "top5_wilson95": [
+            0.5958499732047615,
+            0.9821237869049271
+          ],
+          "mrr": 0.4333333333333333,
+          "avg5": 0.6799999999999999
+        },
+        "disk": {
+          "n": 15,
+          "top1_k": 2,
+          "top1": 0.13333333333333333,
+          "top1_wilson95": [
+            0.03736125910306537,
+            0.37881982832322364
+          ],
+          "top3_k": 15,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.5555555555555556,
+          "avg5": 0.8133333333333337
+        },
+        "loss": {
+          "n": 15,
+          "top1_k": 6,
+          "top1": 0.4,
+          "top1_wilson95": [
+            0.1982449614134158,
+            0.6425316987937539
+          ],
+          "top3_k": 13,
+          "top3": 0.8666666666666667,
+          "top3_wilson95": [
+            0.6211801716767764,
+            0.9626387408969346
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.6522222222222223,
+          "avg5": 0.8
+        },
+        "mem": {
+          "n": 10,
+          "top1_k": 3,
+          "top1": 0.3,
+          "top1_wilson95": [
+            0.10779126740630099,
+            0.6032218525388546
+          ],
+          "top3_k": 10,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "top5_k": 10,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7224672001371107,
+            0.9999999999999999
+          ],
+          "mrr": 0.65,
+          "avg5": 0.86
+        },
+        "socket": {
+          "n": 15,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.20388330103584862
+          ],
+          "top3_k": 12,
+          "top3": 0.8,
+          "top3_wilson95": [
+            0.5481455128483065,
+            0.9295245065301844
+          ],
+          "top5_k": 13,
+          "top5": 0.8666666666666667,
+          "top5_wilson95": [
+            0.6211801716767764,
+            0.9626387408969346
+          ],
+          "mrr": 0.4357142857142857,
+          "avg5": 0.6666666666666667
+        }
+      },
+      "per_subgroup": {
+        "heldout": {
+          "n": 75,
+          "top1_k": 11,
+          "top1": 0.14666666666666667,
+          "top1_wilson95": [
+            0.08391717009472589,
+            0.24384767859312362
+          ],
+          "top3_k": 67,
+          "top3": 0.8933333333333333,
+          "top3_wilson95": [
+            0.8033863715352693,
+            0.9449508723782568
+          ],
+          "top5_k": 71,
+          "top5": 0.9466666666666667,
+          "top5_wilson95": [
+            0.8707401284620144,
+            0.9790665722533456
+          ],
+          "mrr": 0.5291428571428571,
+          "avg5": 0.746666666666666
+        },
+        "heldout_h1": {
+          "n": 30,
+          "top1_k": 3,
+          "top1": 0.1,
+          "top1_wilson95": [
+            0.03459988874733419,
+            0.25621082579184085
+          ],
+          "top3_k": 27,
+          "top3": 0.9,
+          "top3_wilson95": [
+            0.7437891742081593,
+            0.9654001112526658
+          ],
+          "top5_k": 28,
+          "top5": 0.9333333333333333,
+          "top5_wilson95": [
+            0.7867654163738308,
+            0.9815229762087295
+          ],
+          "mrr": 0.5011111111111112,
+          "avg5": 0.7266666666666669
+        },
+        "heldout_h2": {
+          "n": 45,
+          "top1_k": 8,
+          "top1": 0.17777777777777778,
+          "top1_wilson95": [
+            0.09294389514104148,
+            0.3132982462645977
+          ],
+          "top3_k": 40,
+          "top3": 0.8888888888888888,
+          "top3_wilson95": [
+            0.7650090300423141,
+            0.9515952820543282
+          ],
+          "top5_k": 43,
+          "top5": 0.9555555555555556,
+          "top5_wilson95": [
+            0.8517248923056439,
+            0.9877258732932802
+          ],
+          "mrr": 0.5478306878306878,
+          "avg5": 0.76
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-2": 2,
+        "re2ob-checkoutservice-cpu-3": 3,
+        "re2ob-checkoutservice-delay-2": 3,
+        "re2ob-checkoutservice-delay-3": 3,
+        "re2ob-checkoutservice-disk-1": 2,
+        "re2ob-checkoutservice-disk-2": 2,
+        "re2ob-checkoutservice-disk-3": 2,
+        "re2ob-checkoutservice-loss-1": 2,
+        "re2ob-checkoutservice-loss-2": 3,
+        "re2ob-checkoutservice-loss-3": 2,
+        "re2ob-checkoutservice-mem-2": 2,
+        "re2ob-checkoutservice-mem-3": 2,
+        "re2ob-checkoutservice-socket-1": 2,
+        "re2ob-checkoutservice-socket-2": 2,
+        "re2ob-checkoutservice-socket-3": 2,
+        "re2ob-currencyservice-cpu-2": 5,
+        "re2ob-currencyservice-cpu-3": 6,
+        "re2ob-currencyservice-delay-2": 2,
+        "re2ob-currencyservice-delay-3": 2,
+        "re2ob-currencyservice-disk-1": 2,
+        "re2ob-currencyservice-disk-2": 3,
+        "re2ob-currencyservice-disk-3": 2,
+        "re2ob-currencyservice-loss-1": 2,
+        "re2ob-currencyservice-loss-2": 4,
+        "re2ob-currencyservice-loss-3": 5,
+        "re2ob-currencyservice-mem-2": 2,
+        "re2ob-currencyservice-mem-3": 2,
+        "re2ob-currencyservice-socket-1": 4,
+        "re2ob-currencyservice-socket-2": 7,
+        "re2ob-currencyservice-socket-3": 7,
+        "re2ob-emailservice-cpu-2": 2,
+        "re2ob-emailservice-cpu-3": 2,
+        "re2ob-emailservice-delay-2": 6,
+        "re2ob-emailservice-delay-3": 2,
+        "re2ob-emailservice-disk-1": 2,
+        "re2ob-emailservice-disk-2": 1,
+        "re2ob-emailservice-disk-3": 1,
+        "re2ob-emailservice-loss-1": 2,
+        "re2ob-emailservice-loss-2": 2,
+        "re2ob-emailservice-loss-3": 2,
+        "re2ob-emailservice-mem-2": 1,
+        "re2ob-emailservice-mem-3": 1,
+        "re2ob-emailservice-socket-1": 2,
+        "re2ob-emailservice-socket-2": 2,
+        "re2ob-emailservice-socket-3": 2,
+        "re2ob-productcatalogservice-cpu-2": 2,
+        "re2ob-productcatalogservice-cpu-3": 2,
+        "re2ob-productcatalogservice-delay-2": 2,
+        "re2ob-productcatalogservice-delay-3": 2,
+        "re2ob-productcatalogservice-disk-1": 2,
+        "re2ob-productcatalogservice-disk-2": 2,
+        "re2ob-productcatalogservice-disk-3": 2,
+        "re2ob-productcatalogservice-loss-1": 1,
+        "re2ob-productcatalogservice-loss-2": 1,
+        "re2ob-productcatalogservice-loss-3": 1,
+        "re2ob-productcatalogservice-mem-2": 1,
+        "re2ob-productcatalogservice-mem-3": 2,
+        "re2ob-productcatalogservice-socket-1": 2,
+        "re2ob-productcatalogservice-socket-2": 2,
+        "re2ob-productcatalogservice-socket-3": 2,
+        "re2ob-recommendationservice-cpu-2": 2,
+        "re2ob-recommendationservice-cpu-3": 2,
+        "re2ob-recommendationservice-delay-2": 2,
+        "re2ob-recommendationservice-delay-3": 2,
+        "re2ob-recommendationservice-disk-1": 2,
+        "re2ob-recommendationservice-disk-2": 2,
+        "re2ob-recommendationservice-disk-3": 2,
+        "re2ob-recommendationservice-loss-1": 1,
+        "re2ob-recommendationservice-loss-2": 1,
+        "re2ob-recommendationservice-loss-3": 1,
+        "re2ob-recommendationservice-mem-2": 2,
+        "re2ob-recommendationservice-mem-3": 2,
+        "re2ob-recommendationservice-socket-1": 2,
+        "re2ob-recommendationservice-socket-2": 2,
+        "re2ob-recommendationservice-socket-3": 2
+      }
+    }
+  ]
+}
