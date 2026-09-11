@@ -1,0 +1,719 @@
+{
+  "title": "RCAEval RE2-OB tuning split T (15 cases, in-sample)",
+  "systems": [
+    {
+      "system": "faultline-legacy",
+      "kind": "faultline",
+      "source": "tuning-legacy.json",
+      "overall": {
+        "n": 15,
+        "top1_k": 4,
+        "top1": 0.26666666666666666,
+        "top1_wilson95": [
+          0.10897453325692374,
+          0.5195043405598057
+        ],
+        "top3_k": 7,
+        "top3": 0.4666666666666667,
+        "top3_wilson95": [
+          0.24809535365737387,
+          0.698830199745016
+        ],
+        "top5_k": 7,
+        "top5": 0.4666666666666667,
+        "top5_wilson95": [
+          0.24809535365737387,
+          0.698830199745016
+        ],
+        "mrr": 0.4072558922558922,
+        "avg5": 0.4133333333333333
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 5,
+          "top1_k": 1,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.03622410863243014,
+            0.6244653702374747
+          ],
+          "top3_k": 1,
+          "top3": 0.2,
+          "top3_wilson95": [
+            0.03622410863243014,
+            0.6244653702374747
+          ],
+          "top5_k": 1,
+          "top5": 0.2,
+          "top5_wilson95": [
+            0.03622410863243014,
+            0.6244653702374747
+          ],
+          "mrr": 0.28055555555555556,
+          "avg5": 0.2
+        },
+        "delay": {
+          "n": 5,
+          "top1_k": 1,
+          "top1": 0.2,
+          "top1_wilson95": [
+            0.03622410863243014,
+            0.6244653702374747
+          ],
+          "top3_k": 3,
+          "top3": 0.6,
+          "top3_wilson95": [
+            0.2307242812760128,
+            0.882379225767352
+          ],
+          "top5_k": 3,
+          "top5": 0.6,
+          "top5_wilson95": [
+            0.2307242812760128,
+            0.882379225767352
+          ],
+          "mrr": 0.4048484848484848,
+          "avg5": 0.48
+        },
+        "mem": {
+          "n": 5,
+          "top1_k": 2,
+          "top1": 0.4,
+          "top1_wilson95": [
+            0.11762077423264783,
+            0.769275718723987
+          ],
+          "top3_k": 3,
+          "top3": 0.6,
+          "top3_wilson95": [
+            0.2307242812760128,
+            0.882379225767352
+          ],
+          "top5_k": 3,
+          "top5": 0.6,
+          "top5_wilson95": [
+            0.2307242812760128,
+            0.882379225767352
+          ],
+          "mrr": 0.5363636363636364,
+          "avg5": 0.5599999999999999
+        }
+      },
+      "per_subgroup": {
+        "tuning": {
+          "n": 15,
+          "top1_k": 4,
+          "top1": 0.26666666666666666,
+          "top1_wilson95": [
+            0.10897453325692374,
+            0.5195043405598057
+          ],
+          "top3_k": 7,
+          "top3": 0.4666666666666667,
+          "top3_wilson95": [
+            0.24809535365737387,
+            0.698830199745016
+          ],
+          "top5_k": 7,
+          "top5": 0.4666666666666667,
+          "top5_wilson95": [
+            0.24809535365737387,
+            0.698830199745016
+          ],
+          "mrr": 0.4072558922558922,
+          "avg5": 0.4133333333333333
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-1": 9,
+        "re2ob-checkoutservice-delay-1": 2,
+        "re2ob-checkoutservice-mem-1": 1,
+        "re2ob-currencyservice-cpu-1": 1,
+        "re2ob-currencyservice-delay-1": 1,
+        "re2ob-currencyservice-mem-1": 11,
+        "re2ob-emailservice-cpu-1": 12,
+        "re2ob-emailservice-delay-1": 3,
+        "re2ob-emailservice-mem-1": 11,
+        "re2ob-productcatalogservice-cpu-1": 8,
+        "re2ob-productcatalogservice-delay-1": 11,
+        "re2ob-productcatalogservice-mem-1": 1,
+        "re2ob-recommendationservice-cpu-1": 12,
+        "re2ob-recommendationservice-delay-1": 10,
+        "re2ob-recommendationservice-mem-1": 2
+      },
+      "rust_summary_check": {
+        "all_equal": true,
+        "top1": true,
+        "top3": true,
+        "mrr": true,
+        "n": true,
+        "avg5": true,
+        "best_rank": true
+      }
+    },
+    {
+      "system": "rcaeval-nsigma",
+      "kind": "baseline",
+      "source": "tuning-baselines.json",
+      "overall": {
+        "n": 15,
+        "top1_k": 11,
+        "top1": 0.7333333333333333,
+        "top1_wilson95": [
+          0.4804956594401943,
+          0.8910254667430761
+        ],
+        "top3_k": 14,
+        "top3": 0.9333333333333333,
+        "top3_wilson95": [
+          0.7018347012621998,
+          0.9881331045067315
+        ],
+        "top5_k": 15,
+        "top5": 1.0,
+        "top5_wilson95": [
+          0.7961166989641515,
+          1.0
+        ],
+        "mrr": 0.8244444444444444,
+        "avg5": 0.88
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 5,
+          "top1_k": 4,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.37553462976252533,
+            0.9637758913675698
+          ],
+          "top3_k": 4,
+          "top3": 0.8,
+          "top3_wilson95": [
+            0.37553462976252533,
+            0.9637758913675698
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.8400000000000001,
+          "avg5": 0.8400000000000001
+        },
+        "delay": {
+          "n": 5,
+          "top1_k": 3,
+          "top1": 0.6,
+          "top1_wilson95": [
+            0.2307242812760128,
+            0.882379225767352
+          ],
+          "top3_k": 5,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.7333333333333333,
+          "avg5": 0.8400000000000001
+        },
+        "mem": {
+          "n": 5,
+          "top1_k": 4,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.37553462976252533,
+            0.9637758913675698
+          ],
+          "top3_k": 5,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.9,
+          "avg5": 0.96
+        }
+      },
+      "per_subgroup": {
+        "tuning": {
+          "n": 15,
+          "top1_k": 11,
+          "top1": 0.7333333333333333,
+          "top1_wilson95": [
+            0.4804956594401943,
+            0.8910254667430761
+          ],
+          "top3_k": 14,
+          "top3": 0.9333333333333333,
+          "top3_wilson95": [
+            0.7018347012621998,
+            0.9881331045067315
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.8244444444444444,
+          "avg5": 0.88
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-1": 1,
+        "re2ob-checkoutservice-delay-1": 3,
+        "re2ob-checkoutservice-mem-1": 1,
+        "re2ob-currencyservice-cpu-1": 5,
+        "re2ob-currencyservice-delay-1": 3,
+        "re2ob-currencyservice-mem-1": 2,
+        "re2ob-emailservice-cpu-1": 1,
+        "re2ob-emailservice-delay-1": 1,
+        "re2ob-emailservice-mem-1": 1,
+        "re2ob-productcatalogservice-cpu-1": 1,
+        "re2ob-productcatalogservice-delay-1": 1,
+        "re2ob-productcatalogservice-mem-1": 1,
+        "re2ob-recommendationservice-cpu-1": 1,
+        "re2ob-recommendationservice-delay-1": 1,
+        "re2ob-recommendationservice-mem-1": 1
+      }
+    },
+    {
+      "system": "rcaeval-baro",
+      "kind": "baseline",
+      "source": "tuning-baselines.json",
+      "overall": {
+        "n": 15,
+        "top1_k": 2,
+        "top1": 0.13333333333333333,
+        "top1_wilson95": [
+          0.03736125910306537,
+          0.37881982832322364
+        ],
+        "top3_k": 12,
+        "top3": 0.8,
+        "top3_wilson95": [
+          0.5481455128483065,
+          0.9295245065301844
+        ],
+        "top5_k": 14,
+        "top5": 0.9333333333333333,
+        "top5_wilson95": [
+          0.7018347012621998,
+          0.9881331045067315
+        ],
+        "mrr": 0.5095238095238095,
+        "avg5": 0.7200000000000001
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 5,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.43448246478317476
+          ],
+          "top3_k": 4,
+          "top3": 0.8,
+          "top3_wilson95": [
+            0.37553462976252533,
+            0.9637758913675698
+          ],
+          "top5_k": 4,
+          "top5": 0.8,
+          "top5_wilson95": [
+            0.37553462976252533,
+            0.9637758913675698
+          ],
+          "mrr": 0.42857142857142855,
+          "avg5": 0.64
+        },
+        "delay": {
+          "n": 5,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.43448246478317476
+          ],
+          "top3_k": 3,
+          "top3": 0.6,
+          "top3_wilson95": [
+            0.2307242812760128,
+            0.882379225767352
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.4,
+          "avg5": 0.64
+        },
+        "mem": {
+          "n": 5,
+          "top1_k": 2,
+          "top1": 0.4,
+          "top1_wilson95": [
+            0.11762077423264783,
+            0.769275718723987
+          ],
+          "top3_k": 5,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.7,
+          "avg5": 0.8800000000000001
+        }
+      },
+      "per_subgroup": {
+        "tuning": {
+          "n": 15,
+          "top1_k": 2,
+          "top1": 0.13333333333333333,
+          "top1_wilson95": [
+            0.03736125910306537,
+            0.37881982832322364
+          ],
+          "top3_k": 12,
+          "top3": 0.8,
+          "top3_wilson95": [
+            0.5481455128483065,
+            0.9295245065301844
+          ],
+          "top5_k": 14,
+          "top5": 0.9333333333333333,
+          "top5_wilson95": [
+            0.7018347012621998,
+            0.9881331045067315
+          ],
+          "mrr": 0.5095238095238095,
+          "avg5": 0.7200000000000001
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-1": 2,
+        "re2ob-checkoutservice-delay-1": 4,
+        "re2ob-checkoutservice-mem-1": 2,
+        "re2ob-currencyservice-cpu-1": 7,
+        "re2ob-currencyservice-delay-1": 4,
+        "re2ob-currencyservice-mem-1": 2,
+        "re2ob-emailservice-cpu-1": 2,
+        "re2ob-emailservice-delay-1": 2,
+        "re2ob-emailservice-mem-1": 1,
+        "re2ob-productcatalogservice-cpu-1": 2,
+        "re2ob-productcatalogservice-delay-1": 2,
+        "re2ob-productcatalogservice-mem-1": 1,
+        "re2ob-recommendationservice-cpu-1": 2,
+        "re2ob-recommendationservice-delay-1": 2,
+        "re2ob-recommendationservice-mem-1": 2
+      }
+    },
+    {
+      "system": "rcaeval-nsigma [results-2026-08-03 variant]",
+      "kind": "baseline",
+      "source": "tuning-baselines-variant-2026-08-03.json",
+      "overall": {
+        "n": 15,
+        "top1_k": 14,
+        "top1": 0.9333333333333333,
+        "top1_wilson95": [
+          0.7018347012621998,
+          0.9881331045067315
+        ],
+        "top3_k": 14,
+        "top3": 0.9333333333333333,
+        "top3_wilson95": [
+          0.7018347012621998,
+          0.9881331045067315
+        ],
+        "top5_k": 15,
+        "top5": 1.0,
+        "top5_wilson95": [
+          0.7961166989641515,
+          1.0
+        ],
+        "mrr": 0.95,
+        "avg5": 0.9600000000000001
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 5,
+          "top1_k": 5,
+          "top1": 1.0,
+          "top1_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top3_k": 5,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 1.0,
+          "avg5": 1.0
+        },
+        "delay": {
+          "n": 5,
+          "top1_k": 4,
+          "top1": 0.8,
+          "top1_wilson95": [
+            0.37553462976252533,
+            0.9637758913675698
+          ],
+          "top3_k": 4,
+          "top3": 0.8,
+          "top3_wilson95": [
+            0.37553462976252533,
+            0.9637758913675698
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.85,
+          "avg5": 0.8800000000000001
+        },
+        "mem": {
+          "n": 5,
+          "top1_k": 5,
+          "top1": 1.0,
+          "top1_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top3_k": 5,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 1.0,
+          "avg5": 1.0
+        }
+      },
+      "per_subgroup": {
+        "tuning": {
+          "n": 15,
+          "top1_k": 14,
+          "top1": 0.9333333333333333,
+          "top1_wilson95": [
+            0.7018347012621998,
+            0.9881331045067315
+          ],
+          "top3_k": 14,
+          "top3": 0.9333333333333333,
+          "top3_wilson95": [
+            0.7018347012621998,
+            0.9881331045067315
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.95,
+          "avg5": 0.9600000000000001
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-1": 1,
+        "re2ob-checkoutservice-delay-1": 4,
+        "re2ob-checkoutservice-mem-1": 1,
+        "re2ob-currencyservice-cpu-1": 1,
+        "re2ob-currencyservice-delay-1": 1,
+        "re2ob-currencyservice-mem-1": 1,
+        "re2ob-emailservice-cpu-1": 1,
+        "re2ob-emailservice-delay-1": 1,
+        "re2ob-emailservice-mem-1": 1,
+        "re2ob-productcatalogservice-cpu-1": 1,
+        "re2ob-productcatalogservice-delay-1": 1,
+        "re2ob-productcatalogservice-mem-1": 1,
+        "re2ob-recommendationservice-cpu-1": 1,
+        "re2ob-recommendationservice-delay-1": 1,
+        "re2ob-recommendationservice-mem-1": 1
+      }
+    },
+    {
+      "system": "rcaeval-baro [results-2026-08-03 variant]",
+      "kind": "baseline",
+      "source": "tuning-baselines-variant-2026-08-03.json",
+      "overall": {
+        "n": 15,
+        "top1_k": 2,
+        "top1": 0.13333333333333333,
+        "top1_wilson95": [
+          0.03736125910306537,
+          0.37881982832322364
+        ],
+        "top3_k": 14,
+        "top3": 0.9333333333333333,
+        "top3_wilson95": [
+          0.7018347012621998,
+          0.9881331045067315
+        ],
+        "top5_k": 15,
+        "top5": 1.0,
+        "top5_wilson95": [
+          0.7961166989641515,
+          1.0
+        ],
+        "mrr": 0.5244444444444445,
+        "avg5": 0.7600000000000001
+      },
+      "per_fault_type": {
+        "cpu": {
+          "n": 5,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.43448246478317476
+          ],
+          "top3_k": 5,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.4666666666666666,
+          "avg5": 0.76
+        },
+        "delay": {
+          "n": 5,
+          "top1_k": 0,
+          "top1": 0.0,
+          "top1_wilson95": [
+            0.0,
+            0.43448246478317476
+          ],
+          "top3_k": 4,
+          "top3": 0.8,
+          "top3_wilson95": [
+            0.37553462976252533,
+            0.9637758913675698
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.4066666666666666,
+          "avg5": 0.64
+        },
+        "mem": {
+          "n": 5,
+          "top1_k": 2,
+          "top1": 0.4,
+          "top1_wilson95": [
+            0.11762077423264783,
+            0.769275718723987
+          ],
+          "top3_k": 5,
+          "top3": 1.0,
+          "top3_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "top5_k": 5,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.5655175352168251,
+            1.0
+          ],
+          "mrr": 0.7,
+          "avg5": 0.8800000000000001
+        }
+      },
+      "per_subgroup": {
+        "tuning": {
+          "n": 15,
+          "top1_k": 2,
+          "top1": 0.13333333333333333,
+          "top1_wilson95": [
+            0.03736125910306537,
+            0.37881982832322364
+          ],
+          "top3_k": 14,
+          "top3": 0.9333333333333333,
+          "top3_wilson95": [
+            0.7018347012621998,
+            0.9881331045067315
+          ],
+          "top5_k": 15,
+          "top5": 1.0,
+          "top5_wilson95": [
+            0.7961166989641515,
+            1.0
+          ],
+          "mrr": 0.5244444444444445,
+          "avg5": 0.7600000000000001
+        }
+      },
+      "per_case_best_rank": {
+        "re2ob-checkoutservice-cpu-1": 2,
+        "re2ob-checkoutservice-delay-1": 5,
+        "re2ob-checkoutservice-mem-1": 2,
+        "re2ob-currencyservice-cpu-1": 2,
+        "re2ob-currencyservice-delay-1": 2,
+        "re2ob-currencyservice-mem-1": 2,
+        "re2ob-emailservice-cpu-1": 3,
+        "re2ob-emailservice-delay-1": 3,
+        "re2ob-emailservice-mem-1": 1,
+        "re2ob-productcatalogservice-cpu-1": 2,
+        "re2ob-productcatalogservice-delay-1": 2,
+        "re2ob-productcatalogservice-mem-1": 1,
+        "re2ob-recommendationservice-cpu-1": 2,
+        "re2ob-recommendationservice-delay-1": 2,
+        "re2ob-recommendationservice-mem-1": 2
+      }
+    }
+  ]
+}
