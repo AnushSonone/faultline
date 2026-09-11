@@ -2,9 +2,10 @@
 //! inference pipeline; no ground-truth labels anywhere in this path.
 
 use faultline_common::TelemetryEnvelope;
+use faultline_inference::anomaly::StreamHorizon;
 use faultline_inference::evidence::{evidence_for_ranking, Evidence};
 use faultline_inference::evidence_graph::{build_evidence_graph, EvidenceGraph};
-use faultline_inference::features::{compute_features, FeatureConfig};
+use faultline_inference::features::{compute_features_at, FeatureConfig};
 use faultline_inference::ranking::{rank_candidates, RankingWeights, ScoredCandidate};
 use serde::{Deserialize, Serialize};
 
@@ -53,7 +54,15 @@ pub fn build_inference_projections(
         .filter(|e| e.event_time_ns <= cursor_ns)
         .cloned()
         .collect();
-    let features = compute_features(&visible, &FeatureConfig::default());
+    // Before the last event the stream is a prefix: only intervals that have
+    // already persisted may count, so onsets never appear and then vanish as
+    // the cursor advances. At the final cursor the stream is complete.
+    let horizon = if visible.len() == envelopes.len() {
+        StreamHorizon::Complete
+    } else {
+        StreamHorizon::Partial
+    };
+    let features = compute_features_at(&visible, &FeatureConfig::default(), horizon);
     let ranking = rank_candidates(&features, &RankingWeights::default());
     let evidence = evidence_for_ranking(incident_id, &features, &ranking);
     let graph = build_evidence_graph(incident_id, &features, &ranking, EVIDENCE_GRAPH_TOP_N);

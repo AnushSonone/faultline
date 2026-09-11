@@ -19,8 +19,11 @@ use faultline_common::{SpanStatus, TelemetryEnvelope, TelemetryPayload};
 use faultline_graph::{critical_path, ServiceGraph, TraceStore};
 use serde::{Deserialize, Serialize};
 
-use crate::anomaly::{onset_by_service, AnomalyConfig, AnomalyDetector, AnomalyInterval};
-use crate::baseline::{SeriesKey, Z_SATURATION};
+use crate::anomaly::{
+    onset_by_service, qualifying_intervals, AnomalyConfig, AnomalyDetector, AnomalyInterval,
+    StreamHorizon,
+};
+use crate::baseline::{BaselineConfig, SeriesKey, Z_SATURATION};
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FeatureConfig {
@@ -35,14 +38,53 @@ pub struct FeatureConfig {
     pub log_saturation_count: u64,
 }
 
-impl Default for FeatureConfig {
-    fn default() -> Self {
+impl FeatureConfig {
+    fn with_anomaly(anomaly: AnomalyConfig) -> Self {
         Self {
-            anomaly: AnomalyConfig::default(),
+            anomaly,
             change_window_ns: 600_000_000_000, // 10 minutes
             log_window_ns: 60_000_000_000,     // 1 minute
             log_saturation_count: 3,
         }
+    }
+
+    /// The original detector: 32-sample window, no relative spread floor, no
+    /// persistence requirement.
+    pub fn legacy() -> Self {
+        Self::with_anomaly(AnomalyConfig::legacy())
+    }
+
+    /// 300-sample window, 25% relative spread floor, persistence capped at
+    /// 120 s.
+    pub fn v2() -> Self {
+        Self::with_anomaly(AnomalyConfig::v2())
+    }
+
+    /// v2 with the relative spread floor disabled.
+    pub fn v2_no_floor() -> Self {
+        let mut c = Self::v2();
+        c.anomaly.baseline.relative_scale_floor = 0.0;
+        c
+    }
+
+    /// v2 with the persistence requirement disabled.
+    pub fn v2_no_persistence() -> Self {
+        let mut c = Self::v2();
+        c.anomaly.persistence_cap_ns = 0;
+        c
+    }
+
+    /// v2 with the legacy 32-sample window.
+    pub fn v2_window32() -> Self {
+        let mut c = Self::v2();
+        c.anomaly.baseline.window_len = BaselineConfig::legacy().window_len;
+        c
+    }
+}
+
+impl Default for FeatureConfig {
+    fn default() -> Self {
+        Self::v2()
     }
 }
 
@@ -86,9 +128,21 @@ pub struct FeatureSet {
     pub incident_end_ns: Option<i64>,
 }
 
-/// Compute candidate features from an envelope stream sorted by
+/// Compute candidate features from a complete envelope stream sorted by
 /// `(event_time_ns, event_id)` (the replay reader's order).
 pub fn compute_features(envelopes: &[TelemetryEnvelope], config: &FeatureConfig) -> FeatureSet {
+    compute_features_at(envelopes, config, StreamHorizon::Complete)
+}
+
+/// Compute candidate features, treating the stream as a prefix
+/// (`Partial`) or the whole recording (`Complete`). Only intervals that count
+/// toward onsets under `horizon` feed any feature or the returned
+/// `anomaly_intervals`.
+pub fn compute_features_at(
+    envelopes: &[TelemetryEnvelope],
+    config: &FeatureConfig,
+    horizon: StreamHorizon,
+) -> FeatureSet {
     // 1. Robust baselines + anomaly intervals over metric series.
     let mut detector = AnomalyDetector::new(config.anomaly);
     for env in envelopes {
@@ -102,7 +156,7 @@ pub fn compute_features(envelopes: &[TelemetryEnvelope], config: &FeatureConfig)
         };
         detector.observe(&key, env.event_time_ns, m.value, env.event_id.as_str());
     }
-    let intervals = detector.finish();
+    let intervals = qualifying_intervals(detector.finish(), horizon);
     let onsets = onset_by_service(&intervals);
     let incident_onset_ns = onsets.values().copied().min();
     let incident_end_ns = intervals.iter().map(|iv| iv.end_ns).max();
@@ -521,18 +575,23 @@ pub(crate) mod test_support {
 
     /// frontend -> backend call graph; backend goes anomalous first, then
     /// frontend; deploy lands on backend right before its onset.
+    ///
+    /// Faults ramp rather than step: a rolling median absorbs an instant
+    /// step once half its (still short) window is post-step, which is exactly
+    /// the shape of a warm-up artefact, so a ramp is what a real fault on a
+    /// short history must look like to persist.
     pub(crate) fn scenario() -> Vec<TelemetryEnvelope> {
         let mut envs = Vec::new();
         let sec = 1_000_000_000i64;
         for i in 0..20 {
             let t = i * sec;
             let backend_v = if i >= 8 {
-                900.0
+                100.0 + (i - 7) as f64 * 150.0
             } else {
                 100.0 + (i % 3) as f64
             };
             let frontend_v = if i >= 11 {
-                700.0
+                50.0 + (i - 10) as f64 * 120.0
             } else {
                 50.0 + (i % 3) as f64
             };
@@ -732,5 +791,94 @@ mod tests {
         let backend = get(&set, "backend");
         assert_eq!(backend.anomaly_strength, 0.0);
         assert_eq!(backend.contradiction_penalty, 0.0);
+    }
+
+    fn onset_services(set: &FeatureSet) -> Vec<&str> {
+        set.candidates
+            .iter()
+            .filter(|c| c.onset_ns.is_some())
+            .map(|c| c.service.as_str())
+            .collect()
+    }
+
+    #[test]
+    fn partial_horizon_counts_only_qualified() {
+        let sec = 1_000_000_000i64;
+        let envs = scenario();
+        let config = FeatureConfig::default();
+
+        let complete = compute_features_at(&envs, &config, StreamHorizon::Complete);
+        assert_eq!(onset_services(&complete), vec!["backend", "frontend"]);
+        let backend = &complete.anomaly_intervals[0];
+        assert_eq!(backend.service, "backend");
+        assert_eq!((backend.start_ns, backend.end_ns), (8 * sec, 19 * sec));
+        assert!(!backend.closed);
+        assert_eq!(backend.required_persistence_ns, 8 * sec);
+        assert_eq!(backend.qualified_ns, Some(16 * sec));
+        let frontend = &complete.anomaly_intervals[1];
+        assert_eq!(frontend.service, "frontend");
+        assert_eq!((frontend.start_ns, frontend.end_ns), (11 * sec, 19 * sec));
+        assert!(!frontend.closed);
+        assert_eq!(frontend.qualified_ns, None);
+
+        let partial = compute_features_at(&envs, &config, StreamHorizon::Partial);
+        assert_eq!(onset_services(&partial), vec!["backend"]);
+        assert_eq!(partial.anomaly_intervals.len(), 1);
+        assert_eq!(partial.incident_onset_ns, Some(8 * sec));
+    }
+
+    /// Serialise a feature set without the interval fields added by the v2
+    /// detector, for comparison against output captured before they existed.
+    fn without_v2_interval_fields(set: &FeatureSet) -> String {
+        let mut v = serde_json::to_value(set).unwrap();
+        for iv in v["anomaly_intervals"].as_array_mut().unwrap() {
+            let obj = iv.as_object_mut().unwrap();
+            for k in [
+                "baseline_span_ns",
+                "required_persistence_ns",
+                "qualified_ns",
+            ] {
+                assert!(obj.remove(k).is_some(), "missing {k}");
+            }
+        }
+        serde_json::to_string(&v).unwrap()
+    }
+
+    #[test]
+    fn legacy_preset_reproduces_prechange_scenario() {
+        // Captured from the detector before the v2 change, on this scenario.
+        let golden = include_str!("../tests/golden/legacy_scenario_features.json");
+        let set = compute_features(&scenario(), &FeatureConfig::legacy());
+        assert_eq!(without_v2_interval_fields(&set), golden);
+        let partial = compute_features_at(
+            &scenario(),
+            &FeatureConfig::legacy(),
+            StreamHorizon::Partial,
+        );
+        assert_eq!(partial, set, "legacy intervals qualify at open");
+    }
+
+    #[test]
+    fn presets_differ_from_v2_in_one_element() {
+        let v2 = FeatureConfig::v2();
+        assert_eq!(FeatureConfig::default(), v2);
+        let legacy = FeatureConfig::legacy();
+        assert_eq!(legacy.anomaly.baseline.window_len, 32);
+        assert_eq!(legacy.anomaly.baseline.min_samples, 5);
+        assert_eq!(legacy.anomaly.baseline.relative_scale_floor, 0.0);
+        assert_eq!(legacy.anomaly.persistence_cap_ns, 0);
+        assert_eq!(v2.anomaly.baseline.window_len, 300);
+        assert_eq!(v2.anomaly.baseline.relative_scale_floor, 0.25);
+        assert_eq!(v2.anomaly.persistence_cap_ns, 120_000_000_000);
+
+        let mut expect = v2;
+        expect.anomaly.baseline.relative_scale_floor = 0.0;
+        assert_eq!(FeatureConfig::v2_no_floor(), expect);
+        let mut expect = v2;
+        expect.anomaly.persistence_cap_ns = 0;
+        assert_eq!(FeatureConfig::v2_no_persistence(), expect);
+        let mut expect = v2;
+        expect.anomaly.baseline.window_len = 32;
+        assert_eq!(FeatureConfig::v2_window32(), expect);
     }
 }
