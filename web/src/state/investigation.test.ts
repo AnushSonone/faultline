@@ -133,7 +133,7 @@ describe("investigation store", () => {
     expect(after.sawAnomaly).toBe(false);
     expect(after.sawRanking).toBe(false);
     expect(after.briefRead).toBe(false);
-    expect(after.briefOpen).toBe(true);
+    expect(after.briefOpen).toBe(false);
   });
 
   it("mutes progress after the tour until the replay reports the start", () => {

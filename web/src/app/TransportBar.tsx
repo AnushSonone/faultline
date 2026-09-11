@@ -4,6 +4,7 @@ import { SCENARIOS } from "../content/scenarios";
 import { useInvestigation } from "../state/investigation";
 import { InfoTip } from "../components/InfoTip";
 import { fmtIn, fmtOffset } from "../lib/format";
+import { thinTicks } from "../lib/scrubberTicks";
 import { SPEEDS, type Speed } from "../lib/replaySpeed";
 import { KIND_COLORS } from "../theme/kinds";
 
@@ -143,10 +144,10 @@ export function TransportBar({
     const logs = timeline.events.filter((e) => e.signal === "log");
     return logs.length <= MAX_LOG_MARKERS ? [...changes, ...logs] : changes;
   }, [timeline]);
-  const ticks = useMemo(() => {
-    const nodes = evidenceGraph?.graph.nodes ?? [];
-    return nodes.filter((n) => n.time_ns != null && n.kind !== "root_cause_candidate");
-  }, [evidenceGraph]);
+  const ticks = useMemo(
+    () => thinTicks(evidenceGraph?.graph.nodes ?? [], toFrac),
+    [evidenceGraph, toFrac],
+  );
   const axis = useMemo(() => {
     if (!ready) return [];
     return [0, 1 / 3, 2 / 3, 1].map((f) => ({ f, label: fmtOffset(startNs + f * (endNs - startNs), startNs) }));

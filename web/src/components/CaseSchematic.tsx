@@ -1,10 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useElementWidth } from "../lib/useElementWidth";
 import type { CaseSchematic as SchematicData } from "../content/scenarios";
 
 type Props = { schematic: SchematicData };
 
 const W = 264;
-const H = 104;
+// Two node rows when a wave carries a second service or the case draws
+// bystanders, one otherwise. The svg scales to the card width now, so a
+// reserved-but-empty bottom row reads as dead space rather than as margin.
+const H_TWO_ROW = 104;
+const H_ONE_ROW = 76;
 const R = 11;
 const NODE_Y_TOP = 30;
 const NODE_Y_BOTTOM = 68;
@@ -43,6 +48,16 @@ type Placed = {
 export function CaseSchematic({ schematic }: Props) {
   const [playing, setPlaying] = useState(false);
   const [run, setRun] = useState(0);
+  const figRef = useRef<HTMLElement>(null);
+  const width = useElementWidth(figRef, W);
+  // The diagram scales to its card, but its text holds one on-screen size:
+  // 11px, the caption size used everywhere else on the case surfaces. Sizes
+  // are capped in viewBox units so the longest label never runs off a narrow
+  // card; there it shrinks a little rather than clipping.
+  const k = W / Math.max(1, width);
+  const labelSize = Math.min(11 * k, 9.5);
+  const captionSize = Math.min(11 * k, 9);
+  const tagSize = Math.min(10 * k, 9);
 
   const placed = useMemo<Placed[]>(() => {
     const columns = 1 + schematic.waves.length;
@@ -61,6 +76,18 @@ export function CaseSchematic({ schematic }: Props) {
   }, [schematic]);
 
   const byId = useMemo(() => new Map(placed.map((p) => [p.id, p])), [placed]);
+  const H = placed.some((p) => p.y === NODE_Y_BOTTOM) ? H_TWO_ROW : H_ONE_ROW;
+  // A top-row node with something directly beneath it puts its label above:
+  // the label sits at y+R+11, which is exactly where the edge down to the
+  // lower node runs, so the arrow used to be drawn through the word. Bulging
+  // the edge sideways cannot clear it, because the origin sits at x = W - 40
+  // of a 264-wide viewBox and its label is about 80px across.
+  const columnsWithBottom = useMemo(() => {
+    const set = new Set<number>();
+    for (const n of placed) if (n.y === NODE_Y_BOTTOM) set.add(n.x);
+    return set;
+  }, [placed]);
+  const labelAbove = (n: Placed) => n.y === NODE_Y_TOP && columnsWithBottom.has(n.x);
   const lastWave = schematic.waves.length;
   // Timeline in ms: deploy pulse, origin flares, each hop lands 600 ms later.
   const originAt = schematic.deploy ? 500 : 100;
@@ -91,6 +118,7 @@ export function CaseSchematic({ schematic }: Props) {
 
   return (
     <figure
+      ref={figRef}
       className={playing ? "schematic playing" : "schematic"}
       data-testid="briefing-schematic"
       role="button"
@@ -105,7 +133,10 @@ export function CaseSchematic({ schematic }: Props) {
         }
       }}
     >
-      <svg key={run} viewBox={`0 0 ${W} ${H}`} width="100%" height={H} aria-hidden="true">
+      {/* No height attribute: the stylesheet scales it to the card width so
+          the 9px labels grow with the container instead of leaving dead
+          margin on both sides. */}
+      <svg key={run} viewBox={`0 0 ${W} ${H}`} width="100%" aria-hidden="true">
         <defs>
           <marker id="schematic-arrow" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M0,0 L8,4 L0,8 z" className="schematic-arrowhead" />
@@ -165,18 +196,41 @@ export function CaseSchematic({ schematic }: Props) {
                 <circle className="schematic-deploy" cx={p.x} cy={p.y} r={R + 4} style={delay(0)} />
               )}
               <circle className="schematic-dot" cx={p.x} cy={p.y} r={R} />
-              <text className="schematic-label" x={p.x} y={p.y + R + 11} textAnchor="middle">
+              <text
+                className="schematic-label"
+                style={{ fontSize: labelSize }}
+                x={p.x}
+                y={labelAbove(p) ? p.y - R - 6 : p.y + R + 11}
+                textAnchor="middle"
+              >
                 {shortName(p.id)}
               </text>
             </g>
           );
         })}
-        {schematic.deploy && (
-          <text className="schematic-tag" x={byId.get(schematic.origin)?.x ?? W - 40} y={10} textAnchor="middle">
-            deploy t+{schematic.deploy.atS} s
-          </text>
-        )}
-        <text className="schematic-caption" x={4} y={H - 4} style={delay(hopAt(lastWave) + 200)}>
+        {schematic.deploy && (() => {
+          // No shipped fixture has both a deploy and a bystander, but the tag
+          // and a flipped label would occupy the same band if one ever did.
+          const o = byId.get(schematic.origin);
+          const flipped = o != null && labelAbove(o);
+          return (
+            <text
+              className="schematic-tag"
+              style={{ fontSize: tagSize }}
+              x={o?.x ?? W - 40}
+              y={flipped ? (o?.y ?? NODE_Y_TOP) + R + 22 : 10}
+              textAnchor="middle"
+            >
+              deploy t+{schematic.deploy.atS} s
+            </text>
+          );
+        })()}
+        <text
+          className="schematic-caption"
+          x={4}
+          y={H - 4}
+          style={{ ...delay(hopAt(lastWave) + 200), fontSize: captionSize }}
+        >
           {SIGNAL_TERM[schematic.signal]} anomaly at t+{schematic.injectedAtS} s, then {callers}{" "}
           {callers === 1 ? "caller degrades" : "callers degrade"}
         </text>

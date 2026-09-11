@@ -10,7 +10,7 @@ export const SECTION_LEADS: Record<TabId, string> = {
   signals:
     "The telemetry behind the ranking: p99 latency per service and window via DDSketch, and one sampled trace with its critical path.",
   case:
-    "What was recorded, which request routes it covers, the injected signal, and the fault-injection label, which unlocks after one full replay.",
+    "The incident and the question, how the fault propagated, what was recorded, and the fault-injection label, which unlocks after one full replay.",
   runtime:
     "The streaming engine that computes the stage: operator DAG, watermarks, ingestion, query planner, scoring formula and checkpoint recovery.",
 };
@@ -39,7 +39,7 @@ export const WALK_STEPS: WalkStep[] = [
   {
     target: null,
     title: "Faultline",
-    text: "A streaming root-cause analysis engine. It replays an incident on an event-time clock, builds an evidence graph and ranks candidates. A ranking, never a proof.",
+    text: "A streaming root-cause analysis engine: it replays an incident on an event-time clock and ranks candidates. A ranking, never a proof.",
   },
   {
     target: "map",
@@ -49,7 +49,7 @@ export const WALK_STEPS: WalkStep[] = [
   {
     target: "transport",
     title: "Replay transport",
-    text: "Pick an incident, then Play streams its events in event-time order. Reset returns to the start; Advanced toggles projection mode and out-of-order arrival.",
+    text: "Pick an incident; Play streams its events in event-time order. Advanced toggles projection mode and out-of-order arrival.",
   },
   {
     target: "track",
@@ -78,14 +78,14 @@ export const WALK_STEPS: WalkStep[] = [
     target: "evidence",
     needsEvidence: true,
     title: "Evidence graph",
-    text: "Provenance of the ranking, left to right: change event, anomaly, degradation, candidate. Dashed red edges contradict; faded nodes are ahead of the cursor.",
+    text: "Provenance of the ranking: change event, anomaly, degradation, candidate. Dashed red edges contradict the ranking.",
   },
   {
     target: "tab-root-causes",
     tab: "root-causes",
     needsEvidence: true,
     title: "Ranking tab",
-    text: "Per-candidate score decomposition: feature value, weight and contribution. Below it, change proximity joins deployments to anomaly onsets.",
+    text: "Per-candidate score decomposition: feature value, weight and contribution, plus deployments joined to anomaly onsets.",
   },
   {
     target: "tab-signals",
@@ -110,6 +110,6 @@ export const WALK_STEPS: WalkStep[] = [
   {
     target: "transport",
     title: "Run the replay",
-    text: "Press Play and watch the deploy marker, the first anomaly, the propagation and the ranking settle. Then open Case file to compare with ground truth.",
+    text: "Press Play and watch the first anomaly, the propagation and the ranking settle. Then open Case file for the ground truth.",
   },
 ];

@@ -14,14 +14,29 @@ test.describe("Investigation-first open", () => {
     await expect(page.getByTestId("verdict-hero")).toContainText("Nothing is ranked yet");
     await dismissFirstVisit(page);
 
+    // The default screen: the rail opens on the six-row investigation
+    // checklist and the evidence timeline, with the case brief behind its chip.
     const briefing = page.getByTestId("briefing");
-    await expect(briefing).toBeVisible();
-    await expect(briefing).toContainText("recommendationservice");
-    await expect(briefing).toContainText("Watch");
     const checklist = page.getByTestId("checklist");
+    await expect(briefing).toHaveCount(0);
     await expect(checklist).toBeVisible();
     await expect(checklist.locator("[data-testid^='check-']")).toHaveCount(6);
     await expect(checklist.locator("[data-done='true']")).toHaveCount(0);
+    await expect(page.getByTestId("now-strip")).toBeVisible();
+    await expect(page.getByTestId("evidence-graph")).toBeVisible();
+
+    // The chip opens the brief, which carries the whole case.
+    await page.getByTestId("briefing-open").click();
+    await expect(briefing).toBeVisible();
+    await expect(briefing).toContainText("recommendationservice");
+    await expect(briefing).toContainText("Features to watch");
+    await expect(page.getByTestId("case-summary")).toContainText("Online Boutique");
+    await expect(page.getByTestId("case-summary")).toContainText("checkout slows");
+    await expect(briefing).toContainText("Which service is responsible?");
+    await expect(page.getByTestId("briefing-blurb")).toContainText("nine-feature ranker");
+    // With the brief open it owns the rail's height, so the checklist folds.
+    await expect(checklist).toHaveClass(/compact/);
+    await expect(checklist).toContainText("Investigation · 0 of 6");
 
     // Walkthrough: one spotlight per step; steps 2 and 5 also outline a panel.
     await page.getByTestId("briefing-tour").click();
@@ -71,6 +86,8 @@ test.describe("Investigation-first open", () => {
 
     // A new incident gets its own brief, and no second first-visit card.
     await page.getByTestId("incident-picker").selectOption("eval-cpu-cart-007", { timeout: 20_000 });
+    await expect(page.getByTestId("briefing-open")).toBeVisible({ timeout: 30_000 });
+    await page.getByTestId("briefing-open").click();
     await expect(page.getByTestId("briefing")).toContainText("cartservice", { timeout: 30_000 });
     await expect(page.getByTestId("first-visit")).toHaveCount(0);
   });
@@ -103,6 +120,9 @@ test.describe("Investigation-first open", () => {
   test("the checklist ticks as the visitor investigates", async ({ page }) => {
     await bootAtStart(page);
     const row = (id: string) => page.getByTestId(`check-${id}`);
+
+    // The brief is closed on load, so the six rows are already in the rail.
+    await expect(page.getByTestId("briefing")).toHaveCount(0);
 
     // The drawer replaces the rail, so the checklist is read back on Overview.
     await row("case").locator("button").click();

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { anomalyOnsetNs } from "../lib/progress";
+import type { CaseInfo } from "../api/client";
 import type {
   CorrelationPayload,
   EvidenceGraphPayload,
@@ -100,6 +101,10 @@ type InvestigationState = {
   // engine.warning messages, newest last, capped.
   engineWarnings: EngineWarning[];
   groundTruth: GroundTruth | null;
+  // The incident record from GET /sessions/{id}/case. Fetched once when the
+  // session loads so the rail dossier and the Case file share one request;
+  // replaced by the revealed payload when the visitor unlocks ground truth.
+  caseInfo: CaseInfo | null;
   runtimeInspector: RuntimeInspector | null;
   heatmapMode: string;
   selectedEventTime: number | null;
@@ -146,6 +151,7 @@ type InvestigationState = {
   wsClosed: () => void;
   setError: (e: string | null) => void;
   setGroundTruth: (g: GroundTruth | null) => void;
+  setCaseInfo: (c: CaseInfo | null) => void;
   clearNeedsResync: () => void;
   clearSelection: () => void;
   selectService: (s: string | null) => void;
@@ -194,6 +200,7 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   lastQueryMetrics: null,
   engineWarnings: [],
   groundTruth: null,
+  caseInfo: null,
   runtimeInspector: null,
   heatmapMode: "streaming",
   selectedEventTime: null,
@@ -205,7 +212,9 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
   selectedHeatmapCell: null,
   tourTarget: null,
   replayCompleted: false,
-  briefOpen: true,
+  // Closed on load: the rail opens on the checklist and the evidence
+  // timeline, and the Case brief chip opens the brief.
+  briefOpen: false,
   briefRead: false,
   visitedTabs: [],
   playedOnce: false,
@@ -237,6 +246,7 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
     set((s) => ({ connected: false, wsStatus: "reconnecting", wsRetries: s.wsRetries + 1 })),
   setError: (e) => set({ lastError: e }),
   setGroundTruth: (g) => set({ groundTruth: g }),
+  setCaseInfo: (c) => set({ caseInfo: c }),
   clearNeedsResync: () => set({ needsResync: false, lastError: null }),
   clearSelection: () =>
     set({
@@ -250,7 +260,8 @@ export const useInvestigation = create<InvestigationState>((set, get) => ({
       tourTarget: null,
       replayCompleted: false,
       groundTruthRevealed: false,
-      briefOpen: true,
+      caseInfo: null,
+      briefOpen: false,
       briefRead: false,
       visitedTabs: [],
       playedOnce: false,
