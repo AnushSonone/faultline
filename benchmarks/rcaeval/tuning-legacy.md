@@ -2,7 +2,7 @@
 
 Detector: legacy detector (2026-08-03 configuration), spec 18.4 ranking weights.
 
-Protocol: dataset `rcaeval-re2-ob/v2`, commit `021083785736d50937d2a896319583f7cb67b240` (0 dirty files in crates apps Cargo.toml Cargo.lock rust-toolchain.toml), feature config sha256 `0191508ba9c4`, ranking weights sha256 `dc0686ec7e0b`.
+Protocol: dataset `rcaeval-re2-ob/v2`, commit `1e42d2462f51a39dfbb5c800778809e763e3c3d3` (0 dirty files in crates apps Cargo.toml Cargo.lock rust-toolchain.toml), feature config sha256 `7bf78f87093c`, ranking weights sha256 `dc0686ec7e0b`.
 
 | metric | value |
 |---|---|

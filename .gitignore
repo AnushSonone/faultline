@@ -9,6 +9,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+.venv-baselines/
 venv/
 *.egg-info/
 .env

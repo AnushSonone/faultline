@@ -22,7 +22,7 @@ DATA="${FAULTLINE_DATA:-$ROOT/datasets}"
 OUT="$ROOT/benchmarks/rcaeval"
 BASELINES=1
 REPLAY=""
-REPLAY_DETECTOR=legacy
+REPLAY_DETECTOR=v2
 STEP_S=30
 
 while [ $# -gt 0 ]; do
