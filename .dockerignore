@@ -16,6 +16,8 @@ datasets/fixtures/rcaeval-re2-ob/v2/re2ob-productcatalogservice-delay-1
 datasets/fixtures/rcaeval-re2-ob/v2/re2ob-productcatalogservice-mem-1
 datasets/fixtures/rcaeval-re2-ob/v2/re2ob-recommendationservice-cpu-1
 datasets/fixtures/rcaeval-re2-ob/v2/re2ob-recommendationservice-delay-1
+datasets/fixtures/rcaeval-re2-ob/v2-heldout
+datasets/fixtures/rcaeval-re2-ob-window
 benchmarks
 docs
 python

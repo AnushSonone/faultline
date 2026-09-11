@@ -1,0 +1,305 @@
+# RCAEval RE2-OB tuning / held-out split.
+#
+# T (tuning) and H (heldout) are disjoint, and T union H equals the 90 case
+# names in datasets/raw/re2ob-cases.txt (5 services x cpu/mem/disk/delay/loss/
+# socket x instances 1-3). Held-out cases must not be scored by any detector,
+# ranker, or baseline until detector and ranker settings are frozen.
+# Fixture paths are relative to datasets/fixtures. manifest_sha256 is the
+# sha256 of each converted manifest.json, which in turn pins every parquet file.
+
+schema_version: 1
+suite: RE2-OB
+source_manifest: datasets/manifests/rcaeval.yaml
+archive_sha256: 72006b45601980df5088ae60872f0fe3233fa52748584c97c559df664c41bf0b
+converter: python/faultline_data/adapters/rcaeval.py
+converter_commit: 53fb0a04ca0aa5f877267a3bb00539dffaa6502d
+converter_flags: default sampling (traces 1/8 by whole trace, logs capped at 4000, no window)
+extract_script: scripts/extract-rcaeval.sh
+case_list: datasets/raw/re2ob-cases.txt
+invariants:
+  tuning_heldout_disjoint: true
+  union_equals_case_list: true
+  total_cases: 90
+
+tuning:
+  dataset_path: rcaeval-re2-ob/v2
+  selection: instance 1 of cpu/mem/delay for each service (datasets/raw/phase-a.txt)
+  count: 15
+  cases:
+    - id: re2ob-checkoutservice-cpu-1
+      manifest_sha256: 899100f1b5280ce1e83c4b9ddec7418b3f399f1c491445a8c0836c7db1f4015d
+    - id: re2ob-checkoutservice-delay-1
+      manifest_sha256: 02e2cfb6928012b6cafa87a8de26afdcc4c7efa4140c715e9bb84e3411c344b7
+    - id: re2ob-checkoutservice-mem-1
+      manifest_sha256: ee1d366eeeb8dee3049fd2023fb35fcdedf5fd662e7753569ea7882d227e27b3
+    - id: re2ob-currencyservice-cpu-1
+      manifest_sha256: 4fb0392504a7de833fbc3f91adb30e946982a5219bd40f02a30640c495b355af
+    - id: re2ob-currencyservice-delay-1
+      manifest_sha256: bc99d83696b4240aa1208dfa5c4ff5f45cf3342520427a43d166b8434288fcdd
+    - id: re2ob-currencyservice-mem-1
+      manifest_sha256: f0fb1fb8e0c3932d05ecde2dde46fd3f981d7c3fdd077b69c14bb47abb2d0484
+    - id: re2ob-emailservice-cpu-1
+      manifest_sha256: 31e4714047c3994c9140f9ea3c1cac255c038f18fddb20706b8344605e3e7c8d
+    - id: re2ob-emailservice-delay-1
+      manifest_sha256: 7a5b5a26eecfd75b0d34c24b0cf3418eb40cf1706ed4a5c2dda9d068032b3c53
+    - id: re2ob-emailservice-mem-1
+      manifest_sha256: 86c72ccc185dc92fbe63f912541b6fd57221fa2d561ebba22401165d8cb8f3fa
+    - id: re2ob-productcatalogservice-cpu-1
+      manifest_sha256: 8656fffc302d7304cd8e83115f473c2f0fb8a38d28fde1993b4f6422cf3fb170
+    - id: re2ob-productcatalogservice-delay-1
+      manifest_sha256: 8b03c7103acad3674819319877fedf5b65d0a352fbe3e1cb20c0cab0b5115f99
+    - id: re2ob-productcatalogservice-mem-1
+      manifest_sha256: ec50e8decc05e3c1ab8b2a72f3db58f8f20550cfe3483ee9cd619b5f84707ede
+    - id: re2ob-recommendationservice-cpu-1
+      manifest_sha256: 087219d8ab25e2cc89469a1d233226ec02f94fb8ee1ad7cf70e663e2bf9b3f51
+    - id: re2ob-recommendationservice-delay-1
+      manifest_sha256: 2927772f05ccbc1255f703550bb13af8183b03613a7f044ca422c72fbc4809ba
+    - id: re2ob-recommendationservice-mem-1
+      manifest_sha256: 2f0861d7b4a46c21d4742601cc759ee9bd02457aded2bb357892c8e7758059a7
+
+heldout:
+  dataset_path: rcaeval-re2-ob/v2-heldout
+  selection: every RE2-OB case not in tuning
+  count: 75
+  excluded: []
+  short_recordings:  # structural only; all other held-out cases span 1440 s, 720 s after injection
+    - id: re2ob-checkoutservice-cpu-2
+      span_s: 929  # 209 s after injection; metrics 929 s, spans 757 s, logs 892 s
+    - id: re2ob-checkoutservice-mem-2
+      span_s: 1151  # 431 s after injection; metrics 1003 s, spans 1151 s, logs 965 s
+  cases:
+    - id: re2ob-checkoutservice-cpu-2
+      manifest_sha256: 5513debd9dbd5c3a6ed268d093b369e582aef2f7585b4228f4d1fe9d8209e35e
+    - id: re2ob-checkoutservice-cpu-3
+      manifest_sha256: d26a5b545ad5a23b76685d998cdf84a851db556e96424295a2801a8bc97d48e5
+    - id: re2ob-checkoutservice-delay-2
+      manifest_sha256: aa5311df746d9e1c8038bcac5a02ccbe2fe445be13b868ac4ffba7c09e0da789
+    - id: re2ob-checkoutservice-delay-3
+      manifest_sha256: 14eca6c652fa0bcbac97832acd4f9e94b55f395f68a74574ad970f9ba1cf5fe7
+    - id: re2ob-checkoutservice-disk-1
+      manifest_sha256: c387edba3ec083d9de78e8c89315015eba58bacea36235ba30eba3db0bfcaaa3
+    - id: re2ob-checkoutservice-disk-2
+      manifest_sha256: 85dc760b91ba302fde8ef06867f16972f15dfe11706eb16925aa769569eb238b
+    - id: re2ob-checkoutservice-disk-3
+      manifest_sha256: 5a6cf89ac4c653a6ceca2b7d71d1c642508e8af3f46024d8d2b8d46b832e7064
+    - id: re2ob-checkoutservice-loss-1
+      manifest_sha256: 356ca7cb148744b3c4f7948d4b551712cf143a4f518a1b0a6f4920ca6fb542ac
+    - id: re2ob-checkoutservice-loss-2
+      manifest_sha256: b8f0a7b919b67fbb54e16769339f85009547239319bb1bb2743150ad5b8e09b9
+    - id: re2ob-checkoutservice-loss-3
+      manifest_sha256: 79cf23180361536b76570f8e8a96439aeb388038356c766dbc084a7fab745c65
+    - id: re2ob-checkoutservice-mem-2
+      manifest_sha256: 79bec9dfb6c85e8dbfa9d26ae0ae63b331fd5ca0c35a98c2411f06e06deb95cf
+    - id: re2ob-checkoutservice-mem-3
+      manifest_sha256: de94eac16b1f36cecc6635ef5141ba86101227ab493d34b92e627ff5fb4c0f17
+    - id: re2ob-checkoutservice-socket-1
+      manifest_sha256: 1c1dc02124eae045a17e384b2137074ff62eb36ca08e80693ca24239a3d813da
+    - id: re2ob-checkoutservice-socket-2
+      manifest_sha256: 9649fe35bc77d4eca037064ccf8ec4955eacf4510b6c86548067df06cc311272
+    - id: re2ob-checkoutservice-socket-3
+      manifest_sha256: 5b67a71203bd764133f1a561cedb5f7cf866479e38cc3bb23a52c89491405697
+    - id: re2ob-currencyservice-cpu-2
+      manifest_sha256: ddd1b5818274ee91aa97e438f0e51c00513d7e0e4e261b3c858e5fc49b903dc6
+    - id: re2ob-currencyservice-cpu-3
+      manifest_sha256: 0699befc177ff3cd59ea216a541492e1873e40f33722770abec83b0d2165a14f
+    - id: re2ob-currencyservice-delay-2
+      manifest_sha256: 9c9ccde25ddf57df20a878946787e78c72b209a0c8ead5740bbeac86879d33fb
+    - id: re2ob-currencyservice-delay-3
+      manifest_sha256: 3b5adab1ac841644c7a5efb98da1b22d76e6c01d4a1a98c687a235429a0a587c
+    - id: re2ob-currencyservice-disk-1
+      manifest_sha256: a4a58a2559d5b41f2ed91bdab2bb24770bcb76aaec18e01dfb123daca0b857e8
+    - id: re2ob-currencyservice-disk-2
+      manifest_sha256: 5c8fbfa7661148d976e7adaf92bb221877d6a3db8a6df8ad0d1cbd84f4733efa
+    - id: re2ob-currencyservice-disk-3
+      manifest_sha256: 21f71aca3f3293d813b5fe18443ab4edc71f3b208cb2d07ef2eec5b4958e697a
+    - id: re2ob-currencyservice-loss-1
+      manifest_sha256: d0a548bb3202cfe9991015bece9d25775c90b54eb1524774bf48e949dff452b5
+    - id: re2ob-currencyservice-loss-2
+      manifest_sha256: e3fcca088d97975ca30cccb3e8eb73596d25896217db54428a3c7aefc89733ec
+    - id: re2ob-currencyservice-loss-3
+      manifest_sha256: e2c56581db66af9f273dc3dbd059b2a27ceaef9b3ffeccfe74c584d2fce7f020
+    - id: re2ob-currencyservice-mem-2
+      manifest_sha256: d275ba56427d4e0218e4388eadbf1fdae1178a70137283b2b6c4ad57f7934a08
+    - id: re2ob-currencyservice-mem-3
+      manifest_sha256: 17e28b8790c12dd5a186ae3bb70fdebf65e51e6198207304fd54cbd93b45ed82
+    - id: re2ob-currencyservice-socket-1
+      manifest_sha256: a7cd49f0717dd4719d4c40f32806930ecb799f7002a9e0932b03d1296ed4ec79
+    - id: re2ob-currencyservice-socket-2
+      manifest_sha256: 782d30e3f7ab1e8ec9aa3b31fae114fd7c537c6b4faa9950ba53497af9e2c3ca
+    - id: re2ob-currencyservice-socket-3
+      manifest_sha256: 004314fbe86ec7aca21de73bbc6786d054162251784f4fbf0a1ec2545d269fe2
+    - id: re2ob-emailservice-cpu-2
+      manifest_sha256: ede652e032424d151e780f7117dc12f30cfcd52ee239aed22c568b39ff62a1ce
+    - id: re2ob-emailservice-cpu-3
+      manifest_sha256: 8ae87b37a833e8c1e50986f4532b3f7615b312cdef5596749f10d8a66faa9670
+    - id: re2ob-emailservice-delay-2
+      manifest_sha256: 4f9d7f8774d2b01ac6d5c5aa68f51a53117157be0a5161edabda28e5744c26b6
+    - id: re2ob-emailservice-delay-3
+      manifest_sha256: 3bc18e36a3ae773e7f0665246591890f0f63120bb8bc55c3d96cc7e834a38c2f
+    - id: re2ob-emailservice-disk-1
+      manifest_sha256: 4be95b5a0c75830ec4b6a668cef7d3f15ccc90343c8d0e006002d8fe9ee73f71
+    - id: re2ob-emailservice-disk-2
+      manifest_sha256: 71982bcba46ccb9589899250f74d02c44f81e1fd45aa8f178f908242636671d3
+    - id: re2ob-emailservice-disk-3
+      manifest_sha256: 3d1f0e0ef4f7c73bf4ad72b4601ca057e441ed01f2a58bfbeb81f77bbbb1e458
+    - id: re2ob-emailservice-loss-1
+      manifest_sha256: 3c13dce4815a734f39094bde277d362187d01cea19aadc65de7ed7490924d507
+    - id: re2ob-emailservice-loss-2
+      manifest_sha256: f74cd1978e57ee0bde2cd22f5fbb310c2b60a747f6538f6deb292217e6de7ba7
+    - id: re2ob-emailservice-loss-3
+      manifest_sha256: a7eebf8650ad1f9c0790e09ca02df37b5edcf849a9af9f4dd6a9d55d6b7fb650
+    - id: re2ob-emailservice-mem-2
+      manifest_sha256: 48f1e1b23ba430041b10128aa807ed5eefbf318a054e98e3a14990f022551474
+    - id: re2ob-emailservice-mem-3
+      manifest_sha256: 2a8cb3bd2825106cf947a5dd39016f3881495b397e577e67d6eb153c9cff4464
+    - id: re2ob-emailservice-socket-1
+      manifest_sha256: 98bd923a9a820d41e115794e3c0329d7dbf1ca5ef490b288b199c87b0fbc0bcb
+    - id: re2ob-emailservice-socket-2
+      manifest_sha256: 7d5c91fbccc380a3400f17792161fde9f8a0f66fcac860e63f793f8d999f9fb8
+    - id: re2ob-emailservice-socket-3
+      manifest_sha256: 3c022f69c41d46659e42fd8c651957475934d81fc0716e5c39a51e0d03903baa
+    - id: re2ob-productcatalogservice-cpu-2
+      manifest_sha256: 887e4c3810da591485da8115c97e03ecbb357e2ff6f9bd07bdb334fdb51e05d4
+    - id: re2ob-productcatalogservice-cpu-3
+      manifest_sha256: dbe18c2813d4232d33a61c1cbb0d324b1710f40348b8c57b0a4e9847428a537c
+    - id: re2ob-productcatalogservice-delay-2
+      manifest_sha256: 2046725525d383262d6b28e36fea881becca6d758f82bec34b4b6875e97fee06
+    - id: re2ob-productcatalogservice-delay-3
+      manifest_sha256: c701bb034e326d146d2f8dc7d1106abc4b6ca46fd7cf3c7477a7438bf56b12df
+    - id: re2ob-productcatalogservice-disk-1
+      manifest_sha256: 97c6fd936efffa1a2dd7868a75fa1219c5b93ea90cb33f2cebe82a6be1cd29eb
+    - id: re2ob-productcatalogservice-disk-2
+      manifest_sha256: 0dce0ae4c7a75922cad31e5e2160ea5cf565e75761f43b899c937a99e84a4911
+    - id: re2ob-productcatalogservice-disk-3
+      manifest_sha256: afec297e14358d5c625e2c0b87f24449b927cfcb05b09a43b8a64971e0baa760
+    - id: re2ob-productcatalogservice-loss-1
+      manifest_sha256: c64cfde314dcc48a4879f6edc62b7fd509cd52532b4c90041a77ae318bb145d3
+    - id: re2ob-productcatalogservice-loss-2
+      manifest_sha256: 5fef29aaaa2d6ce5110c23a9ac2207728cabf1ef611758dbca763ddd49e58ab5
+    - id: re2ob-productcatalogservice-loss-3
+      manifest_sha256: 20e453194b21ed31026add2c6b43c6af0d7135885d63dac99f2cb35276d0c7b1
+    - id: re2ob-productcatalogservice-mem-2
+      manifest_sha256: 6e20c25bd5acaad011cc835e81740c908f5e861a8c76b4dcfd8ac901287ae8ef
+    - id: re2ob-productcatalogservice-mem-3
+      manifest_sha256: 7cad0e1265865653f79795af005ea19f4e13e163e2ae1df43694def7030d2495
+    - id: re2ob-productcatalogservice-socket-1
+      manifest_sha256: d7779b37982a41614c8aef7b9f332fdeb00df967ecbaa40cd36eb0d4de24f4f1
+    - id: re2ob-productcatalogservice-socket-2
+      manifest_sha256: 86a43264d73b0cd8823bc10cd634da65f89e617377d1c9dd2c9300ac079ed217
+    - id: re2ob-productcatalogservice-socket-3
+      manifest_sha256: 357704baa4752f035a907cc15d22fec8a673aaee4eefb8d024e329ba9f5bd9da
+    - id: re2ob-recommendationservice-cpu-2
+      manifest_sha256: 4b0fca551134d1e73829447d637e35aed4c01bb9a8681356dc31210eab9ab7bb
+    - id: re2ob-recommendationservice-cpu-3
+      manifest_sha256: 3ae67de821403de674f5a387ccec72db998a3b544f09dbd9ade67df536ffe546
+    - id: re2ob-recommendationservice-delay-2
+      manifest_sha256: 084688da115fc66ab7f5e92fbaa4a63ff87fb1fb9db912cf8f61981d13549180
+    - id: re2ob-recommendationservice-delay-3
+      manifest_sha256: 93a9b5dd89c5fc3eceb2a8133027b3944b9a636392adf57b83b5ab46cf13855d
+    - id: re2ob-recommendationservice-disk-1
+      manifest_sha256: f02b497b849ff2793e77b89efa0a35b21efa4f48d6d1c79eeb7fc5cd32d687a7
+    - id: re2ob-recommendationservice-disk-2
+      manifest_sha256: c3cd74b86fbbd603a58a3871bbc7c9309b7126b34d3f8b581831f6a4d8f3e17e
+    - id: re2ob-recommendationservice-disk-3
+      manifest_sha256: c3e81bff5a9acbd9013005bdd36d83af43903632fa7328ef5603b0e06f9be7f1
+    - id: re2ob-recommendationservice-loss-1
+      manifest_sha256: 6da16407729149efeaa23f9ebfa8aa23cf9236b44d930b67b8cb491e01a4b716
+    - id: re2ob-recommendationservice-loss-2
+      manifest_sha256: 20b6982a01a957fd52ed89b9490dbb56136d81b03c1c7da77e0e7768f09f20db
+    - id: re2ob-recommendationservice-loss-3
+      manifest_sha256: a6d5e7245a6bd4b770dfc5ac35babecf4816b1bfd795246a096aff5b97c18741
+    - id: re2ob-recommendationservice-mem-2
+      manifest_sha256: 1e1ce0e1bbe01a4efb4da7c59bf1310a555174f8c8c698c9ee86d6844f80b36d
+    - id: re2ob-recommendationservice-mem-3
+      manifest_sha256: 10c7a9db79bda2215fcd784f23d5287e47d46119caae515c6753d2101cb882e4
+    - id: re2ob-recommendationservice-socket-1
+      manifest_sha256: 0b1e82e3665508a41607850d867c2ce65ed8d1fa770dea4917afa41ebf827006
+    - id: re2ob-recommendationservice-socket-2
+      manifest_sha256: f23f9c05c17d025b88fbfc4fe63eb2a09392a3285b8e1e113ba28622d357b403
+    - id: re2ob-recommendationservice-socket-3
+      manifest_sha256: 21d6719c85f85e2a43dd27c5abef76ca0e9eb7314f57efab32c7f4fd018edff8
+
+subgroups:
+  heldout_h1:
+    description: same fault types as tuning (cpu/mem/delay), instances 2-3
+    count: 30
+    ids:
+      - re2ob-checkoutservice-cpu-2
+      - re2ob-checkoutservice-cpu-3
+      - re2ob-checkoutservice-delay-2
+      - re2ob-checkoutservice-delay-3
+      - re2ob-checkoutservice-mem-2
+      - re2ob-checkoutservice-mem-3
+      - re2ob-currencyservice-cpu-2
+      - re2ob-currencyservice-cpu-3
+      - re2ob-currencyservice-delay-2
+      - re2ob-currencyservice-delay-3
+      - re2ob-currencyservice-mem-2
+      - re2ob-currencyservice-mem-3
+      - re2ob-emailservice-cpu-2
+      - re2ob-emailservice-cpu-3
+      - re2ob-emailservice-delay-2
+      - re2ob-emailservice-delay-3
+      - re2ob-emailservice-mem-2
+      - re2ob-emailservice-mem-3
+      - re2ob-productcatalogservice-cpu-2
+      - re2ob-productcatalogservice-cpu-3
+      - re2ob-productcatalogservice-delay-2
+      - re2ob-productcatalogservice-delay-3
+      - re2ob-productcatalogservice-mem-2
+      - re2ob-productcatalogservice-mem-3
+      - re2ob-recommendationservice-cpu-2
+      - re2ob-recommendationservice-cpu-3
+      - re2ob-recommendationservice-delay-2
+      - re2ob-recommendationservice-delay-3
+      - re2ob-recommendationservice-mem-2
+      - re2ob-recommendationservice-mem-3
+  heldout_h2:
+    description: fault types never tuned on (disk/loss/socket), instances 1-3
+    count: 45
+    ids:
+      - re2ob-checkoutservice-disk-1
+      - re2ob-checkoutservice-disk-2
+      - re2ob-checkoutservice-disk-3
+      - re2ob-checkoutservice-loss-1
+      - re2ob-checkoutservice-loss-2
+      - re2ob-checkoutservice-loss-3
+      - re2ob-checkoutservice-socket-1
+      - re2ob-checkoutservice-socket-2
+      - re2ob-checkoutservice-socket-3
+      - re2ob-currencyservice-disk-1
+      - re2ob-currencyservice-disk-2
+      - re2ob-currencyservice-disk-3
+      - re2ob-currencyservice-loss-1
+      - re2ob-currencyservice-loss-2
+      - re2ob-currencyservice-loss-3
+      - re2ob-currencyservice-socket-1
+      - re2ob-currencyservice-socket-2
+      - re2ob-currencyservice-socket-3
+      - re2ob-emailservice-disk-1
+      - re2ob-emailservice-disk-2
+      - re2ob-emailservice-disk-3
+      - re2ob-emailservice-loss-1
+      - re2ob-emailservice-loss-2
+      - re2ob-emailservice-loss-3
+      - re2ob-emailservice-socket-1
+      - re2ob-emailservice-socket-2
+      - re2ob-emailservice-socket-3
+      - re2ob-productcatalogservice-disk-1
+      - re2ob-productcatalogservice-disk-2
+      - re2ob-productcatalogservice-disk-3
+      - re2ob-productcatalogservice-loss-1
+      - re2ob-productcatalogservice-loss-2
+      - re2ob-productcatalogservice-loss-3
+      - re2ob-productcatalogservice-socket-1
+      - re2ob-productcatalogservice-socket-2
+      - re2ob-productcatalogservice-socket-3
+      - re2ob-recommendationservice-disk-1
+      - re2ob-recommendationservice-disk-2
+      - re2ob-recommendationservice-disk-3
+      - re2ob-recommendationservice-loss-1
+      - re2ob-recommendationservice-loss-2
+      - re2ob-recommendationservice-loss-3
+      - re2ob-recommendationservice-socket-1
+      - re2ob-recommendationservice-socket-2
+      - re2ob-recommendationservice-socket-3
