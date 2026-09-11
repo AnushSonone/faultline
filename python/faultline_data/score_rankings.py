@@ -93,7 +93,7 @@ def load_faultline(path: Path) -> System:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     detector = (data.get("protocol") or {}).get("detector")
     name = f"faultline-{detector}" if detector else f"faultline ({Path(path).stem})"
-    system = System(name=name, kind="faultline", source=str(path))
+    system = System(name=name, kind="faultline", source=Path(path).name)
     system.rust_overall = data.get("overall") or data.get("untuned")
     for inc in data["incidents"]:
         ev = inc["eval"]
@@ -115,7 +115,7 @@ def load_baselines(path: Path) -> list[System]:
     suffix = "" if variant == "rcaeval-main" else f" [{variant} variant]"
     systems = []
     for method in data["methods"]:
-        s = System(name=f"rcaeval-{method}{suffix}", kind="baseline", source=str(path), note=note)
+        s = System(name=f"rcaeval-{method}{suffix}", kind="baseline", source=Path(path).name, note=note)
         for case in data["cases"]:
             ranked = case["results"][method]["ranked_services"]
             s.cases[case["incident_id"]] = {
