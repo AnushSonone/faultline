@@ -41,7 +41,7 @@ export const COMPONENT_COPY: Record<string, ComponentCopy> = {
   },
   topology_consistency: {
     plain: "Share of the anomalous set its dependency paths explain",
-    detail: "Ablation shows this feature carries real data: top-1 drops from 26.7% to 6.7% without it.",
+    detail: "Ablation on 75 held-out RCAEval RE2-OB cases: top-1 drops from 58/75 to 51/75 without it.",
     weight: 0.1,
   },
   change_proximity: {

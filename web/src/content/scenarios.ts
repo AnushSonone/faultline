@@ -1,6 +1,8 @@
 // Curated case briefs for the demo incidents. Facts come from each fixture's
-// labels.json, the live topology snapshot, benchmarks/rcaeval-eval.json
-// (per-case ranks) and RESULTS.md (ablations).
+// labels.json, the live topology snapshot, benchmarks/rcaeval/tuning-v2.json
+// (per-case ranks) and benchmarks/rcaeval/heldout-v2.json (held-out figures and
+// ablations). The four real cases here are all in the 15-case tuning split, so
+// any accuracy figure quoted beside them is the held-out one, with k/n and CI.
 // Claim discipline: the ranker produces a ranked hypothesis, never a proven
 // root cause. Keep that framing in every field.
 //
@@ -101,7 +103,7 @@ export const SCENARIOS: Record<string, Scenario> = {
       fault: "memory leak, injected t+5 s of 15 s",
       changeEvent: "deployment on recommendationservice",
       signals: "metrics · traces · logs · change events",
-      outcome: "ground truth ranked 1st by the untuned ranker",
+      outcome: "ground truth ranked 1st",
     },
     abstract:
       "A deployment lands on recommendationservice at t+5 s and its memory departs from baseline. Its callers follow about 2 s later, a precedence gap visible only on the event-time clock.",
@@ -187,7 +189,7 @@ export const SCENARIOS: Record<string, Scenario> = {
     abstract:
       "A memory fault on a real Online Boutique deployment. Several services look anomalous at once, so the ranking separates origin from caller on precedence and topology alone.",
     watch: [
-      "topology_consistency and temporal_precedence: the two features ablations show carry real data",
+      "topology_consistency: removing it costs 7 of the 58 held-out top-1 hits",
       "anomaly_strength: memory departs from its rolling median well before latency does",
       "contradiction_penalty: stays near zero when no caller degrades before checkoutservice",
     ],
@@ -205,9 +207,9 @@ export const SCENARIOS: Record<string, Scenario> = {
     whatHappened:
       "A real RCAEval RE2-OB case: a memory fault injected into checkoutservice on a real Online Boutique deployment. The ranker puts checkoutservice at rank 1.",
     whatWeEvaluate:
-      "Blind ranking on real fault-injection telemetry with untuned weights. A win here means the features generalize past the synthetic generator, at least for this case.",
+      "Blind ranking on real fault-injection telemetry. Ranking weights are unchanged from the spec; the anomaly detector was fixed on the 15-case tuning split, which includes this case.",
     whatToWatch:
-      "Topology consistency and temporal precedence, the two features ablations show carry real data. Removing topology drops top-1 from 26.7% to 6.7% on this benchmark.",
+      "Topology consistency carrying the separation between origin and callers. On 75 held-out RE2-OB cases the ranker puts the injected service first in 58/75 (77%, 95% CI 67 to 85%) and in the top 3 in 73/75; without topology, top-1 falls to 51/75.",
     caveat: RCAEVAL_CAVEAT,
   },
   "re2ob-currencyservice-delay-1": {
@@ -246,7 +248,7 @@ export const SCENARIOS: Record<string, Scenario> = {
     whatHappened:
       "A real RCAEval RE2-OB case: a network delay fault on currencyservice. The ranker puts currencyservice at rank 1.",
     whatWeEvaluate:
-      "Blind ranking on real fault-injection telemetry with untuned weights. Delay faults surface through latency percentiles rather than resource metrics, so this exercises a different evidence path than the memory cases.",
+      "Blind ranking on real fault-injection telemetry, with ranking weights unchanged from the spec. Delay faults surface through latency percentiles rather than resource metrics, so this exercises a different evidence path than the memory cases.",
     whatToWatch:
       "Topology consistency and temporal precedence carrying the score, with the anomaly signal coming from latency percentiles instead of cpu or memory.",
     caveat: RCAEVAL_CAVEAT,
@@ -264,10 +266,10 @@ export const SCENARIOS: Record<string, Scenario> = {
       fault: "memory fault, injected t+720 s of 1440 s",
       changeEvent: RCAEVAL_CHANGE,
       signals: RCAEVAL_SIGNALS,
-      outcome: "ground truth ranked 2nd; a near miss",
+      outcome: "ground truth ranked 1st; 2nd before the detector fix",
     },
     abstract:
-      "The same fault class as the guided case, recorded on a real system. The ranker places the injected service second, by a thin score margin.",
+      "The same fault class as the guided case, recorded on a real system. The ranker places the injected service first, with frontend second.",
     watch: [
       "the score margin between the top two candidates",
       "temporal_precedence: whether frontend's onset is separable from recommendationservice's at this sampling",
@@ -285,17 +287,17 @@ export const SCENARIOS: Record<string, Scenario> = {
       injectedAtS: 720,
     },
     whatHappened:
-      "A real RCAEval RE2-OB case with the same fault type and service class as the guided synthetic demo: a memory fault on recommendationservice. Here the ranker puts the true service at rank 2, not 1.",
+      "A real RCAEval RE2-OB case with the same fault type and service class as the guided synthetic demo: a memory fault on recommendationservice. The ranker puts recommendationservice at rank 1.",
     whatWeEvaluate:
-      "The gap between synthetic and real. The same pipeline that aces the synthetic version of this fault near-misses the real one.",
+      "The same fault class as the synthetic guided case, on real telemetry. Before the detector fix this case ranked 2nd behind frontend; it now ranks 1st.",
     whatToWatch:
-      "After the replay, open Case file to compare the ground truth with the number 1 candidate's evidence. The score margin between them is thin.",
+      "After the replay, open Case file to compare the ground truth with the evidence behind the number 1 and number 2 candidates.",
     caveat: RCAEVAL_CAVEAT,
   },
   "re2ob-emailservice-cpu-1": {
     title: "RCAEval RE2-OB: CPU fault, emailservice (real)",
     source: "rcaeval-re2ob",
-    headline: "CPU fault in emailservice, real recording, an honest miss",
+    headline: "CPU fault in emailservice, real recording",
     caseSummary: {
       system: RCAEVAL_SYSTEM,
       symptom:
@@ -305,12 +307,12 @@ export const SCENARIOS: Record<string, Scenario> = {
       fault: "CPU saturation, injected t+720 s of 1440 s",
       changeEvent: RCAEVAL_CHANGE,
       signals: RCAEVAL_SIGNALS,
-      outcome: "ground truth ranked 12th; the miss behind the 26.7% top-1 figure",
+      outcome: "ground truth ranked 1st; 12th before the detector fix",
     },
     abstract:
-      "emailservice saturates its CPU at the edge of the graph. Sampled traces carry little error signal, and CPU pressure on a leaf barely perturbs the topology features.",
+      "emailservice saturates its CPU at the edge of the graph. The old detector ranked it 12th; the fixed one waits for a real baseline and ranks it first.",
     watch: [
-      "what the top-ranked candidates did score on, with the true origin far down the list",
+      "anomaly_strength: emailservice's cpu leaves a 300-sample baseline after the injection, not before",
       "topology_consistency: a leaf service explains almost none of the anomalous set",
       "after the replay, open Case file to compare with ground truth",
     ],
@@ -325,11 +327,11 @@ export const SCENARIOS: Record<string, Scenario> = {
       injectedAtS: 720,
     },
     whatHappened:
-      "A real RCAEval RE2-OB case: a cpu fault on emailservice. The ranker puts the true service at rank 12, an honest hard miss.",
+      "A real RCAEval RE2-OB case: a cpu fault on emailservice. The ranker puts emailservice at rank 1; before the detector fix it ranked 12th.",
     whatWeEvaluate:
-      "Where an untuned deterministic ranker fails on real data. Sampled traces plus status codes carry little error signal for this fault, and cpu pressure on a leaf service barely perturbs the topology signal.",
+      "The case that exposed a detector bug. RE2-OB metrics repeat between scrapes, so the old detector's baseline spread collapsed to zero and every service looked anomalous within seconds, leaving the ranking to topology and name order. The fix floors the spread at a quarter of the median and requires an anomaly to persist before it counts.",
     whatToWatch:
-      "What the top-ranked candidates did score on, then open Case file for the ground truth. This case is why RESULTS.md reports 26.7% top-1 untuned, with the improvement path written down.",
+      "The onset times in the evidence: no service is flagged before the injection at t+720 s. This case is in the 15-case tuning split; on 75 held-out cases the ranker puts the injected service first in 58/75 (77%, 95% CI 67 to 85%).",
     caveat: RCAEVAL_CAVEAT,
   },
 };
