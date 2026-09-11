@@ -374,8 +374,11 @@ mod tests {
 
     #[test]
     fn non_default_preset_is_refused() {
-        let err = replay_stability(Path::new("/nonexistent"), "x", &[], "v2", 10, 1).unwrap_err();
-        assert!(err.contains("not available"), "{err}");
+        // The live projection always runs the build default (v2), so replaying
+        // under any other preset would report the wrong detector.
+        let err =
+            replay_stability(Path::new("/nonexistent"), "x", &[], "legacy", 10, 1).unwrap_err();
+        assert!(err.contains("differs"), "{err}");
     }
 
     #[test]
@@ -389,7 +392,7 @@ mod tests {
             &root,
             "synthetic-ob/v1",
             &["rec-mem-001".to_owned()],
-            "legacy",
+            "v2",
             60,
             3,
         )

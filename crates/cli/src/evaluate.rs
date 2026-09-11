@@ -18,7 +18,7 @@ use sha2::{Digest, Sha256};
 
 /// Preset used when `--detector` is not given. After the detector fix merges
 /// this becomes `v2` (see [`detector_config`]).
-pub const DEFAULT_DETECTOR: &str = "legacy";
+pub const DEFAULT_DETECTOR: &str = "v2";
 
 /// Every preset name the harness knows about, in reporting order.
 pub const KNOWN_DETECTORS: &[&str] = &[
@@ -31,18 +31,17 @@ pub const KNOWN_DETECTORS: &[&str] = &[
 
 /// The one place a detector preset name becomes a `FeatureConfig`.
 ///
-/// Kept isolated on purpose. In this build only `legacy` exists, and
-/// `FeatureConfig::default()` IS the 2026-08-03 detector that produced
-/// `benchmarks/rcaeval-eval.json`. After the detector rewrite merges, wire the
-/// real presets here (`legacy -> FeatureConfig::legacy()`, `v2 -> v2()`,
-/// `v2-no-floor -> v2_no_floor()`, `v2-no-persistence -> v2_no_persistence()`,
-/// `v2-window32 -> v2_window32()`) and change [`DEFAULT_DETECTOR`] to `v2`.
+/// Kept isolated on purpose. `legacy` is the 2026-08-03 detector that produced
+/// `benchmarks/rcaeval-eval.json`; `v2` is the spread-floor and persistence
+/// detector and the build default; the other three revert one element of v2
+/// each and are exploratory ablations, never used to choose settings.
 pub fn detector_config(name: &str) -> Result<FeatureConfig, String> {
     match name {
-        "legacy" => Ok(FeatureConfig::default()),
-        "v2" | "v2-no-floor" | "v2-no-persistence" | "v2-window32" => Err(format!(
-            "detector preset '{name}': preset not available in this build"
-        )),
+        "legacy" => Ok(FeatureConfig::legacy()),
+        "v2" => Ok(FeatureConfig::v2()),
+        "v2-no-floor" => Ok(FeatureConfig::v2_no_floor()),
+        "v2-no-persistence" => Ok(FeatureConfig::v2_no_persistence()),
+        "v2-window32" => Ok(FeatureConfig::v2_window32()),
         other => Err(format!(
             "unknown detector preset '{other}' (known: {})",
             KNOWN_DETECTORS.join(", ")
@@ -602,19 +601,31 @@ mod tests {
         }
         let report = evaluate_suite(&[dir]).unwrap();
         assert_eq!(report.overall.top1_accuracy, 1.0);
-        assert_eq!(report.protocol.detector, "legacy");
+        assert_eq!(report.protocol.detector, "v2");
         assert_eq!(report.protocol.incident_ids, vec!["rec-mem-001".to_owned()]);
     }
 
     #[test]
-    fn legacy_is_the_only_preset_in_this_build() {
-        assert_eq!(detector_config("legacy").unwrap(), FeatureConfig::default());
-        for name in ["v2", "v2-no-floor", "v2-no-persistence", "v2-window32"] {
-            let err = detector_config(name).unwrap_err();
-            assert!(err.contains("preset not available in this build"), "{err}");
-        }
+    fn presets_map_to_detector_configs() {
+        assert_eq!(detector_config("legacy").unwrap(), FeatureConfig::legacy());
+        assert_eq!(detector_config("v2").unwrap(), FeatureConfig::v2());
+        assert_eq!(
+            detector_config("v2-no-floor").unwrap(),
+            FeatureConfig::v2_no_floor()
+        );
+        assert_eq!(
+            detector_config("v2-no-persistence").unwrap(),
+            FeatureConfig::v2_no_persistence()
+        );
+        assert_eq!(
+            detector_config("v2-window32").unwrap(),
+            FeatureConfig::v2_window32()
+        );
         assert!(detector_config("bogus").unwrap_err().contains("unknown"));
-        assert_eq!(DEFAULT_DETECTOR, "legacy");
+        // The build default and the harness default are the same preset.
+        assert_eq!(DEFAULT_DETECTOR, "v2");
+        assert_eq!(FeatureConfig::default(), FeatureConfig::v2());
+        assert_ne!(FeatureConfig::legacy(), FeatureConfig::v2());
     }
 
     #[test]
