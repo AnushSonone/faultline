@@ -149,3 +149,48 @@ def test_rcaeval_window_keeps_whole_traces_and_clamps(tmp_path: Path) -> None:
     assert labels["fault_start_time_ns"] == 1705353856 * 10**9
     assert labels["fault_end_time_ns"] == manifest["end_time_ns"]
     assert "Windowed to 5 s before and 5 s after" in labels["notes"]
+
+
+def test_rcaeval_drops_non_finite_metric_samples(tmp_path: Path) -> None:
+    # Eight RE2-OB held-out cases carry bare NaN samples in metrics.json. They
+    # must be dropped like nulls, keep the source index in event ids, and leave
+    # every payload strict JSON (the Rust loader rejects NaN).
+    case = tmp_path / "re2ob_checkoutservice_loss_9"
+    case.mkdir()
+    (case / "inject_time.txt").write_text("1705353856")
+    metrics = _metrics_json()
+    metrics["checkoutservice_cpu"][3][1] = float("nan")
+    metrics["checkoutservice_cpu"][4][1] = float("inf")
+    metrics["frontend_cpu"][7][1] = None
+    (case / "metrics.json").write_text(json.dumps(metrics))
+    assert "NaN" in (case / "metrics.json").read_text()
+    _write_traces(case / "traces.csv", "checkoutservice")
+    _write_logs(case / "logs.csv", "checkoutservice")
+
+    out = convert_case(case, tmp_path / "fixtures")
+    manifest = json.loads((out / "manifest.json").read_text())
+    assert manifest["event_counts"]["metrics"] == 57
+    import pyarrow.parquet as pq
+
+    table = pq.read_table(out / "metrics" / "part-00000.parquet")
+    ids = set(table.column("event_id").to_pylist())
+    assert "m-checkoutservice_cpu-3" not in ids
+    assert "m-checkoutservice_cpu-4" not in ids
+    assert "m-checkoutservice_cpu-5" in ids
+
+    def reject(token: str) -> None:
+        raise ValueError(token)
+
+    for payload in table.column("payload_json").to_pylist():
+        json.loads(payload, parse_constant=reject)
+
+
+def test_write_parquet_refuses_non_finite(tmp_path: Path) -> None:
+    from faultline_data.generate_fixture import write_parquet
+
+    row = {"event_id": "m-0", "event_time_ns": 1, "service": "s", "value": float("nan")}
+    try:
+        write_parquet([row], tmp_path / "part-00000.parquet")
+        raise AssertionError("should have refused a NaN payload")
+    except ValueError as e:
+        assert "JSON compliant" in str(e)

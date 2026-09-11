@@ -163,3 +163,25 @@ serialization (serde_json value, object keys sorted, no whitespace).
 - RCAEval-v2 archive sha256: `72006b45601980df5088ae60872f0fe3233fa52748584c97c559df664c41bf0b`.
 - Reproduction gate at the frozen commit: `--detector legacy` on T equals
   `benchmarks/rcaeval-eval.json` in every value that record holds.
+
+### Amendment 1, 2026-09-11, data only, before any held-out result
+
+The first held-out run stopped on its first case, before any ranking or score existed:
+`re2ob-checkoutservice-cpu-2: payload: payload_json parse: expected value`. A structural scan
+(parse errors counted, digits masked, no metric values read) found 2,502 metric payloads
+holding a bare `NaN` in 8 held-out cases: checkoutservice-cpu-2, checkoutservice-loss-3,
+currencyservice-loss-1, currencyservice-loss-3, productcatalogservice-loss-1,
+productcatalogservice-loss-2, recommendationservice-loss-1, recommendationservice-loss-3. The
+tuning cases hold none. RCAEval's `metrics.json` carries these samples as `NaN`; Python's
+`json` reads them as float nan and wrote them back unchanged, and the Rust loader rejects them.
+
+- Converter: `python/faultline_data/adapters/rcaeval.py` now drops non-finite metric samples as
+  it already dropped nulls, keeping source indices in event ids. `write_parquet` serializes with
+  `allow_nan=False`, so a non-finite payload fails at conversion.
+- Re-converting all 90 cases gave byte-identical `manifest.json` for 82, including all 15 tuning
+  cases; only the 8 cases above changed and were re-pinned. All 14,072,888 payloads in T and H
+  now parse as strict JSON.
+- Split manifest sha256 after re-pinning:
+  `7ac4f78069c91e961c0d1fec9b6a3e358f1f706d079f711256a5f9d06e167b13`.
+- Nothing under `crates` or `apps` changed. Presets, weights, scorer, and harness stay as frozen
+  at `frozen_commit`. The held-out split is still unscored.

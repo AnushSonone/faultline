@@ -14,6 +14,11 @@ archive_sha256: 72006b45601980df5088ae60872f0fe3233fa52748584c97c559df664c41bf0b
 converter: python/faultline_data/adapters/rcaeval.py
 converter_commit: 53fb0a04ca0aa5f877267a3bb00539dffaa6502d
 converter_flags: default sampling (traces 1/8 by whole trace, logs capped at 4000, no window)
+# Amendment 1 (2026-09-11, before any held-out result): the converter drops
+# non-finite metric samples, which eight held-out cases contained as bare NaN.
+# Those eight are re-converted and re-pinned below; the other 82 manifests,
+# every tuning case included, re-converted byte-identically. See the protocol.
+converter_amendment: non-finite metric samples dropped; 8 held-out cases re-pinned
 extract_script: scripts/extract-rcaeval.sh
 case_list: datasets/raw/re2ob-cases.txt
 invariants:
@@ -69,7 +74,7 @@ heldout:
       span_s: 1151  # 431 s after injection; metrics 1003 s, spans 1151 s, logs 965 s
   cases:
     - id: re2ob-checkoutservice-cpu-2
-      manifest_sha256: 5513debd9dbd5c3a6ed268d093b369e582aef2f7585b4228f4d1fe9d8209e35e
+      manifest_sha256: 8c81ca9a9917f8a90417b0dacb48437545b57b27257d19c011a9003da93eb976
     - id: re2ob-checkoutservice-cpu-3
       manifest_sha256: d26a5b545ad5a23b76685d998cdf84a851db556e96424295a2801a8bc97d48e5
     - id: re2ob-checkoutservice-delay-2
@@ -87,7 +92,7 @@ heldout:
     - id: re2ob-checkoutservice-loss-2
       manifest_sha256: b8f0a7b919b67fbb54e16769339f85009547239319bb1bb2743150ad5b8e09b9
     - id: re2ob-checkoutservice-loss-3
-      manifest_sha256: 79cf23180361536b76570f8e8a96439aeb388038356c766dbc084a7fab745c65
+      manifest_sha256: 6bf59ced718ce5231e1a52337479b8aac6aa6bf3329cb5c5de1a291c19a39789
     - id: re2ob-checkoutservice-mem-2
       manifest_sha256: 79bec9dfb6c85e8dbfa9d26ae0ae63b331fd5ca0c35a98c2411f06e06deb95cf
     - id: re2ob-checkoutservice-mem-3
@@ -113,11 +118,11 @@ heldout:
     - id: re2ob-currencyservice-disk-3
       manifest_sha256: 21f71aca3f3293d813b5fe18443ab4edc71f3b208cb2d07ef2eec5b4958e697a
     - id: re2ob-currencyservice-loss-1
-      manifest_sha256: d0a548bb3202cfe9991015bece9d25775c90b54eb1524774bf48e949dff452b5
+      manifest_sha256: add33d27d1106242acc35d5900c8b68bf4f5d59eb0ed436295fd843d723f6e82
     - id: re2ob-currencyservice-loss-2
       manifest_sha256: e3fcca088d97975ca30cccb3e8eb73596d25896217db54428a3c7aefc89733ec
     - id: re2ob-currencyservice-loss-3
-      manifest_sha256: e2c56581db66af9f273dc3dbd059b2a27ceaef9b3ffeccfe74c584d2fce7f020
+      manifest_sha256: 018a1ef848e20b8ec354f020a65ca08cf86c9779ace3c57573f086964c8cd5b4
     - id: re2ob-currencyservice-mem-2
       manifest_sha256: d275ba56427d4e0218e4388eadbf1fdae1178a70137283b2b6c4ad57f7934a08
     - id: re2ob-currencyservice-mem-3
@@ -173,9 +178,9 @@ heldout:
     - id: re2ob-productcatalogservice-disk-3
       manifest_sha256: afec297e14358d5c625e2c0b87f24449b927cfcb05b09a43b8a64971e0baa760
     - id: re2ob-productcatalogservice-loss-1
-      manifest_sha256: c64cfde314dcc48a4879f6edc62b7fd509cd52532b4c90041a77ae318bb145d3
+      manifest_sha256: dcda6687ec1244067e4c1a67a3c51294e44ae5a65272321d433fdf2cc19a9b7e
     - id: re2ob-productcatalogservice-loss-2
-      manifest_sha256: 5fef29aaaa2d6ce5110c23a9ac2207728cabf1ef611758dbca763ddd49e58ab5
+      manifest_sha256: cfcbb1663bcf4cf845874fc2e70436d2ec397c41bf007e687e5d0bf7378173e6
     - id: re2ob-productcatalogservice-loss-3
       manifest_sha256: 20e453194b21ed31026add2c6b43c6af0d7135885d63dac99f2cb35276d0c7b1
     - id: re2ob-productcatalogservice-mem-2
@@ -203,11 +208,11 @@ heldout:
     - id: re2ob-recommendationservice-disk-3
       manifest_sha256: c3e81bff5a9acbd9013005bdd36d83af43903632fa7328ef5603b0e06f9be7f1
     - id: re2ob-recommendationservice-loss-1
-      manifest_sha256: 6da16407729149efeaa23f9ebfa8aa23cf9236b44d930b67b8cb491e01a4b716
+      manifest_sha256: 24f8da883bb1df7dc64d3e5d854113e6dd6a55e1e186a631f69c04c27fc1b2a6
     - id: re2ob-recommendationservice-loss-2
       manifest_sha256: 20b6982a01a957fd52ed89b9490dbb56136d81b03c1c7da77e0e7768f09f20db
     - id: re2ob-recommendationservice-loss-3
-      manifest_sha256: a6d5e7245a6bd4b770dfc5ac35babecf4816b1bfd795246a096aff5b97c18741
+      manifest_sha256: f458cb40c6f426d748f71a8cb4553b2571ec40bb499d19192d743119c36756c9
     - id: re2ob-recommendationservice-mem-2
       manifest_sha256: 1e1ce0e1bbe01a4efb4da7c59bf1310a555174f8c8c698c9ee86d6844f80b36d
     - id: re2ob-recommendationservice-mem-3

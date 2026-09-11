@@ -20,6 +20,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 from pathlib import Path
 
 from faultline_data.generate_fixture import sha256_file, write_parquet
@@ -87,14 +88,17 @@ def convert_case(
     def in_window(ns: int) -> bool:
         return lo is None or lo <= ns <= hi
 
-    # Metrics: full fidelity.
+    # Metrics: full fidelity. Some RE2-OB cases carry NaN samples in
+    # metrics.json (Python's json reads the bare token as float nan); a missing
+    # sample is no observation, so it is dropped like a null. Event ids keep the
+    # source index, so cases without NaN convert byte-identically.
     metrics_raw = json.loads((case_dir / "metrics.json").read_text())
     metric_services = {key.split("_", 1)[0] for key in metrics_raw}
     metrics = []
     for series, points in sorted(metrics_raw.items()):
         service, metric = series.split("_", 1)
         for i, (ts, value) in enumerate(points):
-            if value is None or not in_window(int(ts) * SEC):
+            if value is None or not math.isfinite(value) or not in_window(int(ts) * SEC):
                 continue
             metrics.append(
                 {
