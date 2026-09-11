@@ -142,4 +142,24 @@ RCAEval's nsigma, which is given the injection time, ranks it first in k/75."
 
 ## Freeze record
 
-frozen_commit:
+frozen_commit: 1116e59146f7305665a0d7e76dd01ab4a84f063f
+
+Recorded 2026-09-11, before any run opened H. Hashes are sha256 of the canonical
+serialization (serde_json value, object keys sorted, no whitespace).
+
+| preset | `feature_config_sha256` |
+|---|---|
+| `legacy` | `7bf78f87093ccbfc020517b5aadbfc1fd3568eaee1640856adc2a57fad470ee1` |
+| `v2` | `334d134a9672a73a101f95cf50fe01b28399ee8e3c44067ffa0ad82b23e0b5ae` |
+| `v2-no-floor` | `7ea58163cc965bcdc23435a5f72d8d14b3ca6ec4209d97dc08adf05b00a77321` |
+| `v2-no-persistence` | `7e2ff342bdbeaa8bbd73f642aa9c89b9557a7cd3e2b2adef1978aca02fa6ba61` |
+| `v2-window32` | `81d7370bdb8aeef5e18e10b06f68d97d290942b4711b55b8f890d242d138f822` |
+
+- `v2` anomaly config: window_len 300, min_samples 5, relative_scale_floor 0.25, enter_z 3.0,
+  enter_count 2, exit_z 1.5, exit_count 2, persistence_cap_ns 120000000000.
+- `RankingWeights::default()` sha256: `dc0686ec7e0b60c38bfed94156e57cb970bbca7f111ecf6cb689135f8e737ee6`.
+- `datasets/manifests/rcaeval-re2ob-split.yaml` sha256:
+  `9496231e8d38d966a03f880a2dde01a2bce7fee8fddd080f0bcb81120b82fe05`.
+- RCAEval-v2 archive sha256: `72006b45601980df5088ae60872f0fe3233fa52748584c97c559df664c41bf0b`.
+- Reproduction gate at the frozen commit: `--detector legacy` on T equals
+  `benchmarks/rcaeval-eval.json` in every value that record holds.
