@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchCase, type CaseInfo } from "../../api/client";
+import { fetchCase } from "../../api/client";
 import { useInvestigation } from "../../state/investigation";
-import { SCENARIOS, SOURCE_LABELS } from "../../content/scenarios";
+import { SCENARIOS, SOURCE_LABELS, THE_INPUTS, THE_QUESTION } from "../../content/scenarios";
 import { CaseSchematic } from "../../components/CaseSchematic";
+import { CaseSection } from "../../components/CaseSection";
+import { fmtWindowS } from "../../lib/format";
 import { RecordingTimeline } from "./RecordingTimeline";
 import { SignalInventory } from "./SignalInventory";
 import { RouteList } from "./RouteList";
@@ -43,33 +45,24 @@ export function CaseFilePage({ sessionId, incidentId }: Props) {
   const correlations = useInvestigation((s) => s.correlations);
   const unlocked = useInvestigation((s) => s.replayCompleted);
   const markGroundTruthRevealed = useInvestigation((s) => s.markGroundTruthRevealed);
-  const [info, setInfo] = useState<CaseInfo | null>(null);
+  // The unlabelled record is fetched once when the session loads (App.tsx) and
+  // shared with the rail dossier; only the reveal is this page's own request.
+  const info = useInvestigation((s) => s.caseInfo);
+  const setCaseInfo = useInvestigation((s) => s.setCaseInfo);
   const [revealed, setRevealed] = useState(false);
 
   const scenario = SCENARIOS[incidentId];
 
+  // A new session clears caseInfo, so the reveal has to re-arm with it.
   useEffect(() => {
-    setInfo(null);
     setRevealed(false);
-    if (!sessionId || !incidentId) return;
-    let cancelled = false;
-    fetchCase(sessionId, false)
-      .then((c) => {
-        if (!cancelled) setInfo(c);
-      })
-      .catch(() => {
-        /* the record is optional; stay quiet on failure */
-      });
-    return () => {
-      cancelled = true;
-    };
   }, [sessionId, incidentId]);
 
   const reveal = () => {
     if (!sessionId) return;
     fetchCase(sessionId, true)
       .then((c) => {
-        setInfo(c);
+        setCaseInfo(c);
         setRevealed(true);
         markGroundTruthRevealed();
       })
@@ -98,163 +91,196 @@ export function CaseFilePage({ sessionId, incidentId }: Props) {
   const durationS =
     endNs != null && startNs != null ? Math.round((endNs - startNs) / 1e9) : null;
 
+  const faultPhrase =
+    scenario?.brief.fault.split(",")[0] ?? (info?.fault_type ? `fault ${info.fault_type}` : null);
+  // One muted line of facts under the headline, in place of coloured pills.
+  const meta = [
+    faultPhrase,
+    durationS != null ? `${fmtWindowS(durationS)} recorded` : null,
+    scenario ? SOURCE_LABELS[scenario.source] : null,
+    info?.adversarial ? "adversarial arrival" : null,
+    info?.dataset_id ? `${info.dataset_id} ${info.dataset_version ?? ""}`.trim() : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  // One section order, read top to bottom: what happened, what is asked, how
+  // it propagated, the fault record, the evidence, the engineering, the
+  // answer key, and the method. Every section is a title, an optional caption
+  // and its content, separated by a hairline at one rhythm.
   return (
     <section className="case-panel" data-testid="case-panel">
-      <div className="case-head">
-        <div>
-          <strong>{info?.system ?? scenario?.headline ?? incidentId}</strong>
-          {info?.dataset_id && (
-            <span className="muted">
-              {" "}
-              · {info.dataset_id} {info.dataset_version ?? ""}
-            </span>
-          )}
-        </div>
-        <div className="case-chips">
-          {info?.fault_type && <span className="pill mono">fault {info.fault_type}</span>}
-          {durationS != null && <span className="pill mono">{durationS} s</span>}
-          {info?.adversarial && <span className="pill">adversarial arrival</span>}
-          {scenario && <span className="pill">{SOURCE_LABELS[scenario.source]}</span>}
-        </div>
-      </div>
+      <header className="case-head">
+        {meta && <p className="case-meta">{meta}</p>}
+        <strong>{scenario?.headline ?? info?.system ?? incidentId}</strong>
+      </header>
 
-      <section className="drawer-section">
-        <h3>Recording</h3>
-        <p className="drawer-lead">{LEADS.recording}</p>
-        {startNs != null && endNs != null ? (
-          <RecordingTimeline
-            startNs={startNs}
-            endNs={endNs}
-            faultStartNs={info?.fault_start_time_ns ?? null}
-            faultEndNs={info?.fault_end_time_ns ?? null}
-            deployNs={deployNs}
-            cursorNs={cursorNs}
-          />
-        ) : (
-          <p className="hint">The recording loads with the session.</p>
+      <div className="case-doc">
+        {scenario && (
+          <CaseSection title="The incident">
+            <p>{scenario.caseSummary.symptom}</p>
+            <p>{scenario.caseSummary.system}</p>
+          </CaseSection>
         )}
-      </section>
 
-      <section className="drawer-section">
-        <h3>What was recorded</h3>
-        <p className="drawer-lead">{LEADS.recorded}</p>
-        <SignalInventory
-          eventCounts={info?.event_counts ?? {}}
-          events={timeline?.events ?? []}
-          services={services}
-          origin={origin}
-        />
-      </section>
+        {scenario && (
+          <CaseSection title="The question">
+            <p>
+              {THE_QUESTION} {THE_INPUTS}
+            </p>
+          </CaseSection>
+        )}
 
-      <section className="drawer-section" data-testid="case-rows-section">
-        <h3>Raw records</h3>
-        <p className="drawer-lead">{LEADS.rows}</p>
-        <RawRecords sessionId={sessionId} startNs={startNs} />
-      </section>
+        {scenario && (
+          <CaseSection title="How it propagates" caption={LEADS.propagates}>
+            <CaseSchematic schematic={scenario.schematic} />
+          </CaseSection>
+        )}
 
-      <section className="drawer-section">
-        <h3>Request routes observed</h3>
-        <p className="drawer-lead">{LEADS.routes}</p>
-        <RouteList sessionId={sessionId} listedIds={listedIds} failedIds={failedIds} origin={origin} />
-      </section>
+        {scenario && (
+          <CaseSection title="Fault record">
+            <dl className="case-kv">
+              <dt>Fault</dt>
+              <dd>{scenario.brief.fault}</dd>
+              <dt>Change event</dt>
+              <dd>{scenario.brief.changeEvent}</dd>
+              <dt>Signals</dt>
+              <dd>{scenario.brief.signals}</dd>
+            </dl>
+          </CaseSection>
+        )}
 
-      {scenario && startNs != null && endNs != null && (
-        <section className="drawer-section">
-          <h3>The fault signal</h3>
-          <p className="drawer-lead">{LEADS.series}</p>
-          <FaultSeries
-            sessionId={sessionId}
-            scenario={scenario}
-            startNs={startNs}
-            endNs={endNs}
-            faultStartNs={info?.fault_start_time_ns ?? null}
-            faultEndNs={info?.fault_end_time_ns ?? null}
-            cursorNs={cursorNs}
+        <CaseSection title="Recording" caption={LEADS.recording}>
+          {startNs != null && endNs != null ? (
+            <RecordingTimeline
+              startNs={startNs}
+              endNs={endNs}
+              faultStartNs={info?.fault_start_time_ns ?? null}
+              faultEndNs={info?.fault_end_time_ns ?? null}
+              deployNs={deployNs}
+              cursorNs={cursorNs}
+            />
+          ) : (
+            <p>The recording loads with the session.</p>
+          )}
+        </CaseSection>
+
+        <CaseSection title="What was recorded" caption={LEADS.recorded}>
+          <SignalInventory
+            eventCounts={info?.event_counts ?? {}}
+            events={timeline?.events ?? []}
+            services={services}
+            origin={origin}
           />
-        </section>
-      )}
+        </CaseSection>
 
-      {scenario && (
-        <section className="drawer-section">
-          <h3>How it propagates</h3>
-          <p className="drawer-lead">{LEADS.propagates}</p>
-          <CaseSchematic schematic={scenario.schematic} />
-          <dl className="brief-grid case-brief">
-            <dt>Fault</dt>
-            <dd>{scenario.brief.fault}</dd>
-            <dt>Change event</dt>
-            <dd>{scenario.brief.changeEvent}</dd>
-            <dt>Signals</dt>
-            <dd>{scenario.brief.signals}</dd>
-            <dt>Outcome</dt>
-            <dd>{scenario.brief.outcome}</dd>
-          </dl>
-        </section>
-      )}
+        {scenario && startNs != null && endNs != null && (
+          <CaseSection title="The fault signal" caption={LEADS.series}>
+            <FaultSeries
+              sessionId={sessionId}
+              scenario={scenario}
+              startNs={startNs}
+              endNs={endNs}
+              faultStartNs={info?.fault_start_time_ns ?? null}
+              faultEndNs={info?.fault_end_time_ns ?? null}
+              cursorNs={cursorNs}
+            />
+          </CaseSection>
+        )}
 
-      {(info?.notes || scenario?.caveat) && (
-        <section className="drawer-section">
-          <h3>Notes</h3>
-          {info?.notes && <p className="panel-caption">{info.notes}</p>}
-          {scenario?.caveat && <p className="panel-caption">{scenario.caveat}</p>}
-        </section>
-      )}
+        {/* Never folded and never behind a control: revamp.spec asserts
+            case-rows and case-rows-table are visible, and a closed <details>
+            gives its children a 0x0 box. */}
+        <CaseSection title="Raw records" caption={LEADS.rows} testId="case-rows-section">
+          <RawRecords sessionId={sessionId} startNs={startNs} />
+        </CaseSection>
 
-      <section className="drawer-section">
-        <h3>Ground truth</h3>
-        <div className="case-answer-row">
-          {!revealed && (
-            <>
-              <button
-                type="button"
-                data-testid="case-reveal-button"
-                disabled={!unlocked || !info}
-                data-locked={unlocked ? undefined : "true"}
-                onClick={reveal}
-              >
-                {unlocked ? "Reveal ground truth" : "Reveal ground truth (locked until the replay completes)"}
-              </button>
-              {!unlocked && (
-                <p className="hint case-lock-hint">
-                  Fault-injection labels are the answer key. The ranker never reads them. Run the
-                  replay to the end first, then compare the label with the ranking.
-                </p>
-              )}
-            </>
-          )}
-          {revealed && info?.answer && (
-            <div data-testid="case-answer" className="case-answer">
-              <span className="eyebrow">Ground truth (fault-injection label, not inferred)</span>
-              <span className="case-answer-value">{info.answer.root_cause_services.join(", ")}</span>
-              {info.answer.root_cause_indicators.length > 0 && (
-                <span className="hint mono">indicator {info.answer.root_cause_indicators.join(", ")}</span>
-              )}
-              {info.answer.expected_downstream_services.length > 0 && (
-                <span className="hint">expected downstream: {info.answer.expected_downstream_services.join(", ")}</span>
-              )}
-              {topCandidate && (
-                <span className="hint">
-                  {agrees
-                    ? `Matches the top-ranked candidate (${topCandidate.service}).`
-                    : `Top-ranked candidate is ${topCandidate.service}; the ranking disagrees.`}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
+        <CaseSection title="Request routes observed" caption={LEADS.routes}>
+          <RouteList sessionId={sessionId} listedIds={listedIds} failedIds={failedIds} origin={origin} />
+        </CaseSection>
 
-      {scenario && (
-        <section className="drawer-section scenario-blurb" data-testid="scenario-blurb">
-          <h3>{scenario.title}</h3>
-          <span className="eyebrow">What happened</span>
-          <p>{scenario.whatHappened}</p>
-          <span className="eyebrow">What we evaluate</span>
-          <p>{scenario.whatWeEvaluate}</p>
-          <span className="eyebrow">What to watch</span>
-          <p>{scenario.whatToWatch}</p>
-        </section>
-      )}
+        {(info?.notes || scenario?.caveat) && (
+          <CaseSection title="Notes and caveats">
+            {info?.notes && <p>{info.notes}</p>}
+            {scenario?.caveat && <p>{scenario.caveat}</p>}
+          </CaseSection>
+        )}
+
+        <CaseSection title="Ground truth">
+          <div className="case-answer-row">
+            {!revealed && (
+              <>
+                <button
+                  type="button"
+                  data-testid="case-reveal-button"
+                  disabled={!unlocked || !info}
+                  data-locked={unlocked ? undefined : "true"}
+                  onClick={reveal}
+                >
+                  {unlocked ? "Reveal ground truth" : "Reveal ground truth (locked until the replay completes)"}
+                </button>
+                {!unlocked && (
+                  <p className="case-caption case-lock-hint">
+                    Fault-injection labels are the answer key. The ranker never reads them. Run the
+                    replay to the end first, then compare the label with the ranking.
+                  </p>
+                )}
+              </>
+            )}
+            {revealed && info?.answer && (
+              <div data-testid="case-answer" className="case-answer">
+                <dl className="case-kv">
+                  <dt>Root cause</dt>
+                  <dd>{info.answer.root_cause_services.join(", ")}</dd>
+                  {info.answer.root_cause_indicators.length > 0 && (
+                    <>
+                      <dt>Indicator</dt>
+                      <dd>{info.answer.root_cause_indicators.join(", ")}</dd>
+                    </>
+                  )}
+                  {info.answer.expected_downstream_services.length > 0 && (
+                    <>
+                      <dt>Downstream</dt>
+                      <dd>{info.answer.expected_downstream_services.join(", ")}</dd>
+                    </>
+                  )}
+                  {topCandidate && (
+                    <>
+                      <dt>Ranking</dt>
+                      <dd>
+                        {agrees
+                          ? `Matches the top-ranked candidate (${topCandidate.service}).`
+                          : `Top-ranked candidate is ${topCandidate.service}; the ranking disagrees.`}
+                      </dd>
+                    </>
+                  )}
+                  {scenario && (
+                    <>
+                      <dt>Benchmark</dt>
+                      <dd>{scenario.brief.outcome}</dd>
+                    </>
+                  )}
+                </dl>
+                <p className="case-caption">From the fault-injection label, which the ranker never reads.</p>
+              </div>
+            )}
+          </div>
+        </CaseSection>
+
+        {scenario && (
+          <CaseSection title="Method" testId="scenario-blurb">
+            <p>
+              <strong>What happened.</strong> {scenario.whatHappened}
+            </p>
+            <p>
+              <strong>What we evaluate.</strong> {scenario.whatWeEvaluate}
+            </p>
+            <p>
+              <strong>What to watch.</strong> {scenario.whatToWatch}
+            </p>
+          </CaseSection>
+        )}
+      </div>
     </section>
   );
 }

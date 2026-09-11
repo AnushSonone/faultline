@@ -4,6 +4,7 @@ import {
   connectStream,
   createSession,
   DemoBusyError,
+  fetchCase,
   loadIncident,
   setSpeed,
   type StreamHandle,
@@ -38,6 +39,7 @@ export function App() {
   const setIncidentRange = useInvestigation((s) => s.setIncidentRange);
   const setError = useInvestigation((s) => s.setError);
   const setGroundTruth = useInvestigation((s) => s.setGroundTruth);
+  const setCaseInfo = useInvestigation((s) => s.setCaseInfo);
   const clearSelection = useInvestigation((s) => s.clearSelection);
   const setFirstVisit = useInvestigation((s) => s.setFirstVisit);
   const incidentEndNs = useInvestigation((s) => s.incidentEndNs);
@@ -73,6 +75,15 @@ export function App() {
         // ranked, and the visitor builds the evidence by pressing Play.
         setBooting(false);
         setFirstVisit(readFirstVisit(safeStorage()));
+        // The incident record backs the rail dossier and the Case file tab.
+        // Unlabelled: the ground truth stays behind its own reveal request.
+        fetchCase(id, false)
+          .then((c) => {
+            if (!cancelled) setCaseInfo(c);
+          })
+          .catch(() => {
+            /* the record is optional; the dossier degrades to the fixture facts */
+          });
       } catch (e) {
         if (e instanceof DemoBusyError) {
           setDemoBusy(true);
@@ -92,6 +103,7 @@ export function App() {
     setIncidentRange,
     setError,
     setGroundTruth,
+    setCaseInfo,
     clearSelection,
     setFirstVisit,
     adversarial,

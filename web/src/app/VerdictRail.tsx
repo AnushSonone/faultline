@@ -14,8 +14,8 @@ const MAX_ROWS = 6;
 // the evidence timeline up to the replay cursor.
 export function VerdictRail({ booting, incidentId }: { booting: boolean; incidentId: string }) {
   const rootCauses = useInvestigation((s) => s.rootCauses);
-  // The case brief shows until the first Play (the store closes it on
-  // "playing") and can be brought back with the chip.
+  // The case brief is closed on load and opens from the chip; the store
+  // also closes it on "playing".
   const briefOpen = useInvestigation((s) => s.briefOpen);
   const setBriefOpen = useInvestigation((s) => s.setBriefOpen);
   const tourTarget = useInvestigation((s) => s.tourTarget);
@@ -31,7 +31,9 @@ export function VerdictRail({ booting, incidentId }: { booting: boolean; inciden
   // timeline's slot so nothing is ever cut in half.
   const shortRail = useMediaQuery("(max-height: 820px)");
   const [checkExpanded, setCheckExpanded] = useState(false);
-  const checkCompact = (hasVerdict && !briefOpen) || shortRail;
+  // The brief owns the rail's height while it is open, so the checklist folds
+  // to its one-line summary and hands the rows' height back.
+  const checkCompact = hasVerdict || briefOpen || shortRail;
   const showChecklistRows = checkCompact && checkExpanded;
   const candidates = hasVerdict ? rootCauses!.candidates.slice(0, MAX_ROWS) : [];
   const top = candidates[0] ?? null;
@@ -130,7 +132,17 @@ export function VerdictRail({ booting, incidentId }: { booting: boolean; inciden
         </ol>
       )}
 
-      <Checklist compact={checkCompact} expanded={checkExpanded} onExpandedChange={setCheckExpanded} />
+      <Checklist
+        compact={checkCompact}
+        expanded={checkExpanded}
+        onExpandedChange={(v) => {
+          // The rows take the brief's slot, so close the brief first or the
+          // rail goes blank. The Case brief chip in the hero brings it back.
+          // Not `{ read: true }`: clicking Show is not reading the brief.
+          if (v && briefOpen) setBriefOpen(false);
+          setCheckExpanded(v);
+        }}
+      />
 
       {showChecklistRows ? null : briefOpen ? (
         <Briefing
@@ -147,21 +159,23 @@ export function VerdictRail({ booting, incidentId }: { booting: boolean; inciden
         </div>
       )}
 
-      <p className="rail-caption">
-        {briefOpen ? (
-          "Press Run replay to stream the incident from the start."
-        ) : hasVerdict ? (
-          <>
-            Open{" "}
-            <button type="button" className="link-button" onClick={() => setTab("root-causes")}>
-              Ranking
-            </button>{" "}
-            for the score decomposition.
-          </>
-        ) : (
-          <>Play advances event time; every panel follows the cursor.</>
-        )}
-      </p>
+      {/* The brief pins its own Run replay button, so the caption that used to
+          point at it is gone while the brief is open. */}
+      {!briefOpen && (
+        <p className="rail-caption">
+          {hasVerdict ? (
+            <>
+              Open{" "}
+              <button type="button" className="link-button" onClick={() => setTab("root-causes")}>
+                Ranking
+              </button>{" "}
+              for the score decomposition.
+            </>
+          ) : (
+            <>Play advances event time; every panel follows the cursor.</>
+          )}
+        </p>
+      )}
     </aside>
   );
 }

@@ -28,6 +28,9 @@ export function Walkthrough() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const seekedRef = useRef(false);
+  // False until the first measured placement has been painted, so that
+  // placement snaps into position and only later step changes glide.
+  const settledRef = useRef(false);
   const [spot, setSpot] = useState<Rect | null>(null);
   const [shellSize, setShellSize] = useState({ width: 0, height: 0 });
   const [cardSize, setCardSize] = useState(CARD_FALLBACK);
@@ -73,7 +76,12 @@ export function Walkthrough() {
   useEffect(() => {
     if (active) return;
     setTourTarget(null);
+    settledRef.current = false;
   }, [active, setTourTarget]);
+
+  useEffect(() => {
+    if (placed) settledRef.current = true;
+  }, [placed, i]);
 
   // Everything but the overlay is inert while the walkthrough runs.
   useEffect(() => {
@@ -142,8 +150,9 @@ export function Walkthrough() {
     };
   }, [active, current, i]);
 
-  // The card's own size feeds the placement. Both measurements land before
-  // the browser paints, and the card only becomes visible once they have.
+  // The card's own size feeds the placement. It stays hidden until both
+  // measurements land, so the guessed position is never painted, and that
+  // first placement is applied with no transition.
   useLayoutEffect(() => {
     if (!active) {
       setPlaced(false);
@@ -153,15 +162,22 @@ export function Walkthrough() {
     if (!el) return;
     const read = () => {
       const r = el.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) {
-        setCardSize({ width: r.width, height: r.height });
-        setPlaced(true);
-      }
+      if (r.width > 0 && r.height > 0) setCardSize({ width: r.width, height: r.height });
     };
     read();
+    // Opening the walkthrough closes the brief and inerts the stage, so the
+    // shell relayouts in the same frame. Read again on the next one and only
+    // then reveal, or the card paints once at the pre-relayout centre.
+    const raf = requestAnimationFrame(() => {
+      read();
+      setPlaced(true);
+    });
     const ro = new ResizeObserver(read);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
   }, [active, i]);
 
   useEffect(() => {
@@ -229,8 +245,9 @@ export function Walkthrough() {
         data-testid="tour-card"
         data-side={place.side}
         initial={false}
-        animate={{ left: place.left, top: place.top, opacity: placed ? 1 : 0 }}
-        transition={{ duration: 0.24, ease: [0.2, 0.8, 0.3, 1] }}
+        style={{ visibility: placed ? "visible" : "hidden" }}
+        animate={{ left: place.left, top: place.top }}
+        transition={{ duration: settledRef.current ? 0.24 : 0, ease: [0.2, 0.8, 0.3, 1] }}
       >
         {place.side !== "center" && <span className="walk-pointer" style={pointerStyle} aria-hidden="true" />}
         <div className="walk-head">

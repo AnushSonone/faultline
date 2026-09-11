@@ -3,7 +3,7 @@ import { checklistRows, type CheckId } from "../lib/progress";
 import { useInvestigation } from "../state/investigation";
 
 const LABELS: Record<CheckId, { label: string; hint: string; lockedHint?: string }> = {
-  case: { label: "Read the case file", hint: "The brief in this column, or the Case file tab." },
+  case: { label: "Read the case file", hint: "The Case brief chip above, or the Case file tab." },
   replay: { label: "Run the replay", hint: "Press Play; events stream in event-time order." },
   graph: { label: "Watch the dependency graph turn red", hint: "Nodes redden as a metric leaves its own baseline." },
   telemetry: { label: "Inspect the telemetry", hint: "Open Telemetry: the p99 heatmap and a trace waterfall." },

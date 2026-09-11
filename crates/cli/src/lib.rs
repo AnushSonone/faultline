@@ -2,3 +2,4 @@
 
 pub mod bench;
 pub mod evaluate;
+pub mod replay_stability;

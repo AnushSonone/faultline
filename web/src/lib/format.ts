@@ -56,6 +56,15 @@ export function fmtDurationNs(ns: number | null | undefined): string {
   return `${mantissa(v)} ${DURATION_UNITS[i]}`;
 }
 
+// The recorded window, for a status pill. RCAEval recordings are 1440 s, which
+// reads as nonsense in seconds.
+export function fmtWindowS(seconds: number | null | undefined): string {
+  if (seconds == null || !Number.isFinite(seconds)) return "unknown";
+  if (seconds < 90) return `${Math.round(seconds)} s`;
+  const min = seconds / 60;
+  return `${min < 10 ? Number(min.toFixed(1)) : Math.round(min)} min`;
+}
+
 export function fmtBytes(n: number | null | undefined): string {
   if (n == null) return "-";
   let v = n;

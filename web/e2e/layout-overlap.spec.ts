@@ -47,11 +47,14 @@ for (const vp of VIEWPORTS) {
       await check("boot");
       await assertEvidenceZoom(page, `${vp.width}px / boot`, vp.width >= 1440 ? 0.75 : 0.55);
       await assertEvidenceCentred(page, `${vp.width}px / boot`);
-      // The briefing is open at boot; also check the rail after it is dismissed and re-opened.
+      // The rail opens on the checklist and evidence timeline with the brief
+      // behind its chip. Check the brief open, closed, then leave it open so
+      // later states match the other viewports.
+      await page.getByTestId("briefing-open").click();
+      await check("briefing-open");
       await page.getByTestId("briefing-skip").click();
       await check("briefing-closed");
       await page.getByTestId("briefing-open").click();
-      await check("briefing-open");
       if (vp.width === 1024) {
       }
       if (vp.width === 1440) {
@@ -180,8 +183,8 @@ for (const vp of VIEWPORTS) {
         await seekFraction(page, 1);
         await check("seek-100");
 
-        // The briefing hides the rank list until dismissed.
-        await page.getByTestId("briefing-skip").click();
+        // The brief is closed after an incident switch, so the rank list is
+        // already in the rail.
         const firstRank = page.locator("[data-testid^='rank-']").first();
         await expect(firstRank).toBeVisible({ timeout: 10_000 });
         await firstRank.click();

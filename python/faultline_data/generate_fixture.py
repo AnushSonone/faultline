@@ -194,13 +194,15 @@ def write_parquet(rows: list[dict], path: Path) -> int:
         table = pa.table({"event_id": pa.array([], type=pa.string())})
         pq.write_table(table, path)
         return 0
-    # unify as string-encoded JSON column plus key fields for easy Rust reading
+    # unify as string-encoded JSON column plus key fields for easy Rust reading.
+    # allow_nan=False: bare NaN/Infinity is not JSON and the Rust loader rejects
+    # it, so a non-finite value must fail here, at conversion, not at evaluate.
     table = pa.table(
         {
             "event_id": [r["event_id"] for r in rows],
             "event_time_ns": [r["event_time_ns"] for r in rows],
             "service": [r.get("service") for r in rows],
-            "payload_json": [json.dumps(r, sort_keys=True) for r in rows],
+            "payload_json": [json.dumps(r, sort_keys=True, allow_nan=False) for r in rows],
         }
     )
     pq.write_table(table, path)

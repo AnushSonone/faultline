@@ -1,9 +1,7 @@
 import { useMemo } from "react";
 import type { TimelineEvent } from "../../types/protocol";
 import { fmtCompact } from "../../lib/format";
-
-const SIGNALS = ["metrics", "spans", "logs", "changes"] as const;
-type Signal = (typeof SIGNALS)[number];
+import { SIGNALS, SignalTotals, type Signal } from "../../components/SignalTotals";
 
 // Timeline events name their signal in the singular; the manifest counts in
 // the plural. Deployments and configuration are change events.
@@ -34,8 +32,6 @@ type Props = {
 // service x signal grid counted from the timeline projection up to the
 // cursor, so it fills as the replay runs.
 export function SignalInventory({ eventCounts, events, services, origin }: Props) {
-  const total = SIGNALS.reduce((n, s) => n + (eventCounts[s] ?? 0), 0);
-
   const grid = useMemo(() => {
     const counts = new Map<string, Record<Signal, number>>();
     for (const svc of services) counts.set(svc, { metrics: 0, spans: 0, logs: 0, changes: 0 });
@@ -72,21 +68,7 @@ export function SignalInventory({ eventCounts, events, services, origin }: Props
 
   return (
     <div data-testid="case-inventory">
-      <div className="stack-bar" aria-hidden="true">
-        {SIGNALS.map((s) => {
-          const n = eventCounts[s] ?? 0;
-          if (n <= 0) return null;
-          return <span key={s} className={`stack-seg sig-${s} nonzero`} style={{ width: `${(n / Math.max(1, total)) * 100}%` }} />;
-        })}
-      </div>
-      <div className="metric-chips">
-        {SIGNALS.map((s) => (
-          <span key={s} className="metric-chip">
-            <span className={`sig-dot sig-${s}`} aria-hidden="true" />
-            <span className="metric-key">{s}</span> <span className="metric-value">{fmtCompact(eventCounts[s] ?? 0)}</span>
-          </span>
-        ))}
-      </div>
+      <SignalTotals eventCounts={eventCounts} />
       {rows.length > 0 && (
         <div className="presence-grid" role="table" aria-label="Events per service and signal at the cursor">
           <div className="presence-row presence-head" role="row">

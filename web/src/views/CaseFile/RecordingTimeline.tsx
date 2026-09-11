@@ -22,7 +22,9 @@ export function RecordingTimeline({ startNs, endNs, faultStartNs, faultEndNs, de
   const width = useElementWidth(wrapRef);
   const span = Math.max(1, endNs - startNs);
   const x = (ns: number) => PAD + (Math.min(Math.max(ns, startNs), endNs) - startNs) / span * (width - PAD * 2);
-  const fracs = width < 330 ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1];
+  // Five ticks need room for five labels, and an RCAEval recording writes
+  // them as "t+18m 00s". At rail width that packs them edge to edge.
+  const fracs = width < 420 ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1];
   const injectX = faultStartNs != null ? x(faultStartNs) : null;
   const injectLeft = injectX != null && injectX < width / 2;
 

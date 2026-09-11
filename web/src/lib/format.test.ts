@@ -7,6 +7,7 @@ import {
   fmtIn,
   fmtOffset,
   fmtPct,
+  fmtWindowS,
   shortTraceId,
   titleCase,
 } from "./format";
@@ -148,5 +149,14 @@ describe("shortTraceId", () => {
     expect(fmtCompact(12400)).toBe("12k");
     expect(fmtCompact(3_100_000)).toBe("3.1M");
     expect(fmtCompact(null)).toBe("-");
+  });
+});
+
+describe("fmtWindowS", () => {
+  it("keeps short recordings in seconds and long ones in minutes", () => {
+    expect(fmtWindowS(15)).toBe("15 s");
+    expect(fmtWindowS(19)).toBe("19 s");
+    expect(fmtWindowS(1440)).toBe("24 min");
+    expect(fmtWindowS(null)).toBe("unknown");
   });
 });

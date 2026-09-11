@@ -1,0 +1,1312 @@
+{
+  "detector": "v2",
+  "detector_note": "live projection path (faultline_projection::build_root_causes), FeatureConfig::default() of this build",
+  "feature_config_sha256": "334d134a9672a73a101f95cf50fe01b28399ee8e3c44067ffa0ad82b23e0b5ae",
+  "dataset_path": "rcaeval-re2-ob/v2",
+  "step_s": 30,
+  "timing_repeats": 11,
+  "git_commit": "1e42d2462f51a39dfbb5c800778809e763e3c3d3",
+  "git_dirty_files": 0,
+  "definitions": {
+    "cursors": "manifest start_time_ns, then every step_s, plus the final end_time_ns cursor",
+    "final_top1_first_seen_offset_s": "first cursor whose top-1 equals the top-1 at the end cursor",
+    "final_top1_stable_from_offset_s": "cursor from which every later top-1 equals the final top-1",
+    "first_nonempty_ranking_offset_s": "first cursor where build_root_causes returns at least one candidate",
+    "first_onset_cursor_offset_s": "first cursor where any candidate has a detector onset",
+    "flicker_count": "sum over consecutive cursor pairs and services of: service had an onset at the earlier cursor and none at the later cursor",
+    "last_cursor_call_ms": "wall time of build_root_causes at the end cursor, repeated timing_repeats times after the sweep; nearest-rank p95",
+    "offsets": "seconds relative to labels.fault_start_time_ns; negative is before the injection",
+    "onset_shift_count": "sum over consecutive cursor pairs and services of: onset present at both cursors but at a different time",
+    "top1_changes_after_first_ranking": "consecutive cursor pairs, from the first non-empty ranking on, whose top-1 service differs"
+  },
+  "incidents": [
+    {
+      "incident_id": "re2ob-checkoutservice-mem-1",
+      "labeled_root_cause": [
+        "checkoutservice"
+      ],
+      "fault_start_ns": 1705462070000000000,
+      "start_ns": 1705461350000000000,
+      "end_ns": 1705462790000000000,
+      "cursors": 49,
+      "first_nonempty_ranking_offset_s": -720.0,
+      "first_onset_cursor_offset_s": 150.0,
+      "top1_changes_after_first_ranking": 1,
+      "final_top1": "checkoutservice",
+      "final_top1_is_labeled": true,
+      "final_top1_first_seen_offset_s": 150.0,
+      "final_top1_stable_from_offset_s": 150.0,
+      "flicker_count": 0,
+      "onset_shift_count": 0,
+      "last_cursor_call_ms": {
+        "samples": 11,
+        "median_ms": 136.423125,
+        "p95_ms": 141.012834,
+        "min_ms": 134.396542,
+        "max_ms": 141.012834
+      },
+      "timeline": [
+        {
+          "offset_s": -720.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -690.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -660.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -630.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -600.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -570.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -540.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -510.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -480.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -450.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -420.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -390.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -360.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -330.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -300.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -270.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -240.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -210.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -180.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -150.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -120.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -90.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -60.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -30.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 0.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 30.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 60.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 90.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 120.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 150.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 180.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 210.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 240.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 270.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 300.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 330.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 360.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 390.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 420.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 450.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 480.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 510.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 540.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 570.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 600.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 630.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 660.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 690.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 720.0,
+          "top1": "checkoutservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        }
+      ]
+    },
+    {
+      "incident_id": "re2ob-currencyservice-delay-1",
+      "labeled_root_cause": [
+        "currencyservice"
+      ],
+      "fault_start_ns": 1705702012000000000,
+      "start_ns": 1705701292000000000,
+      "end_ns": 1705702732000000000,
+      "cursors": 49,
+      "first_nonempty_ranking_offset_s": -720.0,
+      "first_onset_cursor_offset_s": 150.0,
+      "top1_changes_after_first_ranking": 1,
+      "final_top1": "currencyservice",
+      "final_top1_is_labeled": true,
+      "final_top1_first_seen_offset_s": 150.0,
+      "final_top1_stable_from_offset_s": 150.0,
+      "flicker_count": 0,
+      "onset_shift_count": 0,
+      "last_cursor_call_ms": {
+        "samples": 11,
+        "median_ms": 140.83908300000002,
+        "p95_ms": 159.460042,
+        "min_ms": 138.431167,
+        "max_ms": 159.460042
+      },
+      "timeline": [
+        {
+          "offset_s": -720.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -690.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -660.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -630.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -600.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -570.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -540.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -510.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -480.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -450.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -420.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -390.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -360.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -330.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -300.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -270.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -240.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -210.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -180.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -150.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -120.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -90.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -60.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -30.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 0.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 30.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 60.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 90.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 120.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 150.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 180.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 210.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 240.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 270.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 300.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 330.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 360.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 390.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 420.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 450.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 480.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 510.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 540.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 570.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 600.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 630.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 660.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 690.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        },
+        {
+          "offset_s": 720.0,
+          "top1": "currencyservice",
+          "candidates": 12,
+          "services_with_onset": 3
+        }
+      ]
+    },
+    {
+      "incident_id": "re2ob-recommendationservice-mem-1",
+      "labeled_root_cause": [
+        "recommendationservice"
+      ],
+      "fault_start_ns": 1705458232000000000,
+      "start_ns": 1705457512000000000,
+      "end_ns": 1705458952000000000,
+      "cursors": 49,
+      "first_nonempty_ranking_offset_s": -720.0,
+      "first_onset_cursor_offset_s": 150.0,
+      "top1_changes_after_first_ranking": 1,
+      "final_top1": "recommendationservice",
+      "final_top1_is_labeled": true,
+      "final_top1_first_seen_offset_s": 150.0,
+      "final_top1_stable_from_offset_s": 150.0,
+      "flicker_count": 0,
+      "onset_shift_count": 0,
+      "last_cursor_call_ms": {
+        "samples": 11,
+        "median_ms": 139.177166,
+        "p95_ms": 160.262541,
+        "min_ms": 134.645958,
+        "max_ms": 160.262541
+      },
+      "timeline": [
+        {
+          "offset_s": -720.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -690.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -660.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -630.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -600.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -570.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -540.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -510.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -480.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -450.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -420.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -390.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -360.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -330.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -300.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -270.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -240.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -210.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -180.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -150.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -120.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -90.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -60.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -30.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 0.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 30.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 60.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 90.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 120.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 150.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 180.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 210.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 240.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 270.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 300.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 330.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 360.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 390.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 420.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 450.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 480.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 510.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 540.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 570.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 600.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 630.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 660.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 690.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        },
+        {
+          "offset_s": 720.0,
+          "top1": "recommendationservice",
+          "candidates": 12,
+          "services_with_onset": 2
+        }
+      ]
+    },
+    {
+      "incident_id": "re2ob-emailservice-cpu-1",
+      "labeled_root_cause": [
+        "emailservice"
+      ],
+      "fault_start_ns": 1705350165000000000,
+      "start_ns": 1705349445000000000,
+      "end_ns": 1705350885000000000,
+      "cursors": 49,
+      "first_nonempty_ranking_offset_s": -720.0,
+      "first_onset_cursor_offset_s": 150.0,
+      "top1_changes_after_first_ranking": 1,
+      "final_top1": "emailservice",
+      "final_top1_is_labeled": true,
+      "final_top1_first_seen_offset_s": 150.0,
+      "final_top1_stable_from_offset_s": 150.0,
+      "flicker_count": 0,
+      "onset_shift_count": 0,
+      "last_cursor_call_ms": {
+        "samples": 11,
+        "median_ms": 147.95875,
+        "p95_ms": 153.309625,
+        "min_ms": 146.62175,
+        "max_ms": 153.309625
+      },
+      "timeline": [
+        {
+          "offset_s": -720.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -690.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -660.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -630.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -600.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -570.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -540.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -510.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -480.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -450.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -420.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -390.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -360.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -330.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -300.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -270.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -240.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -210.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -180.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -150.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -120.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -90.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -60.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": -30.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 0.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 30.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 60.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 90.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 120.0,
+          "top1": "adservice",
+          "candidates": 12,
+          "services_with_onset": 0
+        },
+        {
+          "offset_s": 150.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 180.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 210.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 240.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 270.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 300.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 330.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 360.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 390.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 420.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 450.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 480.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 510.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 540.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 570.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 600.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 630.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 660.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 690.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        },
+        {
+          "offset_s": 720.0,
+          "top1": "emailservice",
+          "candidates": 12,
+          "services_with_onset": 1
+        }
+      ]
+    }
+  ]
+}

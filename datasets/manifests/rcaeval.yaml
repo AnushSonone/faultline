@@ -15,6 +15,9 @@ fallback: datasets/fixtures/synthetic-ob/v1/rec-mem-001
 archive_sha256: 72006b45601980df5088ae60872f0fe3233fa52748584c97c559df664c41bf0b
 archive_format: gzip tar (despite .zip name), root dir data/
 converted_cases: 15 (5 services x cpu/mem/delay x instance 1) -> datasets/fixtures/rcaeval-re2-ob/v2
+heldout_split: datasets/manifests/rcaeval-re2ob-split.yaml
+heldout_cases: 75 (the other RE2-OB cases) -> datasets/fixtures/rcaeval-re2-ob/v2-heldout, not scored until settings are frozen
+extract_script: scripts/extract-rcaeval.sh
 converter: python/faultline_data/adapters/rcaeval.py
 results: benchmarks/rcaeval-eval.json + RESULTS.md
 notes: |

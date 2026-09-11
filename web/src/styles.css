@@ -39,6 +39,7 @@
   --alert: #ff8a3d;
   --alert-dim: rgba(255, 138, 61, 0.14);
   --warn: #e8b93e;
+  --warn-dim: rgba(232, 185, 62, 0.14);
   --danger: #e5604f;
   --danger-dim: rgba(229, 96, 79, 0.12);
   --danger-soft: #ffb4a8;
@@ -112,6 +113,7 @@
   --alert: #ea580c;
   --alert-dim: rgba(234, 88, 12, 0.10);
   --warn: #9a6d00;
+  --warn-dim: rgba(154, 109, 0, 0.10);
   --danger: #c0392b;
   --danger-dim: rgba(192, 57, 43, 0.08);
   --danger-soft: #8c2a1e;
@@ -377,9 +379,15 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
   display: inline-flex;
   align-items: center;
   gap: var(--s2);
-  background: var(--panel);
+  /* In the light theme the embed ships, --panel is #ffffff on a #ffffff
+     surface, so a bare .pill was invisible. --panel-2 is only a 1.4% step, so
+     the border is the fix and the fill reinforces it. The negative 1px keeps
+     the box the same height, or .transport wraps to a second row and the
+     stage loses the height this pass is trying to buy. */
+  background: var(--panel-2);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  padding: var(--s1) var(--s3);
+  padding: calc(var(--s1) - 1px) var(--s3);
   font-size: var(--text-xs);
   color: var(--muted);
   white-space: nowrap;
@@ -950,14 +958,32 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 .score-table tr:hover td { color: var(--fg); }
 .score-table tr.filtered td { background: var(--accent-dim); }
 
-.evidence-list { margin: var(--s2) 0 0; padding-left: 0; font-size: var(--text-sm); list-style: none; display: flex; flex-direction: column; gap: var(--s1); }
+/* One grid for the whole list, rows contributing their cells, so every badge
+   sits in the same column and wrapped text never runs back under it. The
+   scoped selector beats `.correlation-card ul`, which would otherwise indent
+   the first column by 1.1rem. */
+.correlation-card .evidence-list,
+.evidence-list {
+  margin: var(--s2) 0 0;
+  padding-left: 0;
+  font-size: var(--text-sm);
+  list-style: none;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s1) var(--s2);
+}
+.evidence { display: contents; }
+.evidence-text { min-width: 0; }
+.evidence-list .hint { grid-column: 1 / -1; margin: 0; }
 .evidence-badge {
+  justify-self: start;
   font-size: var(--text-xs);
   padding: 0 var(--s2);
   border-radius: 999px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-right: var(--s1);
+  white-space: nowrap;
 }
 .evidence.supports .evidence-badge { color: var(--ok); background: var(--ok-dim); }
 .evidence.contradicts .evidence-badge { color: var(--danger); background: var(--danger-dim); }
@@ -1118,9 +1144,8 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 /* ---------- case panel ---------- */
 
 .case-panel .panel-body { display: flex; flex-direction: column; gap: var(--s2); }
-.case-answer-row { margin-top: var(--s2); }
-.case-answer { display: flex; flex-direction: column; gap: var(--s1); }
-.case-answer-value { font-size: var(--text-md); font-weight: 600; }
+.case-answer-row { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s2); }
+.case-answer { display: flex; flex-direction: column; gap: var(--s2); width: 100%; }
 
 /* ---------- error boundary ---------- */
 
@@ -1170,15 +1195,30 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 }
 .now-head { display: block; height: 20px; line-height: 20px; }
 
-/* Three columns from 1200px up: map | evidence | rail. Last so it wins. */
+/* Three columns from 1200px up: map | evidence | rail. Last so it wins.
+
+   The split is staged because e2e/utils/overlap.ts fails the build when the
+   evidence graph's zoom drops below 0.75 at 1440 and up, or 0.55 below that.
+   Measured with the graph seeked to the end: an even 31/38/31 gives 0.538 at
+   1200 and 0.678 at 1440, both failures, while 30/42/28 clears 1440 by 0.004,
+   which is not a margin. So the reading columns take their width only where
+   the graph has zoom to spare. */
 @media (min-width: 1200px) {
   .stage {
-    grid-template-columns: minmax(0, 28fr) minmax(0, 46fr) minmax(0, 26fr);
+    grid-template-columns: minmax(0, 29fr) minmax(0, 44fr) minmax(0, 27fr);
     grid-template-rows: minmax(0, 1fr);
     grid-template-areas: "map evidence rail";
   }
   .verdict-service { font-size: var(--text-lg); }
   .rank-row { grid-template-columns: 24px minmax(0, 1fr) 72px 40px; }
+}
+
+/* Past 1700px the graph still reads at 0.844, so the rail goes 403px to 481px
+   at 1728 and the dependency graph gains the same on the left. */
+@media (min-width: 1700px) {
+  .stage {
+    grid-template-columns: minmax(0, 31fr) minmax(0, 38fr) minmax(0, 31fr);
+  }
 }
 
 /* ---------- beginner-facing captions, rank header, briefing ---------- */
@@ -1247,7 +1287,7 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 .check-label { font-size: var(--text-sm); line-height: 1.3; }
 .check-hint { font-size: var(--text-xs); color: var(--faint); line-height: 1.3; }
 .check-row.locked .check-label { color: var(--faint); }
-.checklist.expanded { flex: 1; min-height: 0; overflow-y: auto; }
+.checklist.expanded { flex: 1; min-height: 0; overflow-y: auto; padding-right: var(--s2); }
 .checklist.compact {
   flex-direction: row;
   align-items: center;
@@ -1271,18 +1311,23 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
   place-items: center;
   background: rgba(11, 14, 20, 0.62);
 }
-.first-visit-card { width: 380px; }
 
 .walk-button { white-space: nowrap; }
 .drawer-intro { flex: none; margin: 0; }
 
-/* The case brief: a definition list, the propagation schematic, an abstract
-   and the features to watch. The card scrolls internally as a last resort so
-   the rail's height budget never cuts a line in half. */
+/* The case brief: a fixed head, a scrolling body and a pinned action row. The
+   rail gives the card 160 to 400 px of height against 500 px of content, so
+   something has to scroll. Making the card itself the scroller put Run replay
+   hundreds of pixels below the fold; only .briefing-body scrolls now.
+   No `.briefing > * { flex: none }` here: it would beat `.briefing-body
+   { flex: 1 }` on equal specificity and collapse the body to content height,
+   at which point `overflow: hidden` clips the footer with no scrollbar. */
 .briefing {
-  flex: 1;
+  /* Sized to its content, shrinking to whatever the rail can spare. Growing
+     to fill would leave a void between the last line and the pinned row. */
+  flex: 0 1 auto;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--s2);
@@ -1290,26 +1335,136 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
   border-radius: var(--r-md);
   padding: var(--s3) var(--s4);
 }
-.briefing > * { flex: none; }
-.briefing-title { margin: 0; font-size: var(--text-md); font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.brief-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px var(--s3); margin: 0; align-items: baseline; }
-.brief-grid dt { font-size: var(--text-xs); color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
-.brief-grid dd { margin: 0; font-size: var(--text-sm); color: var(--fg); line-height: 1.4; min-width: 0; }
-.briefing-abstract { margin: 0; font-size: var(--text-sm); line-height: 1.45; color: var(--fg); }
-.briefing-watch-head { margin-top: var(--s1); }
+.briefing-head { flex: none; display: flex; flex-direction: column; gap: 2px; }
+.briefing-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  /* Overlay scrollbars (macOS) paint on top of the content instead of
+     reserving a track, and scrollbar-gutter is specified to have no effect on
+     them, so the thumb was landing on the last characters of every line. Real
+     padding is the only fix. .drawer-body already has --s4 here; .checklist
+     is the other rail scroller and gets the same. */
+  padding-right: var(--s3);
+  display: flex;
+  flex-direction: column;
+  /* .case-doc rhythm: 16px between sections, 4px from a title to its body. */
+  gap: var(--s4);
+  /* A seam, so the row below reads as a pinned bar rather than as the end of
+     the content. That is the only cue that there is more to scroll on a
+     platform with overlay scrollbars. */
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--s2);
+}
+.briefing-body > * { flex: none; }
+/* `auto`, not a fixed column: the labels are nowrap and the overlap sweep
+   fails the build on a nowrap label clipped without an ellipsis. The row gap
+   gives the rows rhythm so a two-line value never runs into the next label. */
+/* The dossier rows: the recording extent and the signal totals. They are what
+   fills a tall rail; on a laptop the card has about 13px to spare, so the
+   height guard below drops them rather than pushing the brief into a scroll. */
+.dossier-block, .briefing-watch-block { display: flex; flex-direction: column; gap: var(--s1); }
+.dossier-block .stack-bar { margin-top: var(--s1); }
 .briefing-watch { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: var(--text-xs); color: var(--muted); line-height: 1.4; }
 .briefing-watch code { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--fg); }
-.briefing-more { margin: 0; font-size: var(--text-xs); color: var(--faint); }
-.briefing-more .link-button { font-size: var(--text-xs); }
-.briefing-actions { display: flex; gap: var(--s2); align-items: center; flex: none; flex-wrap: nowrap; padding-top: var(--s1); }
+/* Wraps as a safety valve: .briefing is a non-scrollable clipper, so a row
+   that overflows it is cut with no way to reach it. */
+.briefing-actions { flex: none; display: flex; gap: var(--s2); row-gap: var(--s1); align-items: center; flex-wrap: wrap; padding-top: var(--s1); }
+.briefing-actions > button { flex: none; }
 .briefing-actions .primary { white-space: nowrap; }
+.briefing-tour-link { margin-left: auto; font-size: var(--text-xs); }
 
 /* Propagation schematic: origin right, callers step left hop by hop. The
    static frame is the end state; `.playing` runs the keyframes once with
    per-element delays set inline. */
-.schematic { margin: 0; padding: 0; cursor: pointer; border-radius: var(--r-sm); background: var(--bg); border: 1px solid var(--border); }
+/* ---------- case report: one structure, monochrome ----------
+
+   Shared by the rail brief and the Case file tab. Sections sit at one even
+   rhythm separated by a hairline, and there are four text styles only: the
+   headline, a section title, body text and a caption. No role colour: on
+   these surfaces colour encodes data only (the schematic, the recording band
+   and the signal palette). */
+
+.case-doc { display: flex; flex-direction: column; gap: 0; }
+.case-doc > .case-section,
+.case-doc > .case-fold {
+  padding-block: var(--case-gap, var(--s4));
+  border-top: 1px solid var(--border);
+}
+.case-doc > :first-child { border-top: 0; }
+.briefing-body.case-doc > :first-child,
+.case-fold .case-doc > :first-child { padding-top: 0; }
+.case-doc > :last-child { padding-bottom: 0; }
+.briefing .case-doc { --case-gap: var(--s3); }
+.case-panel .case-doc { --case-gap: var(--s4); }
+
+.case-section { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
+.case-section > h4 {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.case-section p { margin: 0; font-size: var(--text-sm); line-height: 1.55; color: var(--fg); }
+.case-section p strong { font-weight: 600; }
+.case-section p.case-caption { font-size: var(--text-xs); line-height: 1.5; color: var(--muted); }
+
+/* The headline: the one place a surface uses the top of the type scale. */
+.briefing-title, .case-head strong {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+.case-meta { margin: 0; font-size: var(--text-xs); line-height: 1.5; color: var(--muted); }
+
+/* Label and value pairs: sentence-case labels in the caption colour, values
+   as body text. Replaces three uppercase small-caps definition lists. */
+.case-kv {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--s2) var(--s4);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+.case-kv dt { color: var(--muted); }
+.case-kv dd { margin: 0; color: var(--fg); min-width: 0; overflow-wrap: anywhere; }
+
+/* Signal totals and the features list read as body text, not as tiles. */
+.case-stats { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: var(--s2) var(--s3); margin: 0; }
+.case-doc .case-stats .stat-value { font-size: var(--text-sm); font-weight: 600; }
+.case-doc .case-stats .eyebrow { text-transform: none; letter-spacing: 0; color: var(--muted); }
+.case-doc .briefing-watch { font-size: var(--text-sm); color: var(--fg); gap: var(--s2); }
+.case-doc .briefing-watch code { font-size: var(--text-xs); }
+
+/* The folded method, styled as a section title with an open affordance. */
+.case-fold { margin: 0; }
+.case-fold > summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  list-style: none;
+}
+.case-fold > summary::-webkit-details-marker { display: none; }
+.case-fold > summary::after { content: " +"; color: var(--muted); font-weight: 400; }
+.case-fold[open] > summary::after { content: " \2212"; }
+.case-fold > summary:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: 2px; border-radius: var(--r-sm); }
+.case-fold[open] > summary { margin-bottom: var(--s3); }
+
+/* The svg scales to the container now, so the max-width is the guard that
+   stops it ballooning wherever this component is reused. The Case file drawer
+   shares it and sits in the same grid area, so today both are 260 to 400 px. */
+.schematic { margin: 0; padding: 0; max-width: 420px; cursor: pointer; border-radius: var(--r-sm); background: var(--bg); border: 1px solid var(--border); }
 .schematic:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.schematic svg { display: block; }
+.schematic svg { display: block; width: 100%; height: auto; }
 .schematic-edge { stroke: var(--border-strong); stroke-width: 1.25; }
 .schematic-arrowhead { fill: var(--border-strong); }
 .schematic-edge.affected { stroke: var(--danger); }
@@ -1320,7 +1475,7 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 .schematic-node.origin .schematic-label { fill: var(--fg); font-weight: 600; }
 .schematic-tag { font: 500 8px var(--font-mono); fill: var(--warn); }
 .schematic-deploy { fill: none; stroke: var(--warn); stroke-width: 1.5; }
-.schematic-caption { font: 400 9px var(--font-sans); fill: var(--faint); }
+.schematic-caption { font: 400 9px var(--font-sans); fill: var(--muted); }
 
 .schematic.playing .schematic-node.origin .schematic-dot,
 .schematic.playing .schematic-node.wave .schematic-dot { fill: var(--accent); animation: schematic-flare 0.5s var(--ease) forwards; }
@@ -1338,15 +1493,31 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 .rail-chip { text-transform: none; letter-spacing: normal; padding: 1px var(--s2); font-size: var(--text-xs); }
 .rail-eyebrow .rail-chip:first-of-type { margin-left: auto; }
 
+/* Laptop-height rails have no spare room: the dossier rows would only push the
+   brief back into a scroll, which is the defect this card was rebuilt to fix.
+   The Case file tab carries both at every height. */
+@media (max-height: 900px) {
+  .briefing .dossier-block { display: none; }
+}
+
 /* Short rails (two-row layout at 768px tall): one-line title, no note, and
-   the card itself may scroll as a last resort so nothing is ever cut. */
+   the body scrolls as a last resort so nothing is ever cut. */
 @media (max-height: 820px) {
   .rank-head { display: none; }
-  .briefing > .eyebrow, .briefing-more, .briefing-watch, .briefing-watch-head { display: none; }
-  .brief-grid dt:nth-of-type(n + 3), .brief-grid dd:nth-of-type(n + 3) { display: none; }
+  /* The schematic scales with the card, and a short rail gives the brief
+     about 140px total: the diagram would be the whole body. The Case file
+     tab still shows it, hence the .briefing scope. */
+  .briefing .case-meta, .briefing .case-propagation { display: none; }
+  /* A size change, never display:none: this query matches at exactly 900,
+     which is briefing.spec.ts's viewport, and that spec reads text out of
+     [data-testid=case-summary]. Hiding it would delete it from textContent. */
+  .briefing-title { font-size: var(--text-md); line-height: 1.3; }
+  .briefing .case-doc { --case-gap: var(--s2); }
+  /* Two lines of context, not four. Clamped and never hidden: this query
+     matches at exactly 900, briefing.spec's viewport, and display:none would
+     take the sentence out of textContent. */
+  .briefing .case-system { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .briefing { padding: var(--s2) var(--s3); gap: var(--s1); }
-  .briefing-title { -webkit-line-clamp: 1; }
-  .briefing-abstract { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .verdict-why { display: none; }
   .rank-list .rank-row:nth-child(n + 5) { display: none; }
   .check-hint { display: none; }
@@ -1403,7 +1574,10 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 /* One card style for every callout: the walkthrough steps and the
    first-visit choice. */
 .callout-card {
-  width: 340px;
+  /* Wide enough that a one-sentence body sits on a single line; longer step
+     copy still wraps, and `text-wrap: balance` keeps the lines even instead
+     of leaving one orphan word. */
+  width: 420px;
   max-width: calc(100% - 16px);
   display: flex;
   flex-direction: column;
@@ -1416,11 +1590,31 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
   outline: none;
 }
 .callout-card h3 { margin: 0; font-size: var(--text-sm); font-weight: 600; line-height: 1.3; }
-.callout-card p { margin: 0; font-size: var(--text-xs); color: var(--fg); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.callout-card p {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--fg);
+  line-height: 1.45;
+  text-wrap: balance;
+  max-height: calc(1.45em * 3);
+  overflow: hidden;
+}
+.first-visit-card { width: 460px; }
 .walk-card { position: absolute; z-index: 101; }
-.walk-card.center { width: 380px; }
 .walk-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .walk-actions { display: flex; gap: var(--s2); align-items: center; justify-content: flex-end; white-space: nowrap; }
+/* One control size for every callout button: the pill and the primary differ
+   in colour only, never in type scale or box. */
+.walk-actions button {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.4;
+  padding: var(--s1) var(--s3);
+  min-height: 30px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+}
+.walk-actions .chip-toggle { border-color: var(--border); }
 /* The pointer: a rotated square on the edge that faces the spotlight. */
 .walk-pointer {
   position: absolute;
@@ -1435,12 +1629,9 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 .walk-card.right .walk-pointer { left: 0; border-top: 0; border-right: 0; }
 .walk-card.left .walk-pointer { left: 100%; border-bottom: 0; border-left: 0; }
 
-/* The stage panel the walkthrough is pointing at. */
-.tour-target {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-  box-shadow: 0 0 0 4px var(--accent-dim);
-}
+/* The panel the walkthrough is pointing at. The spotlight cutout draws the
+   only ring; this class stays as the hook the e2e specs assert on. */
+.tour-target { }
 
 /* Short rails keep the Play button visible: the primer folds away. */
 @media (max-height: 820px) {
@@ -1556,10 +1747,14 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 /* ingestion */
 .stack-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--panel-2); margin: var(--s2) 0 0; }
 .stack-seg { display: block; height: 100%; }
+/* One declaration for the signal palette. It used to be written twice, here
+   and again near the case-file rules, disagreeing on logs (warn vs muted) and
+   changes (danger-soft vs warn); the later block silently won. SignalTotals
+   renders in both the rail and the Case file, so it lives in one place now. */
 .sig-metrics { background: var(--accent); }
 .sig-spans { background: var(--ok); }
-.sig-logs { background: var(--warn); }
-.sig-changes { background: var(--danger-soft); }
+.sig-logs { background: var(--muted); }
+.sig-changes { background: var(--warn); }
 .sig-other { background: var(--muted); }
 .sig-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; align-self: center; }
 .gauge-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--s2); margin: var(--s3) 0 var(--s2); font-size: var(--text-xs); }
@@ -1772,10 +1967,13 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 
 /* ---------- case file ---------- */
 
-.case-head { display: flex; flex-direction: column; gap: var(--s2); margin-bottom: var(--s2); font-size: var(--text-sm); }
-.case-head strong { font-weight: 600; color: var(--fg); overflow-wrap: anywhere; }
-.case-chips { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); }
-.case-brief { margin-top: var(--s2); }
+.case-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding-bottom: var(--s4);
+  border-bottom: 1px solid var(--border);
+}
 .rec-wrap, .series-wrap { width: 100%; }
 .rec-svg, .series-svg { display: block; width: 100%; }
 .rec-svg text, .series-svg text { font: 9px var(--font-mono); fill: var(--muted); }
@@ -1787,11 +1985,6 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 .rec-cursor { stroke: var(--accent); stroke-width: 2; }
 .rec-cursor-head { fill: var(--accent); }
 .stack-seg.nonzero { min-width: 3px; }
-.stack-seg.sig-metrics, .sig-dot.sig-metrics { background: var(--accent); }
-.stack-seg.sig-spans, .sig-dot.sig-spans { background: var(--ok); }
-.stack-seg.sig-logs, .sig-dot.sig-logs { background: var(--muted); }
-.stack-seg.sig-changes, .sig-dot.sig-changes { background: var(--warn); }
-.sig-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
 .presence-grid { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 52px); gap: 2px 4px; font-size: var(--text-xs); margin-top: var(--s2); }
 .presence-row { display: contents; }
 .presence-head span { color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; font-size: 9px; text-align: right; padding: 0 4px; }

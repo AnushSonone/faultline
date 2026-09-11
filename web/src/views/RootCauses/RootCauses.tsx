@@ -17,11 +17,13 @@ function EvidenceItem({ ev }: { ev: RootCauseEvidence }) {
   const contradicts = ev.direction === "contradicts";
   return (
     <li className={contradicts ? "evidence contradicts" : "evidence supports"}>
-      <span className="evidence-badge">{contradicts ? "contradicts" : "supports"}</span>{" "}
-      {ev.human_label}
-      {ev.source_refs.length > 0 && (
-        <span className="muted"> ({ev.source_refs.length} refs)</span>
-      )}
+      <span className="evidence-badge">{contradicts ? "contradicts" : "supports"}</span>
+      <span className="evidence-text">
+        {ev.human_label}
+        {ev.source_refs.length > 0 && (
+          <span className="muted"> ({ev.source_refs.length} refs)</span>
+        )}
+      </span>
     </li>
   );
 }

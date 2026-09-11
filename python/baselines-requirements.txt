@@ -1,0 +1,35 @@
+# RCAEval baselines venv (nsigma, BARO). Separate from the converter environment.
+#
+#   /opt/homebrew/bin/python3.14 -m venv python/.venv-baselines
+#   python/.venv-baselines/bin/pip install -r python/baselines-requirements.txt
+#
+# Python must be 3.12 or 3.14: RCAEval 1.6.0's RCAEval/e2e/__init__.py imports its
+# methods lazily only on 3.10/3.12/3.14 and otherwise hard-imports rcd/torai
+# (causal-learn, torch). Verified here with CPython 3.14.
+#
+# RCAEval 1.6.0 declares no base dependencies (everything sits in the [default]
+# extra, ~150 pins including torch). nsigma and BARO need only the packages below.
+# Frozen from the venv used for benchmarks/rcaeval on 2026-09-11.
+RCAEval==1.6.0
+numpy==2.5.3
+pandas==3.0.5
+scikit-learn==1.9.1
+scipy==1.18.1
+joblib==1.6.0
+threadpoolctl==3.6.0
+python-dateutil==2.9.0.post0
+six==1.17.0
+narwhals==2.26.0
+requests==2.34.2
+certifi==2026.7.22
+charset-normalizer==3.5.1
+idna==3.19
+urllib3==2.7.0
+tqdm==4.70.0
+PyYAML==6.0.3
+pytest==9.1.1
+iniconfig==2.3.0
+packaging==26.3
+pluggy==1.6.0
+Pygments==2.21.0
+cloudpickle==3.1.2

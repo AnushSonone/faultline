@@ -50,13 +50,33 @@ pub fn evaluate_ranking(
     }
 }
 
-/// Aggregate over incidents: top-1/top-3 accuracy and mean reciprocal rank.
+/// Aggregate over incidents: top-1/top-3 accuracy, mean reciprocal rank, and
+/// RCAEval's Avg@5.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EvalSummary {
     pub incidents: usize,
     pub top1_accuracy: f64,
     pub top3_accuracy: f64,
     pub mrr: f64,
+    /// RCAEval Avg@5: the mean over k = 1..=5 of AC@k, where AC@k is the
+    /// fraction of incidents whose labeled root cause is within the top k
+    /// (RCAEval 1.6.0 `benchmark/evaluation.py`, `Evaluator.average`).
+    #[serde(default)]
+    pub avg5: f64,
+}
+
+/// AC@k for one incident: 1 when a labeled root cause ranks within the top k.
+pub fn hit_at(best_rank: Option<usize>, k: usize) -> bool {
+    best_rank.is_some_and(|r| r <= k)
+}
+
+/// Avg@k for one incident: the mean over j = 1..=k of AC@j. Averaging this
+/// over incidents equals RCAEval's `sum(AC@j for j in 1..=k) / k`.
+pub fn avg_at(best_rank: Option<usize>, k: usize) -> f64 {
+    if k == 0 {
+        return 0.0;
+    }
+    (1..=k).filter(|j| hit_at(best_rank, *j)).count() as f64 / k as f64
 }
 
 pub fn summarize(evals: &[RankingEval]) -> EvalSummary {
@@ -67,6 +87,7 @@ pub fn summarize(evals: &[RankingEval]) -> EvalSummary {
             top1_accuracy: 0.0,
             top3_accuracy: 0.0,
             mrr: 0.0,
+            avg5: 0.0,
         };
     }
     EvalSummary {
@@ -74,6 +95,7 @@ pub fn summarize(evals: &[RankingEval]) -> EvalSummary {
         top1_accuracy: evals.iter().filter(|e| e.top1).count() as f64 / n as f64,
         top3_accuracy: evals.iter().filter(|e| e.top3).count() as f64 / n as f64,
         mrr: evals.iter().map(|e| e.reciprocal_rank).sum::<f64>() / n as f64,
+        avg5: evals.iter().map(|e| avg_at(e.best_rank, 5)).sum::<f64>() / n as f64,
     }
 }
 
@@ -153,5 +175,43 @@ mod tests {
         assert_eq!(s.top1_accuracy, 0.5);
         assert_eq!(s.top3_accuracy, 1.0);
         assert!((s.mrr - 0.75).abs() < 1e-12);
+        // Ranks 1 and 2: Avg@5 = ((5/5) + (4/5)) / 2.
+        assert!((s.avg5 - 0.9).abs() < 1e-12);
+    }
+
+    #[test]
+    fn avg_at_5_per_incident() {
+        assert_eq!(avg_at(Some(1), 5), 1.0);
+        assert!((avg_at(Some(2), 5) - 0.8).abs() < 1e-12);
+        assert!((avg_at(Some(5), 5) - 0.2).abs() < 1e-12);
+        assert_eq!(avg_at(Some(6), 5), 0.0);
+        assert_eq!(avg_at(None, 5), 0.0);
+    }
+
+    #[test]
+    fn avg_at_5_matches_rcaeval_definition() {
+        // Hand-computed: best ranks 1, 2, 6, none.
+        // AC@1 = 1/4, AC@2..AC@5 = 2/4, so Avg@5 = (0.25 + 4 * 0.5) / 5 = 0.45.
+        let r = ranking(&[
+            ("a", 0.9),
+            ("b", 0.8),
+            ("c", 0.7),
+            ("d", 0.6),
+            ("e", 0.5),
+            ("f", 0.4),
+        ]);
+        let evals = vec![
+            evaluate_ranking("i1", &r, &["a".into()]),
+            evaluate_ranking("i2", &r, &["b".into()]),
+            evaluate_ranking("i3", &r, &["f".into()]),
+            evaluate_ranking("i4", &r, &["ghost".into()]),
+        ];
+        let rcaeval: f64 = (1..=5)
+            .map(|k| evals.iter().filter(|e| hit_at(e.best_rank, k)).count() as f64 / 4.0)
+            .sum::<f64>()
+            / 5.0;
+        let s = summarize(&evals);
+        assert!((s.avg5 - 0.45).abs() < 1e-12);
+        assert!((s.avg5 - rcaeval).abs() < 1e-12);
     }
 }

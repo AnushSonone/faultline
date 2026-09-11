@@ -13,9 +13,8 @@ type Props = {
   adversarial: boolean;
 };
 
-// The one screen. Map top-left, verdict (or an open drawer) top-right,
-// evidence graph across the bottom. Grid tracks own the height; panels never
-// grow past them.
+// The one screen. Map left, evidence graph centre, verdict (or an open
+// drawer) right. Grid tracks own the height; panels never grow past them.
 export function Stage({ booting, sessionId, incidentId, adversarial }: Props) {
   const activeTab = useInvestigation((s) => s.activeTab);
   const tourTarget = useInvestigation((s) => s.tourTarget);

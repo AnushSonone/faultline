@@ -4,7 +4,14 @@ Produces N labeled synthetic incidents across fault types (mem, cpu,
 latency, error) and target services, split-by-incident by construction.
 Deterministic per seed. The original rec-mem-001 fixture is left untouched.
 
-Usage: python -m faultline_data.generate_suite [--out DIR] [--seed 7]
+Usage: python -m faultline_data.generate_suite [--out DIR] [--seed 7] [--ticks 20]
+
+--ticks lengthens every incident. The extra ticks are added before the
+fault, so the fault and everything after it keep the default shape and the
+detector gets a longer healthy baseline. With the default 20 ticks the output
+is unchanged. Example: --ticks 400 puts the fault at tick 385-387 with 385+
+healthy samples before it. Write long suites to a scratch --out, not into
+datasets/fixtures.
 """
 
 from __future__ import annotations
@@ -48,6 +55,7 @@ class IncidentSpec:
     target: str
     onset_tick: int
     seed: int
+    ticks: int = TICKS
 
     @property
     def route(self) -> list[str]:
@@ -63,7 +71,11 @@ class IncidentSpec:
         return route[: route.index(self.target)]
 
 
-def suite_specs(seed: int) -> list[IncidentSpec]:
+def suite_specs(seed: int, ticks: int = TICKS) -> list[IncidentSpec]:
+    if ticks < TICKS:
+        raise ValueError(f"ticks must be >= {TICKS}, got {ticks}")
+    # Extra ticks go before the fault; the random draws are unchanged.
+    lead = ticks - TICKS
     rng = random.Random(seed)
     specs = []
     for fault in FAULT_TYPES:
@@ -74,8 +86,9 @@ def suite_specs(seed: int) -> list[IncidentSpec]:
                     incident_id=f"eval-{fault}-{target[:4]}-{n:03}",
                     fault_type=fault,
                     target=target,
-                    onset_tick=rng.randint(5, 7),
+                    onset_tick=rng.randint(5, 7) + lead,
                     seed=rng.randint(0, 2**31),
+                    ticks=ticks,
                 )
             )
     return specs
@@ -94,7 +107,7 @@ def build_incident(spec: IncidentSpec) -> dict[str, list[dict]]:
     onset = spec.onset_tick
     affected = set(spec.downstream)
 
-    for t in range(TICKS):
+    for t in range(spec.ticks):
         et = base_ns + t * TICK
         ramp = max(0, t - onset + 1)
         for svc in SERVICES:
@@ -229,7 +242,7 @@ def generate_incident(out_root: Path, spec: IncidentSpec) -> Path:
         "incident_id": spec.incident_id,
         "system": "online-boutique-synthetic",
         "start_time_ns": base_ns,
-        "end_time_ns": base_ns + (TICKS - 1) * TICK,
+        "end_time_ns": base_ns + (spec.ticks - 1) * TICK,
         "signals": list(rows.keys()),
         "event_counts": counts,
         "files": files,
@@ -240,7 +253,7 @@ def generate_incident(out_root: Path, spec: IncidentSpec) -> Path:
         "root_cause_indicators": [f"{spec.target}_{'latency' if spec.fault_type == 'latency' else spec.fault_type if spec.fault_type != 'error' else 'error_rate'}"],
         "fault_type": spec.fault_type,
         "fault_start_time_ns": base_ns + spec.onset_tick * TICK,
-        "fault_end_time_ns": base_ns + (TICKS - 1) * TICK,
+        "fault_end_time_ns": base_ns + (spec.ticks - 1) * TICK,
         "expected_downstream_services": spec.downstream,
         "notes": f"Synthetic {spec.fault_type} fault on {spec.target} (evaluation suite, seed {spec.seed}).",
     }
@@ -250,8 +263,8 @@ def generate_incident(out_root: Path, spec: IncidentSpec) -> Path:
     return incident_dir
 
 
-def generate_suite(out_root: Path, seed: int) -> list[Path]:
-    return [generate_incident(out_root, spec) for spec in suite_specs(seed)]
+def generate_suite(out_root: Path, seed: int, ticks: int = TICKS) -> list[Path]:
+    return [generate_incident(out_root, spec) for spec in suite_specs(seed, ticks)]
 
 
 if __name__ == "__main__":
@@ -262,8 +275,16 @@ if __name__ == "__main__":
         default=Path(__file__).resolve().parents[2] / "datasets" / "fixtures",
     )
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument(
+        "--ticks",
+        type=int,
+        default=TICKS,
+        help=f"samples per incident (>= {TICKS}); extra ticks precede the fault",
+    )
     args = ap.parse_args()
-    paths = generate_suite(args.out, args.seed)
+    if args.ticks < TICKS:
+        ap.error(f"--ticks must be >= {TICKS}")
+    paths = generate_suite(args.out, args.seed, args.ticks)
     print(f"wrote {len(paths)} incidents under {args.out}")
     for p in paths:
         print(f"  {p.name}")
